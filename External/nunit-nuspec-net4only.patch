@@ -1,0 +1,43 @@
+diff -uprN nunit.old/build.cake nunit.new/build.cake
+--- nunit.old/build.cake	2016-07-10 17:13:48.660384512 +0300
++++ nunit.new/build.cake	2016-07-10 17:20:49.201812898 +0300
+@@ -879,8 +879,6 @@ Task("BuildAllFrameworks")
+     .IsDependentOn("InitializeBuild")
+     .IsDependentOn("Build45")
+     .IsDependentOn("Build40")
+-    .IsDependentOn("Build35")
+-    .IsDependentOn("Build20")
+ // NOTE: The following tasks use Criteria and will be skipped on Linux
+     .IsDependentOn("BuildPortable")
+     .IsDependentOn("BuildSL")
+diff -uprN nunit.old/nuget/framework/nunit.nuspec nunit.new/nuget/framework/nunit.nuspec
+--- nunit.old/nuget/framework/nunit.nuspec	2016-07-10 17:13:48.660384512 +0300
++++ nunit.new/nuget/framework/nunit.nuspec	2016-07-10 17:21:50.161812767 +0300
+@@ -32,11 +32,6 @@ Supported platforms:
+     <file src="LICENSE.txt" />
+     <file src="NOTICES.txt" />
+     <file src="CHANGES.txt" />
+-    <file src="bin/net-2.0/nunit.framework.dll" target="lib/net20" />
+-    <file src="bin/net-2.0/nunit.framework.xml" target="lib/net20" />
+-    <file src="bin/net-2.0/NUnit.System.Linq.dll" target="lib/net20" />
+-    <file src="bin/net-3.5/nunit.framework.dll" target="lib/net35" />
+-    <file src="bin/net-3.5/nunit.framework.xml" target="lib/net35" />
+     <file src="bin/net-4.0/nunit.framework.dll" target="lib/net40" />
+     <file src="bin/net-4.0/nunit.framework.xml" target="lib/net40" />
+     <file src="bin/net-4.5/nunit.framework.dll" target="lib/net45" />
+diff -uprN nunit.old/nuget/nunitlite/nunitlite.nuspec nunit.new/nuget/nunitlite/nunitlite.nuspec
+--- nunit.old/nuget/nunitlite/nunitlite.nuspec	2016-07-10 17:13:48.660384512 +0300
++++ nunit.new/nuget/nunitlite/nunitlite.nuspec	2016-07-10 17:22:13.421812717 +0300
+@@ -36,12 +36,8 @@ How to use this package:
+     <file src="LICENSE.txt" />
+     <file src="NOTICES.txt" />
+     <file src="CHANGES.txt" />
+-    <file src="bin/net-2.0/nunitlite.dll" target="lib/net20" />
+-    <file src="bin/net-3.5/nunitlite.dll" target="lib/net35" />
+     <file src="bin/net-4.0/nunitlite.dll" target="lib/net40" />
+     <file src="bin/net-4.5/nunitlite.dll" target="lib/net45" />
+-    <file src="bin/net-2.0/nunitlite-runner.exe" target="tools/net20" />
+-    <file src="bin/net-3.5/nunitlite-runner.exe" target="tools/net35" />
+     <file src="bin/net-4.0/nunitlite-runner.exe" target="tools/net40" />
+     <file src="bin/net-4.5/nunitlite-runner.exe" target="tools/net45" />
+     <file src="../../nuget/nunitlite/Program.cs" target="content" />
