@@ -1,3 +1,6 @@
 [submodule "External/DotNetBuildTools"]
 	path = External/DotNetBuildTools
 	url = https://github.com/DarkCaster/DotNetBuildTools.git
+[submodule "External/msgpack"]
+	path = External/msgpack
+	url = https://github.com/msgpack/msgpack-cli.git
