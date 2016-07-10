@@ -1,0 +1,3 @@
+[submodule "External/DotNetBuildTools"]
+	path = External/DotNetBuildTools
+	url = https://github.com/DarkCaster/DotNetBuildTools.git
