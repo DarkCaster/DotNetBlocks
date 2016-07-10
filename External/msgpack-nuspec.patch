@@ -1,0 +1,24 @@
+diff -uprN msgpack/MsgPack.nuspec msgpack.new/MsgPack.nuspec
+--- msgpack/MsgPack.nuspec	2016-07-10 11:10:56.304994883 +0300
++++ msgpack.new/MsgPack.nuspec	2016-07-10 11:29:10.687362464 +0300
+@@ -3,7 +3,7 @@
+   <metadata>
+     <id>MsgPack.Cli</id>
+     <title>MessagePack for CLI</title>
+-    <version>0.0.0-development</version>
++    <version>0.7.1</version>
+     <authors>FUJIWARA, Yusuke</authors>
+     <owners>FUJIWARA, Yusuke</owners>
+     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+@@ -80,7 +80,7 @@ This package provides MessagePack serial
+     </dependencies>
+   </metadata>
+   <files>
+-    <file src="bin\**\*.dll" target="lib" exclude="**\System.*;**\Microsoft.*;**\Mono.*" />
+-    <file src="bin\**\*.XML" target="lib" exclude="**\System.*;**\Microsoft.*;**\Mono.*" />
++    <file src="**/*.dll" target="lib" exclude="**/System.*;**/Microsoft.*;**/Mono.*" />
++    <file src="**/*.XML" target="lib" exclude="**/System.*;**/Microsoft.*;**/Mono.*" />
+   </files>
+-</package>
+\ No newline at end of file
++</package>
