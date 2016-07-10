@@ -31,6 +31,7 @@
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\CustomBlocks.xml</DocumentationFile>
     <ConsolePause>false</ConsolePause>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
