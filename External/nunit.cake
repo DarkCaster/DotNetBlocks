@@ -11,7 +11,7 @@ Task("Patch").Does(() =>
 
  if(IsRunningOnWindows())
  {
-  var settings=new ProcessSettings()
+  settings=new ProcessSettings()
   {
    WorkingDirectory = new DirectoryPath("nunit"),
    Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec-nonet35.patch"), 
