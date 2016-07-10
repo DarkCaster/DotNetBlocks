@@ -1,15 +1,21 @@
 diff -uprN nunit.old/build.cake nunit.new/build.cake
 --- nunit.old/build.cake	2016-07-10 17:13:48.660384512 +0300
-+++ nunit.new/build.cake	2016-07-10 17:20:49.201812898 +0300
-@@ -879,8 +879,6 @@ Task("BuildAllFrameworks")
++++ nunit.new/build.cake	2016-07-10 17:25:52.637437890 +0300
+@@ -878,13 +878,7 @@ Task("Rebuild")
+ Task("BuildAllFrameworks")
      .IsDependentOn("InitializeBuild")
      .IsDependentOn("Build45")
-     .IsDependentOn("Build40")
+-    .IsDependentOn("Build40")
 -    .IsDependentOn("Build35")
 -    .IsDependentOn("Build20")
- // NOTE: The following tasks use Criteria and will be skipped on Linux
-     .IsDependentOn("BuildPortable")
-     .IsDependentOn("BuildSL")
+-// NOTE: The following tasks use Criteria and will be skipped on Linux
+-    .IsDependentOn("BuildPortable")
+-    .IsDependentOn("BuildSL")
+-    .IsDependentOn("BuildCF");
++    .IsDependentOn("Build40");
+ 
+ Task("TestAll")
+     .IsDependentOn("TestAllFrameworks")
 diff -uprN nunit.old/nuget/framework/nunit.nuspec nunit.new/nuget/framework/nunit.nuspec
 --- nunit.old/nuget/framework/nunit.nuspec	2016-07-10 17:13:48.660384512 +0300
 +++ nunit.new/nuget/framework/nunit.nuspec	2016-07-10 17:21:50.161812767 +0300
