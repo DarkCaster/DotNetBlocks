@@ -9,4 +9,5 @@ _ReSharper*/
 /*.suo
 **/[Pp]ackages/*
 /NuGet.Config
+/External/dist/
 
