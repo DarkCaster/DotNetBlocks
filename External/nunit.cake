@@ -7,7 +7,7 @@ Task("Patch").Does(() =>
   WorkingDirectory = new DirectoryPath("nunit"),
   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec.patch"),
  };
- StartProcess("patch",settings); }
+ StartProcess("patch",settings);
 
  if(IsRunningOnWindows())
  {
