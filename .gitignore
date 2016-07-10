@@ -1,0 +1,12 @@
+#Ignore files build by Visual Studio
+*.userprefs
+**/[Bb]in/[Dd]ebug*/
+**/[Oo]bj/[Dd]ebug*/
+**/[Bb]in/[Rr]elease*/
+**/[Oo]bj/[Rr]elease*/
+_ReSharper*/
+**/gtk-gui/*.cs
+/*.suo
+**/[Pp]ackages/*
+/NuGet.Config
+

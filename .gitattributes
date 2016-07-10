@@ -1,0 +1,9 @@
+*.cs text=auto
+*.sh text eol=lf
+*.sh.in text eol=lf
+*.sln text eol=crlf
+*.csproj text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.patch binary
+
