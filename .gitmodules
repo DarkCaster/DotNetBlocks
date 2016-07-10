@@ -4,3 +4,6 @@
 [submodule "External/msgpack"]
 	path = External/msgpack
 	url = https://github.com/msgpack/msgpack-cli.git
+[submodule "External/nunit"]
+	path = External/nunit
+	url = https://github.com/nunit/nunit.git
