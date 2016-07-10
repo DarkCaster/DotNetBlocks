@@ -33,7 +33,8 @@ Task("Pack").IsDependentOn("Build").Does(() =>
  args.Add("configuration","Release");
  args.Add("target","PackageNuGet");
  CakeExecuteScript("nunit/build.cake", new CakeSettings{ Arguments = args });
- CopyFiles("nunit/package/*.nupkg",".");
+ CreateDirectory("packages");
+ CopyFiles("nunit/package/*.nupkg","packages");
 });
 
 Task("Default").IsDependentOn("Pack");

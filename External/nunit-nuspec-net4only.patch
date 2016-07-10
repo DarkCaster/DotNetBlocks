@@ -1,7 +1,76 @@
 diff -uprN nunit.old/build.cake nunit.new/build.cake
 --- nunit.old/build.cake	2016-07-10 17:13:48.660384512 +0300
-+++ nunit.new/build.cake	2016-07-10 17:25:52.637437890 +0300
-@@ -878,13 +878,7 @@ Task("Rebuild")
++++ nunit.new/build.cake	2016-07-10 17:36:48.005715770 +0300
+@@ -627,60 +627,6 @@ Task("PackageNuGet")
+ 		PackageRunnerWithExtensions("nuget/runners/nunit.console-runner-with-extensions.nuspec", packageVersion, teamcityVersion, currentImageDir, PACKAGE_DIR);
+ 
+ 		PackageRunnerWithExtensions("nuget/runners/nunit.runners.nuspec", packageVersion, teamcityVersion, currentImageDir, PACKAGE_DIR);
+-
+-        // Package engine
+-        NuGetPack("nuget/engine/nunit.engine.nuspec", new NuGetPackSettings()
+-        {
+-            Version = packageVersion,
+-            BasePath = currentImageDir,
+-            OutputDirectory = PACKAGE_DIR,
+-            NoPackageAnalysis = true
+-        });
+-        NuGetPack("nuget/engine/nunit.engine.tool.nuspec", new NuGetPackSettings()
+-        {
+-            Version = packageVersion,
+-            BasePath = currentImageDir,
+-            OutputDirectory = PACKAGE_DIR,
+-            NoPackageAnalysis = true
+-        });
+-
+-        // Package Extensions
+-        NuGetPack("nuget/extensions/nunit-project-loader.nuspec", new NuGetPackSettings()
+-        {
+-            Version = packageVersion,
+-            BasePath = currentImageDir,
+-            OutputDirectory = PACKAGE_DIR,
+-            NoPackageAnalysis = true
+-        });
+-        NuGetPack("nuget/extensions/vs-project-loader.nuspec", new NuGetPackSettings()
+-        {
+-            Version = packageVersion,
+-            BasePath = currentImageDir,
+-            OutputDirectory = PACKAGE_DIR,
+-            NoPackageAnalysis = true
+-        });
+-        NuGetPack("nuget/extensions/nunit-v2-result-writer.nuspec", new NuGetPackSettings()
+-        {
+-            Version = packageVersion,
+-            BasePath = currentImageDir,
+-            OutputDirectory = PACKAGE_DIR,
+-            NoPackageAnalysis = true
+-        });
+-        NuGetPack("nuget/extensions/nunit.v2.driver.nuspec", new NuGetPackSettings()
+-        {
+-            Version = packageVersion,
+-            BasePath = currentImageDir,
+-            OutputDirectory = PACKAGE_DIR,
+-            NoPackageAnalysis = true
+-        });
+-        NuGetPack("nuget/extensions/teamcity-event-listener.nuspec", new NuGetPackSettings()
+-        {
+-		    // The teamcity-event-listener extension uses its own versioning
+-            Version = teamcityVersion,
+-            BasePath = currentImageDir,
+-            OutputDirectory = PACKAGE_DIR,
+-            NoPackageAnalysis = true
+-        });
+     });
+ 
+ Task("PackageMsi")
+@@ -868,7 +814,6 @@ void PackageRunnerWithExtensions(string
+ 
+ Task("Build")
+   .IsDependentOn("BuildAllFrameworks")
+-  .IsDependentOn("BuildEngine")
+   .IsDependentOn("BuildConsole");
+ 
+ Task("Rebuild")
+@@ -878,13 +823,7 @@ Task("Rebuild")
  Task("BuildAllFrameworks")
      .IsDependentOn("InitializeBuild")
      .IsDependentOn("Build45")
