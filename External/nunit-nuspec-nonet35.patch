@@ -1,0 +1,23 @@
+diff -uprN nunit.old/build.cake nunit.new/build.cake
+--- nunit.old/build.cake	2016-07-10 17:13:48.660384512 +0300
++++ nunit.new/build.cake	2016-07-10 17:10:54.852384885 +0300
+@@ -879,7 +879,6 @@ Task("BuildAllFrameworks")
+     .IsDependentOn("InitializeBuild")
+     .IsDependentOn("Build45")
+     .IsDependentOn("Build40")
+-    .IsDependentOn("Build35")
+     .IsDependentOn("Build20")
+ // NOTE: The following tasks use Criteria and will be skipped on Linux
+     .IsDependentOn("BuildPortable")
+diff -uprN nunit.old/nuget/framework/nunit.nuspec nunit.new/nuget/framework/nunit.nuspec
+--- nunit.old/nuget/framework/nunit.nuspec	2016-07-10 17:13:48.660384512 +0300
++++ nunit.new/nuget/framework/nunit.nuspec	2016-07-10 17:11:36.824384795 +0300
+@@ -35,8 +35,6 @@ Supported platforms:
+     <file src="bin/net-2.0/nunit.framework.dll" target="lib/net20" />
+     <file src="bin/net-2.0/nunit.framework.xml" target="lib/net20" />
+     <file src="bin/net-2.0/NUnit.System.Linq.dll" target="lib/net20" />
+-    <file src="bin/net-3.5/nunit.framework.dll" target="lib/net35" />
+-    <file src="bin/net-3.5/nunit.framework.xml" target="lib/net35" />
+     <file src="bin/net-4.0/nunit.framework.dll" target="lib/net40" />
+     <file src="bin/net-4.0/nunit.framework.xml" target="lib/net40" />
+     <file src="bin/net-4.5/nunit.framework.dll" target="lib/net45" />

@@ -7,11 +7,17 @@ Task("Patch").Does(() =>
   WorkingDirectory = new DirectoryPath("nunit"),
   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec.patch"),
  };
+ StartProcess("patch",settings); }
 
  if(IsRunningOnWindows())
- { StartProcess("patch.exe",settings); }
- else
- { StartProcess("patch",settings); }
+ {
+  var settings=new ProcessSettings()
+  {
+   WorkingDirectory = new DirectoryPath("nunit"),
+   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec-nonet35.patch"), 
+  };
+  StartProcess("patch",settings);
+ }
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>
