@@ -40,8 +40,8 @@ namespace DarkCaster.Converters
 	///   maximize performance on decode\encode
 	/// - Minimize memory allocations - calculate required arrays size and allocate it only once
 	/// 
-	/// Converter is fully working now (there is also some unit tests), but some features
-	/// require more work to be complete. Any contribution is welcomed.
+	/// Converter is fully working now but some features require more work to be complete.
+	/// Any contribution is welcomed.
 	/// </summary>
 
 	public static class Base85
