@@ -46,13 +46,18 @@ namespace DarkCaster.Converters
 
 	public static class Base85
 	{
-		//start mark sequence. BStartMark - ascii version of StartMark. used in encode
+		//start mark sequence. BStartMark - version of StartMark. used in encode
 		private const string StartMark = "<~";
-		private static readonly byte[] BStartMark = { 60, 126 };
+		private const char BStartMark_1 = '<';
+		private const char BStartMark_2 = '~';
 
-		//end mark sequence. BEndMark - ascii version of EndMark, used in encode
+		//end mark sequence. BEndMark - version of EndMark, used in encode
 		private const string EndMark = "~>";
-		private static readonly byte[] BEndMark = { 126, 62 };
+		private const char BEndMark_1 = '~';
+		private const char BEndMark_2 = '>';
+		
+		//empty string with marks, used when encoding null or empty data byte arrays with error check is disabled
+		private const string EmptyStringWithMarks = "<~~>";
 
 		//using in decode to fast select proper "power of 85" value
 		private static readonly uint[] pow85 = { 52200625U, 614125U, 7225U, 85U, 1U };
@@ -199,42 +204,21 @@ namespace DarkCaster.Converters
 		{
 			if(data == null && !ignoreErrors)
 				throw new ArgumentNullException("data", "Input byte array cannot be null");
-			//7-bit-ascii strings will be generated
-			var encoding = Encoding.GetEncoding("us-ascii", new EncoderExceptionFallback(), new DecoderReplacementFallback(" "));
 			if(data == null || data.Length == 0)
-			{
-				if(useMarks)
-				{
-					var empty = new byte[BStartMark.Length + BEndMark.Length];
-					int ePos = 0;
-					for(int i = 0; i < BStartMark.Length; ++i)
-					{
-						empty[ePos] = BStartMark[i];
-						ePos++;
-					}
-					for(int i = 0; i < BEndMark.Length; ++i)
-					{
-						empty[ePos] = BEndMark[i];
-						ePos++;
-					}
-					return encoding.GetString(empty);
-				}
-				else
-					return string.Empty;
-			}
+				return useMarks ? EmptyStringWithMarks : string.Empty;
 			//pos
 			int rPos = 0;
 			//calculate how much space we need
 			var fullchunks = data.Length / 4;
 			var remainder = data.Length % 4;
-			var result = new byte[fullchunks * 5 + (remainder > 0 ? 5 : 0) + (useMarks ? BStartMark.Length + BEndMark.Length : 0)];
+			var result = new char[fullchunks * 5 + (remainder > 0 ? 5 : 0) + (useMarks ? 4 /*start+end marks len*/ : 0)];
 			//append start mark
 			if(useMarks)
-				for(int i = 0; i < BStartMark.Length; ++i)
-				{
-					result[rPos] = BStartMark[i];
-					rPos++;
-				}
+			{
+				result[rPos] = BStartMark_1;
+				result[rPos + 1] = BStartMark_2;
+				rPos+=2;
+			}
 			//encode full chunks
 			uint tuple = 0U;
 			//process full chunks
@@ -246,16 +230,16 @@ namespace DarkCaster.Converters
 				tuple |= (uint)data[4 * i + 3];
 				if(tuple == 0U)
 				{
-					result[rPos] = 122;
+					result[rPos] = 'z';
 					rPos++;
 				}
 				else
 				{
-					result[rPos + 4] = (byte)((tuple % 85U) + 33U);
-					result[rPos + 3] = (byte)((tuple / 85U % 85U) + 33U);
-					result[rPos + 2] = (byte)((tuple / 7225U % 85U) + 33U);
-					result[rPos + 1] = (byte)((tuple / 614125U % 85U) + 33U);
-					result[rPos] = (byte)((tuple / 52200625U % 85U) + 33U);
+					result[rPos + 4] = (char)((tuple % 85U) + 33U);
+					result[rPos + 3] = (char)((tuple / 85U % 85U) + 33U);
+					result[rPos + 2] = (char)((tuple / 7225U % 85U) + 33U);
+					result[rPos + 1] = (char)((tuple / 614125U % 85U) + 33U);
+					result[rPos] = (char)((tuple / 52200625U % 85U) + 33U);
 					rPos += 5;
 					tuple = 0U;
 				}
@@ -265,20 +249,21 @@ namespace DarkCaster.Converters
 			{
 				for(int i = 0; i < remainder; ++i)
 					tuple |= (uint)data[4 * fullchunks + i] << (24 - i * 8);
-				result[rPos + 4] = (byte)((tuple % 85U) + 33U);
-				result[rPos + 3] = (byte)((tuple / 85U % 85U) + 33U);
-				result[rPos + 2] = (byte)((tuple / 7225U % 85U) + 33U);
-				result[rPos + 1] = (byte)((tuple / 614125U % 85U) + 33U);
-				result[rPos] = (byte)((tuple / 52200625U % 85U) + 33U);
+				result[rPos + 4] = (char)((tuple % 85U) + 33U);
+				result[rPos + 3] = (char)((tuple / 85U % 85U) + 33U);
+				result[rPos + 2] = (char)((tuple / 7225U % 85U) + 33U);
+				result[rPos + 1] = (char)((tuple / 614125U % 85U) + 33U);
+				result[rPos] = (char)((tuple / 52200625U % 85U) + 33U);
 				rPos += (remainder + 1);
 			}
 			if(useMarks)
-				for(int i = 0; i < BEndMark.Length; ++i)
-				{
-					result[rPos] = BEndMark[i];
-					rPos++;
-				}
-			return encoding.GetString(result, 0, rPos);
+			{
+				result[rPos] = BEndMark_1;
+				result[rPos + 1] = BEndMark_2;
+				rPos+=2;
+			}
+			//7-bit-ascii strings will be generated, no need to use additional Encoding
+			return new string(result, 0, rPos);
 		}
 	}
 }
