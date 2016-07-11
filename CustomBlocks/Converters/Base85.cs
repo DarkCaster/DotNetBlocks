@@ -137,7 +137,7 @@ namespace DarkCaster.Converters
 				}
 				else if(source[i] >= 33 && source[i] <= 117)
 					encPendingLen++;
-				else if(!ignoreErrors)
+				else if(!ignoreErrors && source[i]!=32 && source[i]!=10 && source[i]!=13 && source[i]!=9)
 					throw new FormatException("Incorrect symbol at string's input position: " + i.ToString());
 				if(encPendingLen == 5)
 				{
