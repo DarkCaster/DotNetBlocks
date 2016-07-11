@@ -14,7 +14,7 @@ Task("Patch").Does(() =>
   settings=new ProcessSettings()
   {
    WorkingDirectory = new DirectoryPath("nunit"),
-   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec-net4only.patch"),
+   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec-net45only.patch"),
   };
   StartProcess("patch",settings);
  }

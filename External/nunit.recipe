@@ -1,4 +1,4 @@
 sources="nunit"
 targets="packages"
-files="nunit-nuspec.patch nunit-nuspec-net4only.patch"
+files="nunit-nuspec.patch nunit-nuspec-net45only.patch"
 
