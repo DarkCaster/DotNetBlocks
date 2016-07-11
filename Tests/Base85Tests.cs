@@ -153,6 +153,32 @@ namespace Tests
 				Assert.AreEqual(source, restored);
 			}
 		}
+		
+		/*
+		private volatile byte[] decPerfResult=null;
+		private volatile string encPerfResult=null;
+		
+		[Test]
+		//TODO: write PROPER performance test for use with profiler
+		public void UglyPerformanceTest()
+		{
+			var random = new Random();
+			var src=new byte[8192];
+			random.NextBytes(src);
+			
+			var sTime=DateTime.UtcNow;
+			for(int i=0;i<100000;++i)
+				encPerfResult=Base85.Encode(src);
+			var encTime=DateTime.UtcNow-sTime;
+			
+			sTime=DateTime.UtcNow;
+			for(int i=0;i<100000;++i)
+				decPerfResult=Base85.Decode(encPerfResult);
+			var decTime=DateTime.UtcNow-sTime;
+			
+			Assert.Fail("encTime="+encTime+" decTime="+decTime);
+		}
+		*/
 	}
 }
 
