@@ -41,9 +41,16 @@
   <ItemGroup>
     <Compile Include="Converters\Base85.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\BinarySerialization\BinaryDeserializationException.cs" />
+    <Compile Include="Serialization\BinarySerialization\BinarySerializationException.cs" />
+    <Compile Include="Serialization\BinarySerialization\BinarySerializationHelper.cs" />
+    <Compile Include="Serialization\ISerializationHelper.cs" />
+    <Compile Include="Serialization\SerializationException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
+    <Folder Include="Serialization" />
+    <Folder Include="Serialization\BinarySerialization" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
