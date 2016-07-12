@@ -47,12 +47,10 @@ namespace DarkCaster.Converters
 	public static class Base85
 	{
 		//start mark sequence. BStartMark - version of StartMark. used in encode
-		private const string StartMark = "<~";
 		private const char BStartMark_1 = '<';
 		private const char BStartMark_2 = '~';
 
 		//end mark sequence. BEndMark - version of EndMark, used in encode
-		private const string EndMark = "~>";
 		private const char BEndMark_1 = '~';
 		private const char BEndMark_2 = '>';
 		
@@ -68,8 +66,7 @@ namespace DarkCaster.Converters
 			{
 				if(ignoreErrors)
 					return new byte[0];
-				else
-					throw new ArgumentNullException("dataString", "Encoded data string in null!");
+				throw new ArgumentNullException("dataString", "Encoded data string in null!");
 			}
 			if(dataString.Length == 0)
 				return new byte[0];
@@ -77,51 +74,45 @@ namespace DarkCaster.Converters
 			{
 				if(ignoreErrors)
 					return new byte[0];
-				else
-					throw new FormatException("Encoded data string does not contain correct encoded characters!");
+				throw new FormatException("Encoded data string does not contain correct encoded characters!");
 			}
-			//convert source data string to ascii encoding, replacing all non compatible characters with space (so it will not interfere with base85's characters)
+			//convert source data string to ascii encoding, replacing all non compatible characters with space
+			//so it will not interfere with base85's characters, will not contain "graphemes" or stuff like that
 			var encoding = Encoding.GetEncoding("us-ascii", new EncoderReplacementFallback(" "), new DecoderExceptionFallback());
 			var source = encoding.GetBytes(dataString);
 			//counters
 			int sourceLen = source.Length;
 			int startIdx = 0;
 			int endIdx = sourceLen;
-			//If using marks, get substring position and try to ignore any errors possible
+			//If using marks, get substring position
 			if(useMarks)
 			{
-				startIdx = dataString.IndexOf(StartMark, StringComparison.Ordinal);
-				if(startIdx < 0)
-				{
-					if(!ignoreErrors)
-						throw new FormatException("Failed to find start marker in encoded data string!");
-					startIdx = -2;
-				}
-				endIdx = dataString.LastIndexOf(EndMark, StringComparison.Ordinal);
-				if(endIdx > (startIdx + 1))
-				{
-					if(startIdx < 0)
-						startIdx = 0;
-					else
-						startIdx += 2;
-				}
-				else
-				{
-					if(!ignoreErrors)
-						throw new FormatException("Failed to find end marker in encoded data string!");
-					if(startIdx >= 0)
+				//find start marker
+				for(int i=0;i<sourceLen-2;++i)
+					if(source[i]==(byte)BStartMark_1 && source[i+1]==(byte)BStartMark_2)
 					{
-						startIdx += 2;
-						endIdx = sourceLen;
+						startIdx=i+2;
+						break;
 					}
-					else
-					{
-						startIdx = 0;
-						endIdx = sourceLen;
-					}
+				if(startIdx==0||startIdx>sourceLen-2)
+				{
+					if(ignoreErrors)
+						return new byte[0];
+					throw new FormatException("Failed to find correct start marker in encoded data string!");
 				}
-				if((endIdx - startIdx) == 0)
-					return new byte[0];
+				//find end marker
+				for(int i=sourceLen-1;i>=startIdx;--i)
+					if(source[i]==(byte)BEndMark_2 && source[i-1]==(byte)BEndMark_1)
+					{
+						endIdx=i-1;
+						break;
+					}
+				if(endIdx==sourceLen||endIdx<startIdx)
+				{
+					if(ignoreErrors)
+						return new byte[0];
+					throw new FormatException("Failed to find correct end marker in encoded data string!");
+				}
 			}
 			//count real decoded string len
 			int decPredictedLen = 0;
