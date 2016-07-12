@@ -111,7 +111,7 @@ namespace Tests
 			var random = new Random();
 			const int minSrcLen = 128;
 			const int maxSrcLen = 256;
-			for(int i = 0; i < 100; ++i)
+			for(int i = 0; i < 1000; ++i)
 			{
 				var marks = Convert.ToBoolean(random.Next(0, 2));
 				//original source data
