@@ -41,24 +41,32 @@ namespace Tests
 		{
 			int ctrlVal = (new Random()).Next();
 			var test = new TestClass(ctrlVal);
-			var genSer=(ISerializationHelper<TestClass>)(new BinarySerializationHelper<TestClass>());
-			var objSer=(ISerializationHelper)(new BinarySerializationHelper<TestClass>());
-			SerializationHelpersTests.SerializersCompare(test,genSer,objSer);
-			var check1=SerializationHelpersTests.GenericInterfaceBinary(test,genSer);
+			var ser=new BinarySerializationHelper<TestClass>();
+			var anotherSer=new BinarySerializationHelper<TestClass>();
+			SerializationHelpersTests.SerializersCompare(test,ser,anotherSer);
+			var check1=SerializationHelpersTests.GenericInterfaceBinary(test,ser);
 			Assert.AreEqual(test.V,check1.V);
-			var check2=SerializationHelpersTests.GenericInterfaceText(test,genSer);
+			var check2=SerializationHelpersTests.GenericInterfaceText(test,ser);
 			Assert.AreEqual(test.V,check2.V);
-			var check3=SerializationHelpersTests.InterfaceBinary(test,objSer);
+			var check3=SerializationHelpersTests.InterfaceBinary(test,ser);
 			Assert.AreEqual(test.V,((TestClass)check3).V);
-			var check4=SerializationHelpersTests.InterfaceText(test,objSer);
+			var check4=SerializationHelpersTests.InterfaceText(test,ser);
 			Assert.AreEqual(test.V,((TestClass)check4).V);
+		}
+		
+		[Test]
+		public void BadDataDeserialization()
+		{
+			var ser=new BinarySerializationHelper<TestClass>();
+			SerializationHelpersTests.BadDataDeserialize<TestClass,BinarySerializationHelper<TestClass>,BinarySerializationHelper<TestClass>>
+				(typeof(BinaryDeserializationException),ser,ser);
 		}
 		
 		[Test]
 		public void IncorrectSerialization()
 		{
 			int ctrlVal = (new Random()).Next();
-			var objSer=(ISerializationHelper)(new BinarySerializationHelper<TestClass>());
+			var objSer=new BinarySerializationHelper<TestClass>();
 			var testWrong = new TestClassWrong(ctrlVal,ctrlVal+1);
 			SerializationHelpersTests.WrongTypeSerialize(typeof(BinarySerializationException),testWrong,objSer);
 		}
