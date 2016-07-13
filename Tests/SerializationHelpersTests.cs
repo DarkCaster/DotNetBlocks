@@ -45,5 +45,23 @@ namespace Tests
 			var data2=objSer.SerializeObj(source);
 			Assert.AreEqual(data1,data2);
 		}
+		
+		public static void WrongTypeSerialize<SER>(Type expectedException, object wrongObject, SER serializer)
+			where SER : ISerializationHelper
+		{
+			Assert.Throws(expectedException,()=>serializer.SerializeObj(wrongObject));
+			Assert.Throws(expectedException,()=>serializer.SerializeObjToString(wrongObject));
+		}
+		
+		//Some serializers (like json) actually CAN deserialize and apply data to wrong object type,
+		//so this check may be skipped in such cases
+		public static void WrongTypeDeserialize<SER>(Type expectedException, object obj, SER correctSerializer, SER wrongSerializer)
+			where SER : ISerializationHelper
+		{
+			var bytes=correctSerializer.SerializeObj(obj);
+			var str=correctSerializer.SerializeObjToString(obj);
+			Assert.Throws(expectedException,()=>wrongSerializer.DeserializeObj(bytes));
+			Assert.Throws(expectedException,()=>wrongSerializer.DeserializeObj(str));
+		}
 	}
 }

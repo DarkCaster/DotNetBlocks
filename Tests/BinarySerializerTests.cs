@@ -53,24 +53,24 @@ namespace Tests
 			var check4=SerializationHelpersTests.InterfaceText(test,objSer);
 			Assert.AreEqual(test.V,((TestClass)check4).V);
 		}
-
+		
 		[Test]
-		public void WrongTypeExceptions()
+		public void IncorrectSerialization()
 		{
 			int ctrlVal = (new Random()).Next();
-			var test = new TestClass(ctrlVal);
+			var objSer=(ISerializationHelper)(new BinarySerializationHelper<TestClass>());
 			var testWrong = new TestClassWrong(ctrlVal,ctrlVal+1);
-			var serializer = (ISerializationHelper)(new BinarySerializationHelper<TestClass>());
-			var serializerWrong = (ISerializationHelper)(new BinarySerializationHelper<TestClassWrong>());
-
-			var data = serializer.SerializeObj(test);
-			var dataWrong = serializerWrong.SerializeObj(testWrong);
-
-			Assert.Throws(typeof(BinarySerializationException), () => serializer.SerializeObj(testWrong));
-			Assert.Throws(typeof(BinarySerializationException), () => serializerWrong.SerializeObj(test));
-
-			Assert.Throws(typeof(BinaryDeserializationException), () => serializer.DeserializeObj(dataWrong));
-			Assert.Throws(typeof(BinaryDeserializationException), () => serializerWrong.DeserializeObj(data));
+			SerializationHelpersTests.WrongTypeSerialize(typeof(BinarySerializationException),testWrong,objSer);
+		}
+		
+		[Test]
+		public void IncorrectDeserialization()
+		{
+			int ctrlVal = (new Random()).Next();
+			var objSer=(ISerializationHelper)(new BinarySerializationHelper<TestClass>());
+			var wrongSer=(ISerializationHelper)(new BinarySerializationHelper<TestClassWrong>());
+			var obj = new TestClass(ctrlVal);
+			SerializationHelpersTests.WrongTypeDeserialize(typeof(BinaryDeserializationException),obj,objSer,wrongSer);
 		}
 	}
 }
