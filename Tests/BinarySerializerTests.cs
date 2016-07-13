@@ -35,52 +35,23 @@ namespace Tests
 			public int V { get { return v; } }
 			public int X { get { return x; } }
 		}
-
+		
 		[Test]
-		public void DirectSerialization()
+		public void CorrectSerialization()
 		{
 			int ctrlVal = (new Random()).Next();
 			var test = new TestClass(ctrlVal);
-			var serializer = new BinarySerializationHelper<TestClass>();
-			var data = serializer.Serialize(test);
-			var data2 = serializer.SerializeObj(test);
-			Assert.AreEqual(data, data2);
-			var test2 = serializer.Deserialize(data);
-			var test3 = (TestClass)serializer.DeserializeObj(data);
-			Assert.AreEqual(test.V, test2.V);
-			Assert.AreEqual(test2.V, test3.V);
-		}
-
-		[Test]
-		public void InterfaceSerialization()
-		{
-			int ctrlVal = (new Random()).Next();
-			var test = new TestClass(ctrlVal);
-			var serializer = (ISerializationHelper<TestClass>)(new BinarySerializationHelper<TestClass>());
-			var serializer2 = (ISerializationHelper)(new BinarySerializationHelper<TestClass>());
-			var data = serializer.Serialize(test);
-			var data2 = serializer2.SerializeObj(test);
-			Assert.AreEqual(data, data2);
-			var test2 = serializer.Deserialize(data);
-			var test3 = (TestClass)serializer2.DeserializeObj(data);
-			Assert.AreEqual(test.V, test2.V);
-			Assert.AreEqual(test2.V, test3.V);
-		}
-
-		[Test]
-		public void Interface2InterfaceSerialization()
-		{
-			int ctrlVal = (new Random()).Next();
-			var test = (ITestClass)(new TestClass(ctrlVal));
-			var serializer = (ISerializationHelper<TestClass>)(new BinarySerializationHelper<TestClass>());
-			var serializer2 = (ISerializationHelper)(new BinarySerializationHelper<TestClass>());
-			var data = serializer.Serialize((TestClass)test);
-			var data2 = serializer2.SerializeObj(test);
-			Assert.AreEqual(data, data2);
-			var test2 = serializer.Deserialize(data);
-			var test3 = (ITestClass)serializer2.DeserializeObj(data);
-			Assert.AreEqual(test.V, test2.V);
-			Assert.AreEqual(test2.V, test3.V);
+			var genSer=(ISerializationHelper<TestClass>)(new BinarySerializationHelper<TestClass>());
+			var objSer=(ISerializationHelper)(new BinarySerializationHelper<TestClass>());
+			SerializationHelpersTests.SerializersCompare(test,genSer,objSer);
+			var check1=SerializationHelpersTests.GenericInterfaceBinary(test,genSer);
+			Assert.AreEqual(test.V,check1.V);
+			var check2=SerializationHelpersTests.GenericInterfaceText(test,genSer);
+			Assert.AreEqual(test.V,check2.V);
+			var check3=SerializationHelpersTests.InterfaceBinary(test,objSer);
+			Assert.AreEqual(test.V,((TestClass)check3).V);
+			var check4=SerializationHelpersTests.InterfaceText(test,objSer);
+			Assert.AreEqual(test.V,((TestClass)check4).V);
 		}
 
 		[Test]
