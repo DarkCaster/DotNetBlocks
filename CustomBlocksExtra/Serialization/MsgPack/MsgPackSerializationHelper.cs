@@ -25,6 +25,7 @@
 
 using System;
 using System.IO;
+using MsgPack;
 using MsgPack.Serialization;
 using DarkCaster.Converters;
 
@@ -36,6 +37,26 @@ namespace DarkCaster.Serialization
 	/// </summary>
 	public sealed class MsgPackSerializationHelper<T> : ISerializationHelper, ISerializationHelper<T>
 	{
+		private readonly SerializationContext context;
+		
+		private MsgPackSerializationHelper() {}
+		
+		public MsgPackSerializationHelper(bool useForStorage)
+		{
+			context=new SerializationContext();
+			if(useForStorage)
+			{
+				context.SerializationMethod=SerializationMethod.Map;
+				context.EnumSerializationMethod=EnumSerializationMethod.ByName;
+			}
+			else
+			{
+				context.SerializationMethod = SerializationMethod.Array;
+				context.EnumSerializationMethod = EnumSerializationMethod.ByUnderlyingValue;
+			}
+			context.CompatibilityOptions.PackerCompatibilityOptions=PackerCompatibilityOptions.None;
+		}
+		
 		public byte[] SerializeObj(object target)
 		{
 			if(target==null)
@@ -60,7 +81,7 @@ namespace DarkCaster.Serialization
 					throw new ArgumentException("Object to serialize is NULL");
 				using(var stream = new MemoryStream())
 				{
-					var serializer = MessagePackSerializer.Get<T>();
+					var serializer = MessagePackSerializer.Get<T>(context);
 					serializer.Pack(stream, target);
 					return stream.ToArray();
 				}
@@ -79,7 +100,7 @@ namespace DarkCaster.Serialization
 					throw new ArgumentException("Could not deserialize object from empty data", "data");
 				using(var stream = new MemoryStream(data))
 				{
-					var serializer = MessagePackSerializer.Get<T>();
+					var serializer = MessagePackSerializer.Get<T>(context);
 					var result=serializer.Unpack(stream);
 					if(!typeof(T).IsValueType && result==null)
 						throw new Exception("Deserialized object is null!");
