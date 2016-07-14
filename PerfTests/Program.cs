@@ -30,7 +30,8 @@ namespace PerfTests
 	class Program
 	{
 		public static void Main(string[] args)
-		{			
+		{
+			MMHashSpeedTest.Test();
 			Console.Write("Press any key to continue . . . ");
 			Console.ReadKey(true);
 		}
