@@ -22,8 +22,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("CustomBlocksExtra")]
 [assembly: AssemblyDescription("Some helper classes, abstractions, and other service stuff. Some external dependencies may be required.")]
@@ -33,5 +33,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright("Copyright (c) 2016 DarkCaster <dark.caster@outlook.com>")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-
 [assembly: AssemblyVersion("1.0.*")]
