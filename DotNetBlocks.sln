@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomBlocksExtra", "Custom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3A8179CA-8360-4491-97E7-62A0B59D51A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfTests", "PerfTests\PerfTests.csproj", "{59799510-574E-4515-9885-9A553A74B8AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{3A8179CA-8360-4491-97E7-62A0B59D51A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A8179CA-8360-4491-97E7-62A0B59D51A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A8179CA-8360-4491-97E7-62A0B59D51A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59799510-574E-4515-9885-9A553A74B8AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59799510-574E-4515-9885-9A553A74B8AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59799510-574E-4515-9885-9A553A74B8AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59799510-574E-4515-9885-9A553A74B8AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
