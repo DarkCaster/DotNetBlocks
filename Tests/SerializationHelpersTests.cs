@@ -56,6 +56,15 @@ namespace Tests
 			random.NextBytes(data);
 			Assert.Throws(expectedException,()=>genSer.Deserialize(data));
 			Assert.Throws(expectedException,()=>objSer.DeserializeObj(data));
+		}
+		
+		public static void BadStringDeserialize<TC,SER1,SER2>(Type expectedException, SER1 genSer, SER2 objSer)
+			where SER1 : ISerializationHelper<TC>
+			where SER2 : ISerializationHelper
+		{
+			var random=new Random();
+			var data=new byte[random.Next(512,8192)];
+			random.NextBytes(data);
 			var encoding = Encoding.GetEncoding("us-ascii", new EncoderReplacementFallback(" "), new DecoderReplacementFallback(" "));
 			var badString=encoding.GetString(data);
 			Assert.Throws(expectedException,()=>genSer.Deserialize(badString));

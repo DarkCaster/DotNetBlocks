@@ -57,6 +57,14 @@ namespace Tests
 		}
 		
 		[Test]
+		public void BadStringDeserialization()
+		{
+			var ser=new MsgPackSerializationHelper<TestClass>();
+			SerializationHelpersTests.BadStringDeserialize<TestClass,MsgPackSerializationHelper<TestClass>,MsgPackSerializationHelper<TestClass>>
+				(typeof(MsgPackDeserializationException),ser,ser);
+		}
+		
+		[Test]
 		public void IncorrectSerialization()
 		{
 			int ctrlVal = (new Random()).Next();
