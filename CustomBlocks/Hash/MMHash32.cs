@@ -75,7 +75,7 @@ namespace DarkCaster.Hash
 			}
 
 			//Process last piece of data, and get output hash
-			public int ProceedLastChunk( byte[] chunk, uint chunkLen )
+			public uint ProceedLastChunk( byte[] chunk, uint chunkLen )
 			{
 				if( chunkLen == 4 )
 					ProceedChunk(chunk);
@@ -98,7 +98,7 @@ namespace DarkCaster.Hash
 				h1 ^= h1 >> 13;
 				h1 *= 0xc2b2ae35;
 				h1 ^= h1 >> 16;
-				return unchecked((int)h1);
+				return h1;
 			}
 		}
 		
@@ -114,7 +114,7 @@ namespace DarkCaster.Hash
 			return chunkLen;
 		}
 
-		public static int GetHash( byte[] stream, uint seed )
+		public static uint GetHash( byte[] stream, uint seed )
 		{
 			BitMagic magic=BitMagic.Create(seed);
 			byte[] chunk=new byte[4];
@@ -142,7 +142,7 @@ namespace DarkCaster.Hash
 			this.seed=seed;
 		}
 		
-		public int GetHash( byte[] stream )
+		public uint GetHash( byte[] stream )
 		{
 			return GetHash(stream, seed);
 		}
