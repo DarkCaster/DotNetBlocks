@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using DarkCaster.Hash;
 
 namespace PerfTests
@@ -16,10 +17,13 @@ namespace PerfTests
 			random.NextBytes(data);
 			var mmHash=new MMHash32(seed);
 			
-			var sTime=DateTime.UtcNow;
+			var sw=new Stopwatch();
+			
+			sw.Start();
 			for(int i=0;i<iter;++i)
 				hash=mmHash.GetHash(data);
-			var diff=(DateTime.UtcNow-sTime).TotalSeconds;
+			sw.Stop();
+			var diff=sw.Elapsed.TotalSeconds;
 			var totalSize=data.Length*iter;
 			var speed=(totalSize/(1024*1024))/diff;
 			Console.WriteLine(string.Format("MMHash32.GetHash: {0} B in {1:##.##} S. Speed=={2:##.###} Mb/S.",totalSize,diff,speed));
