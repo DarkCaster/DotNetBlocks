@@ -33,10 +33,16 @@ namespace Tests
 		[Test]
 		public void CorrectSerialization()
 		{
+			_CorrectSerialization(false);
+			_CorrectSerialization(true);
+		}
+		
+		private void _CorrectSerialization(bool storage)
+		{
 			int ctrlVal = (new Random()).Next();
 			var test = new TestClass(ctrlVal);
-			var ser=new MsgPackSerializationHelper<TestClass>();
-			var anotherSer=new MsgPackSerializationHelper<TestClass>();
+			var ser=new MsgPackSerializationHelper<TestClass>(storage);
+			var anotherSer=new MsgPackSerializationHelper<TestClass>(storage);
 			SerializationHelpersTests.SerializersCompare(test,ser,anotherSer);
 			var check1=SerializationHelpersTests.GenericInterfaceBinary(test,ser);
 			Assert.AreEqual(test.V,check1.V);
@@ -51,7 +57,13 @@ namespace Tests
 		[Test]
 		public void BadDataDeserialization()
 		{
-			var ser=new MsgPackSerializationHelper<TestClass>();
+			_BadDataDeserialization(false);
+			_BadDataDeserialization(true);
+		}
+		
+		private void _BadDataDeserialization(bool storage)
+		{
+			var ser=new MsgPackSerializationHelper<TestClass>(storage);
 			SerializationHelpersTests.BadDataDeserialize<TestClass,MsgPackSerializationHelper<TestClass>,MsgPackSerializationHelper<TestClass>>
 				(typeof(MsgPackDeserializationException),ser,ser);
 		}
@@ -59,7 +71,13 @@ namespace Tests
 		[Test]
 		public void BadStringDeserialization()
 		{
-			var ser=new MsgPackSerializationHelper<TestClass>();
+			_BadStringDeserialization(false);
+			_BadStringDeserialization(true);
+		}
+		
+		private void _BadStringDeserialization(bool storage)
+		{
+			var ser=new MsgPackSerializationHelper<TestClass>(storage);
 			SerializationHelpersTests.BadStringDeserialize<TestClass,MsgPackSerializationHelper<TestClass>,MsgPackSerializationHelper<TestClass>>
 				(typeof(MsgPackDeserializationException),ser,ser);
 		}
@@ -67,8 +85,14 @@ namespace Tests
 		[Test]
 		public void IncorrectSerialization()
 		{
+			_IncorrectSerialization(false);
+			_IncorrectSerialization(true);
+		}
+		
+		private void _IncorrectSerialization(bool storage)
+		{
 			int ctrlVal = (new Random()).Next();
-			var objSer=new MsgPackSerializationHelper<TestClass>();
+			var objSer=new MsgPackSerializationHelper<TestClass>(storage);
 			var testWrong = new TestClassWrong(ctrlVal,ctrlVal+1,ctrlVal+3);
 			SerializationHelpersTests.WrongTypeSerialize(typeof(MsgPackSerializationException),testWrong,objSer);
 		}
