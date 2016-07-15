@@ -23,9 +23,8 @@
 // SOFTWARE.
 //
 
-// A 32-bit MurMurHash v3 hash-function algorithm implementation, from my old projects.
-// I do not remember exactly what examples\docs I've used as base while creating this code.
-// So, if you think that I should mention you or place here a link to your code\site - contact me.
+// A 32-bit MurMurHash v3 hash-function algorithm implementation.
+// Based on this doc: https://en.wikipedia.org/wiki/MurmurHash
 
 using System;
 
@@ -33,56 +32,60 @@ namespace DarkCaster.Hash
 {
 	/// <summary>
 	/// A 32-bit MurMurHash v3 hash function
+	/// Use static GetHash method (seed param must be passed),
+	/// or create MMHash32 object with some seed, and use GetHash method (without seed param).
 	/// </summary>
 	public class MMHash32
 	{
-		private const uint c1 = 0xcc9e2d51;
-		private const uint c2 = 0x1b873593;
-			
 		public static uint GetHash( byte[] data, uint seed )
 		{
-			uint k1=0U; //Currently processed data chunk
-			uint h1=seed; //Temporary hash value
-			uint pos=0u; //Currently processed data pos
+			uint k=0U; //key
+			uint hash=seed; //seed
+			uint pos=0u; //len
 			
 			int fullChunks=data.Length / 4;
 			for(int i=0;i<fullChunks;++i)
 			{
-				k1 = (uint)( data[pos] | data[pos+1] << 8 | data[pos+2] << 16 | data[pos+3] << 24 );
-				
-				k1 *= c1;
-				k1 = ( k1 << 15 ) | ( k1 >> 17/*(32 - 15)*/); //RotL32(k1, 15);
-				k1 *= c2;
-				h1 ^= k1;
-				
-				h1 = ( h1 << 13 ) | ( h1 >> 19/*(32 - 13)*/); //RotL32(h1, 13);
-				h1 = h1 * 5 + 0xe6546b64;
+				unchecked
+				{
+					k = (uint)( data[pos] | data[pos+1] << 8 | data[pos+2] << 16 | data[pos+3] << 24 );
+					k *= 0xcc9e2d51;
+					k = ( k << 15 ) | ( k >> 17 ); // k <- (k ROL r1)
+					k *= 0x1b873593;
+					hash ^= k;
+					hash = ( hash << 13 ) | ( hash >> 19 ); // hash <- (hash ROL r2)
+					hash = hash * 5 + 0xe6546b64;
+				}
 				pos += 4U;
 			}
 			
 			int remainder=data.Length % 4;
 			if(remainder>0)
 			{
-				k1=0U;
+				k=0U;
 				for(int i=0;i<remainder;++i)
-					k1 |= (uint)(data[pos+i]<<(i*8));
-				
-				k1 *= c1;
-				k1 = ( k1 << 15 ) | ( k1 >> 17/*(32 - 15)*/); //RotL32(k1, 15);
-				k1 *= c2;
-				h1 ^= k1;
-				
+					k |= (uint)(data[pos+i]<<(i*8));
+				unchecked
+				{
+					k *= 0xcc9e2d51;
+					k = ( k << 15 ) | ( k >> 17 ); // remainingBytes <- (remainingBytes ROL r1)
+					k *= 0x1b873593;
+					hash ^= k;
+				}
 				pos+=(uint)remainder;
 			}
 			
 			//Finalize hash
-			h1 ^= pos;
-			h1 ^= h1 >> 16;
-			h1 *= 0x85ebca6b;
-			h1 ^= h1 >> 13;
-			h1 *= 0xc2b2ae35;
-			h1 ^= h1 >> 16;
-			return h1;
+			unchecked
+			{
+				hash ^= pos;
+				hash ^= hash >> 16;
+				hash *= 0x85ebca6b;
+				hash ^= hash >> 13;
+				hash *= 0xc2b2ae35;
+				hash ^= hash >> 16;
+			}
+			return hash;
 		}
 		
 		private readonly uint seed;
