@@ -36,98 +36,53 @@ namespace DarkCaster.Hash
 	/// </summary>
 	public class MMHash32
 	{
-		private struct BitMagic
+		private const uint c1 = 0xcc9e2d51;
+		private const uint c2 = 0x1b873593;
+			
+		public static uint GetHash( byte[] data, uint seed )
 		{
-			private const uint c1 = 0xcc9e2d51;
-			private const uint c2 = 0x1b873593;
-
-			private uint k1; //Currently processed data chunk
-			private uint h1; //Temporary hash value
-			private uint len; //Currently processed data len
-
-			//Hash function must be initialized with seed.
-			//Different seed = different results
-			public static BitMagic Create( uint seed )
+			uint k1=0U; //Currently processed data chunk
+			uint h1=seed; //Temporary hash value
+			uint pos=0u; //Currently processed data pos
+			
+			int fullChunks=data.Length / 4;
+			for(int i=0;i<fullChunks;++i)
 			{
-				BitMagic result;
-				result.h1 = seed;
-				result.k1 = 0u;
-				result.len = 0u;
-				return result;
-			}
-
-			private void DoMagic()
-			{
+				k1 = (uint)( data[pos] | data[pos+1] << 8 | data[pos+2] << 16 | data[pos+3] << 24 );
+				
 				k1 *= c1;
 				k1 = ( k1 << 15 ) | ( k1 >> 17/*(32 - 15)*/); //RotL32(k1, 15);
 				k1 *= c2;
 				h1 ^= k1;
-			}
-
-			//Process data as 4-byte chunks
-			public void ProceedChunk( byte[] chunk )
-			{
-				k1 = (uint)( chunk[0] | chunk[1] << 8 | chunk[2] << 16 | chunk[3] << 24 );
-				DoMagic();
+				
 				h1 = ( h1 << 13 ) | ( h1 >> 19/*(32 - 13)*/); //RotL32(h1, 13);
 				h1 = h1 * 5 + 0xe6546b64;
-				len += 4;
+				pos += 4U;
 			}
-
-			//Process last piece of data, and get output hash
-			public uint ProceedLastChunk( byte[] chunk, uint chunkLen )
+			
+			int remainder=data.Length % 4;
+			if(remainder>0)
 			{
-				if( chunkLen == 4 )
-					ProceedChunk(chunk);
-				else
-				{
-					len += chunkLen;
-					if( chunkLen == 3 )
-						k1 = (uint)( chunk[0] | chunk[1] << 8 | chunk[2] << 16 );
-					else if( chunkLen == 2 )
-						k1 = (uint)( chunk[0] | chunk[1] << 8 );
-					else if( chunkLen == 1 )
-						k1 = (uint)( chunk[0] );
-					if( chunkLen > 0 )
-						DoMagic();
-				}
-				//Finalize hash
-				h1 ^= len;
-				h1 ^= h1 >> 16;
-				h1 *= 0x85ebca6b;
-				h1 ^= h1 >> 13;
-				h1 *= 0xc2b2ae35;
-				h1 ^= h1 >> 16;
-				return h1;
+				k1=0U;
+				for(int i=0;i<remainder;++i)
+					k1 |= (uint)(data[pos+i]<<(i*8));
+				
+				k1 *= c1;
+				k1 = ( k1 << 15 ) | ( k1 >> 17/*(32 - 15)*/); //RotL32(k1, 15);
+				k1 *= c2;
+				h1 ^= k1;
+				
+				pos+=(uint)remainder;
 			}
-		}
-		
-		private static uint FillChunk( byte[] source, uint sourcePos, byte[] chunk )
-		{
-			uint chunkLen=0U;
-			while( chunkLen < 4U && sourcePos < source.Length )
-			{
-				chunk[chunkLen] = source[sourcePos];
-				++chunkLen;
-				++sourcePos;
-			}
-			return chunkLen;
-		}
-
-		public static uint GetHash( byte[] stream, uint seed )
-		{
-			BitMagic magic=BitMagic.Create(seed);
-			byte[] chunk=new byte[4];
-			uint streamPos = 0U;
-			uint chunkLen = FillChunk(stream, streamPos, chunk);
-			streamPos += chunkLen;
-			while( streamPos < stream.Length )
-			{
-				magic.ProceedChunk(chunk);
-				chunkLen = FillChunk(stream, streamPos, chunk);
-				streamPos += chunkLen;
-			}
-			return magic.ProceedLastChunk(chunk, chunkLen);
+			
+			//Finalize hash
+			h1 ^= pos;
+			h1 ^= h1 >> 16;
+			h1 *= 0x85ebca6b;
+			h1 ^= h1 >> 13;
+			h1 *= 0xc2b2ae35;
+			h1 ^= h1 >> 16;
+			return h1;
 		}
 		
 		private readonly uint seed;
