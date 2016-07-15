@@ -37,18 +37,20 @@ namespace DarkCaster.Hash
 	/// </summary>
 	public class MMHash32
 	{
-		public static uint GetHash( byte[] data, uint seed )
+		public static uint GetHash( uint seed, byte[] data, int offset=0, int len=0 )
 		{
+			if( offset < 0 )
+				throw new ArgumentException("Offset cannot be < 0", "offset");
+			if( len <= 0 )
+				len = data.Length - offset;
 			uint k=0U; //key
-			uint hash=seed; //seed
-			uint pos=0u; //len
-			
-			int fullChunks=data.Length / 4;
+			uint hash=seed; //seed			
+			int fullChunks = len / 4;
 			for(int i=0;i<fullChunks;++i)
 			{
 				unchecked
 				{
-					k = (uint)( data[pos] | data[pos+1] << 8 | data[pos+2] << 16 | data[pos+3] << 24 );
+					k = (uint)( data[offset] | data[offset+1] << 8 | data[offset+2] << 16 | data[offset+3] << 24 );
 					k *= 0xcc9e2d51;
 					k = ( k << 15 ) | ( k >> 17 ); // k <- (k ROL r1)
 					k *= 0x1b873593;
@@ -56,15 +58,15 @@ namespace DarkCaster.Hash
 					hash = ( hash << 13 ) | ( hash >> 19 ); // hash <- (hash ROL r2)
 					hash = hash * 5 + 0xe6546b64;
 				}
-				pos += 4U;
+				offset += 4;
 			}
 			
-			int remainder=data.Length % 4;
+			int remainder=len % 4;
 			if(remainder>0)
 			{
 				k=0U;
 				for(int i=0;i<remainder;++i)
-					k |= (uint)(data[pos+i]<<(i*8));
+					k |= (uint)(data[offset+i]<<(i*8));
 				unchecked
 				{
 					k *= 0xcc9e2d51;
@@ -72,13 +74,12 @@ namespace DarkCaster.Hash
 					k *= 0x1b873593;
 					hash ^= k;
 				}
-				pos+=(uint)remainder;
 			}
 			
 			//Finalize hash
 			unchecked
 			{
-				hash ^= pos;
+				hash ^= (uint)len;
 				hash ^= hash >> 16;
 				hash *= 0x85ebca6b;
 				hash ^= hash >> 13;
@@ -95,14 +96,14 @@ namespace DarkCaster.Hash
 			seed=0U;
 		}
 		
-		public MMHash32(uint seed)
+		public MMHash32( uint seed )
 		{
 			this.seed=seed;
 		}
 		
-		public uint GetHash( byte[] stream )
+		public uint GetHash( byte[] stream, int offset=0, int len=0 )
 		{
-			return GetHash(stream, seed);
+			return GetHash(seed, stream, offset, len);
 		}
 	}
 }
