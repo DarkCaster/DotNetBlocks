@@ -33,11 +33,13 @@ namespace Tests
 		[Test]
 		public void CorrectSerialization()
 		{
-			_CorrectSerialization(false);
-			_CorrectSerialization(true);
+			_CorrectSerialization(MsgPackMode.Storage);
+			_CorrectSerialization(MsgPackMode.StorageCheckSum);
+			_CorrectSerialization(MsgPackMode.Transfer);
+			_CorrectSerialization(MsgPackMode.TransferCheckSum);
 		}
 		
-		private void _CorrectSerialization(bool storage)
+		private void _CorrectSerialization(MsgPackMode storage)
 		{
 			int ctrlVal = (new Random()).Next();
 			var test = new TestClass(ctrlVal);
@@ -57,11 +59,11 @@ namespace Tests
 		[Test]
 		public void BadDataDeserialization()
 		{
-			_BadDataDeserialization(false);
-			_BadDataDeserialization(true);
+			_BadDataDeserialization(MsgPackMode.StorageCheckSum);
+			_BadDataDeserialization(MsgPackMode.TransferCheckSum);
 		}
 		
-		private void _BadDataDeserialization(bool storage)
+		private void _BadDataDeserialization(MsgPackMode storage)
 		{
 			var ser=new MsgPackSerializationHelper<TestClass>(storage);
 			SerializationHelpersTests.BadDataDeserialize<TestClass,MsgPackSerializationHelper<TestClass>,MsgPackSerializationHelper<TestClass>>
@@ -71,11 +73,13 @@ namespace Tests
 		[Test]
 		public void BadStringDeserialization()
 		{
-			_BadStringDeserialization(false);
-			_BadStringDeserialization(true);
+			_BadStringDeserialization(MsgPackMode.Storage);
+			_BadStringDeserialization(MsgPackMode.StorageCheckSum);
+			_BadStringDeserialization(MsgPackMode.Transfer);
+			_BadStringDeserialization(MsgPackMode.TransferCheckSum);
 		}
 		
-		private void _BadStringDeserialization(bool storage)
+		private void _BadStringDeserialization(MsgPackMode storage)
 		{
 			var ser=new MsgPackSerializationHelper<TestClass>(storage);
 			SerializationHelpersTests.BadStringDeserialize<TestClass,MsgPackSerializationHelper<TestClass>,MsgPackSerializationHelper<TestClass>>
@@ -85,11 +89,13 @@ namespace Tests
 		[Test]
 		public void IncorrectSerialization()
 		{
-			_IncorrectSerialization(false);
-			_IncorrectSerialization(true);
+			_IncorrectSerialization(MsgPackMode.Storage);
+			_IncorrectSerialization(MsgPackMode.StorageCheckSum);
+			_IncorrectSerialization(MsgPackMode.Transfer);
+			_IncorrectSerialization(MsgPackMode.TransferCheckSum);
 		}
 		
-		private void _IncorrectSerialization(bool storage)
+		private void _IncorrectSerialization(MsgPackMode storage)
 		{
 			int ctrlVal = (new Random()).Next();
 			var objSer=new MsgPackSerializationHelper<TestClass>(storage);

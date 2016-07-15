@@ -28,9 +28,46 @@ using System.IO;
 using MsgPack;
 using MsgPack.Serialization;
 using DarkCaster.Converters;
+using DarkCaster.Hash;
 
 namespace DarkCaster.Serialization
 {
+	/// <summary>
+	/// Mode of operation for MsgPackSerializationHelper.
+	/// MsgPack-Cli could not ensure integrity of data and does not throw error when trying to deserialize broken data,
+	/// sometimes producing incorrectly deserialized object instead.
+	/// So, there are 2 modes that use additional checksum protection,
+	/// to deny deserialization of damaged data and throw MsgPackDeserializationException in such cases.
+	/// </summary>
+	public enum MsgPackMode
+	{
+		/// <summary>
+		/// Optimize for on-disk storage.
+		/// Maximize compatibility with past and future MsgPack-Cli library versions, and possible serialized class changes.
+		/// Produced data can be deserialized manually without use of MsgPackSerializationHelper.
+		/// </summary>
+		Storage=0,
+		/// <summary>
+		/// Optimize for on-disk storage. Also add checksum protection to ensure data integrity.
+		/// Maximize compatibility with past and future MsgPack-Cli library versions, and possible serialized class changes.
+		/// Produced data must be deserialized with MsgPackSerializationHelper.
+		/// </summary>
+		StorageCheckSum,
+		/// <summary>
+		/// Optimize for network data transfer. Maximize serialization performance, and minimize data size.
+		/// Compatibility over different versions of MsgPack-Cli library is not guaranteed.
+		/// Produced data can be deserialized manually without use of MsgPackSerializationHelper.
+		/// </summary>
+		Transfer,
+		/// <summary>
+		/// Optimize for network data transfer. Maximize serialization performance, and minimize data size.
+		/// Also add checksum protection to ensure data integrity.
+		/// Compatibility over different versions of MsgPack-Cli library is not guaranteed.
+		/// Produced data must be deserialized with MsgPackSerializationHelper.
+		/// </summary>
+		TransferCheckSum
+	}
+	
 	/// <summary>
 	/// Simple serialization helper class, that performs serializaion to/from MsgPack format.
 	/// Using Base85 converter to deal with serialization to/from string.
@@ -38,16 +75,17 @@ namespace DarkCaster.Serialization
 	public sealed class MsgPackSerializationHelper<T> : ISerializationHelper, ISerializationHelper<T>
 	{
 		private readonly SerializationContext context;
+		private readonly bool useCheckSum;
 		
 		private MsgPackSerializationHelper() {}
 		
-		public MsgPackSerializationHelper(bool useForStorage)
+		public MsgPackSerializationHelper(MsgPackMode mode = MsgPackMode.Storage)
 		{
 			context=new SerializationContext();
-			if(useForStorage)
+			if( mode==MsgPackMode.Storage || mode==MsgPackMode.StorageCheckSum )
 			{
-				context.SerializationMethod=SerializationMethod.Map;
-				context.EnumSerializationMethod=EnumSerializationMethod.ByName;
+				context.SerializationMethod = SerializationMethod.Map;
+				context.EnumSerializationMethod = EnumSerializationMethod.ByName;
 			}
 			else
 			{
@@ -55,6 +93,10 @@ namespace DarkCaster.Serialization
 				context.EnumSerializationMethod = EnumSerializationMethod.ByUnderlyingValue;
 			}
 			context.CompatibilityOptions.PackerCompatibilityOptions=PackerCompatibilityOptions.None;
+			if( mode==MsgPackMode.StorageCheckSum || mode==MsgPackMode.TransferCheckSum )
+				useCheckSum=true;
+			else
+				useCheckSum=false;
 		}
 		
 		public byte[] SerializeObj(object target)
@@ -83,6 +125,14 @@ namespace DarkCaster.Serialization
 				{
 					var serializer = MessagePackSerializer.Get<T>(context);
 					serializer.Pack(stream, target);
+					if(useCheckSum)
+					{
+						var hash=MMHash32.GetHash(42,stream.ToArray());
+						stream.WriteByte((byte)( hash & 0xff ));
+						stream.WriteByte((byte)( hash >> 8 & 0xff));
+						stream.WriteByte((byte)( hash >> 16 & 0xff));
+						stream.WriteByte((byte)( hash >> 24 ));
+					}
 					return stream.ToArray();
 				}
 			}
@@ -98,7 +148,18 @@ namespace DarkCaster.Serialization
 			{
 				if( data==null || data.Length==0 )
 					throw new ArgumentException("Could not deserialize object from empty data", "data");
-				using(var stream = new MemoryStream(data))
+				var len = data.Length;
+				if(useCheckSum)
+				{
+					if(data.Length<5)
+						throw new ArgumentException("Data array is too small", "data");
+					len -= 4;
+					var check = unchecked((uint)( data[len] | data[len + 1] << 8 | data[len + 2] << 16 | data[len + 3] << 24 ));
+					var hash = MMHash32.GetHash(42, data, 0, len);
+					if(check!=hash)
+						throw new Exception("Checksum do not match, cannot deserialize broken data!");
+				}
+				using(var stream = new MemoryStream(data,0,len))
 				{
 					var serializer = MessagePackSerializer.Get<T>(context);
 					var result=serializer.Unpack(stream);
