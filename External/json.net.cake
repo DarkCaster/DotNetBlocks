@@ -34,9 +34,13 @@ Task("Build").IsDependentOn("Patch").Does(() =>
 
 Task("Pack").IsDependentOn("Build").Does(() =>
 {
+ CreateDirectory("output");
+ CreateDirectory("output/net45");
+ CopyFiles("json.net/Src/Newtonsoft.Json/bin/Release/Net45/*","output/net45");
+ 
  var nuGetPackSettings   = new NuGetPackSettings
  {
-  BasePath = "json.net/Src/Newtonsoft.Json/bin/Release",
+  BasePath = "output",
  };
  NuGetPack("json.net/Build/Newtonsoft.Json.nuspec", nuGetPackSettings);
 });
