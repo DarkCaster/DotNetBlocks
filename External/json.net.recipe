@@ -1,0 +1,3 @@
+sources="json.net"
+targets="xxx.nupkg"
+files="json.net.custom.signkey.patch json.net.custom.signkey.snk"
