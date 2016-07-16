@@ -7,3 +7,6 @@
 [submodule "External/nunit"]
 	path = External/nunit
 	url = https://github.com/nunit/nunit.git
+[submodule "External/json.net"]
+	path = External/json.net
+	url = https://github.com/JamesNK/Newtonsoft.Json.git
