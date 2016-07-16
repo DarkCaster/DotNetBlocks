@@ -10,6 +10,14 @@ Task("Patch").Does(() =>
  };
  
  StartProcess("patch",settings);
+ 
+ settings=new ProcessSettings()
+ {
+  WorkingDirectory = new DirectoryPath("json.net"),
+  Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../json.net.nuspec.patch"),
+ };
+ 
+ StartProcess("patch",settings);
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>
@@ -28,10 +36,10 @@ Task("Pack").IsDependentOn("Build").Does(() =>
 {
  var nuGetPackSettings   = new NuGetPackSettings
  {
-  BasePath = "json.net/bin",
+  BasePath = "json.net/Src/Newtonsoft.Json/bin/Release",
  };
- NuGetPack("json.net/json.net.nuspec", nuGetPackSettings);
+ NuGetPack("json.net/Build/Newtonsoft.Json.nuspec", nuGetPackSettings);
 });
 
-Task("Default").IsDependentOn("Build");
+Task("Default").IsDependentOn("Pack");
 RunTarget(target);
