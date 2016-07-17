@@ -74,14 +74,14 @@ namespace DarkCaster.Serialization
 	/// </summary>
 	public sealed class MsgPackSerializationHelper<T> : ISerializationHelper, ISerializationHelper<T>
 	{
-		private readonly SerializationContext context;
+		private readonly MessagePackSerializer<T> serializer;
 		private readonly bool useCheckSum;
 		
 		private MsgPackSerializationHelper() {}
 		
 		public MsgPackSerializationHelper(MsgPackMode mode = MsgPackMode.Storage)
 		{
-			context=new SerializationContext();
+			var context=new SerializationContext();
 			if( mode==MsgPackMode.Storage || mode==MsgPackMode.StorageCheckSum )
 			{
 				context.SerializationMethod = SerializationMethod.Map;
@@ -97,6 +97,7 @@ namespace DarkCaster.Serialization
 				useCheckSum=true;
 			else
 				useCheckSum=false;
+			serializer = MessagePackSerializer.Get<T>(context);
 		}
 		
 		public byte[] SerializeObj(object target)
@@ -123,7 +124,6 @@ namespace DarkCaster.Serialization
 					throw new ArgumentException("Object to serialize is NULL");
 				using(var stream = new MemoryStream())
 				{
-					var serializer = MessagePackSerializer.Get<T>(context);
 					serializer.Pack(stream, target);
 					if(useCheckSum)
 					{
@@ -161,7 +161,6 @@ namespace DarkCaster.Serialization
 				}
 				using(var stream = new MemoryStream(data,0,len))
 				{
-					var serializer = MessagePackSerializer.Get<T>(context);
 					var result=serializer.Unpack(stream);
 					if(!typeof(T).IsValueType && result==null)
 						throw new Exception("Deserialized object is null!");
