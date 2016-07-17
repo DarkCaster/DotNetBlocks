@@ -43,6 +43,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\Json\JsonDeserializationException.cs" />
+    <Compile Include="Serialization\Json\JsonSerializationException.cs" />
+    <Compile Include="Serialization\Json\JsonSerializationHelper.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackDeserializationException.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationException.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationHelper.cs" />
@@ -58,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Serialization" />
+    <Folder Include="Serialization\Json" />
     <Folder Include="Serialization\MsgPack" />
   </ItemGroup>
   <ItemGroup>
