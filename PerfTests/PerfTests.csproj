@@ -44,6 +44,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinarySerHelperSpeedTest.cs" />
     <Compile Include="JsonSerHelperSpeedTest.cs" />
     <Compile Include="MMHashSpeedTest.cs" />
     <Compile Include="MsgPackSerHelperSpeedTest.cs" />
