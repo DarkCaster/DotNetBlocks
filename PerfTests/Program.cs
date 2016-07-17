@@ -40,6 +40,10 @@ namespace PerfTests
 			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPackMode.Transfer);
 			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPackMode.TransferCheckSum);
 			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPackMode.TransferCheckSum);
+			JsonSerHelperSpeedTest.TestSerialize();
+			JsonSerHelperSpeedTest.TestDeserialize();
+			JsonSerHelperSpeedTest.TestSerializeText();
+			JsonSerHelperSpeedTest.TestDeserializeText();
 			Console.Write("Press any key to continue . . . ");
 			Console.ReadKey(true);
 		}
