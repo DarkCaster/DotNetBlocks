@@ -7,7 +7,9 @@ Task("Patch").Does(() =>
   WorkingDirectory = new DirectoryPath("nunit"),
   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec.patch"),
  };
- StartProcess("patch",settings);
+ var result=StartProcess("patch",settings);
+ if(result!=0)
+  throw new Exception("patch ended with error!");
 
  if(IsRunningOnWindows())
  {
@@ -16,7 +18,9 @@ Task("Patch").Does(() =>
    WorkingDirectory = new DirectoryPath("nunit"),
    Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../nunit-nuspec-net45only.patch"),
   };
-  StartProcess("patch",settings);
+  var result2=StartProcess("patch",settings);
+  if(result2!=0)
+   throw new Exception("patch ended with error!");
  }
 });
 

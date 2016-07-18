@@ -9,7 +9,9 @@ Task("Patch").Does(() =>
   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../json.net.custom.signkey.patch"),
  };
  
- StartProcess("patch",settings);
+ var result=StartProcess("patch",settings);
+ if(result!=0)
+  throw new Exception("patch ended with error!");
  
  settings=new ProcessSettings()
  {
@@ -17,7 +19,9 @@ Task("Patch").Does(() =>
   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../json.net.nuspec.patch"),
  };
  
- StartProcess("patch",settings);
+ result=StartProcess("patch",settings);
+ if(result!=0)
+  throw new Exception("patch ended with error!");
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>

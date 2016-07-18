@@ -11,10 +11,9 @@ Task("Patch").Does(() =>
   Arguments = new ProcessArgumentBuilder().Append("-p1").Append("-i").Append("../msgpack-nuspec.patch"),
  };
 
- if(IsRunningOnWindows())
- { StartProcess("patch.exe",settings); }
- else
- { StartProcess("patch",settings); }
+ var result=StartProcess("patch",settings);
+ if(result!=0)
+  throw new Exception("patch ended with error!");
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>
