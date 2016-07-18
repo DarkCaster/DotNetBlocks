@@ -25,8 +25,11 @@ namespace PerfTests
 				w=6.0;
 			}
 		}
-		
+
+		#pragma warning disable 414
 		private static volatile TestClass tmp;
+		#pragma warning restore 414
+
 		private static volatile byte[] tmpBytes;
 		private static volatile string tmpString;
 		

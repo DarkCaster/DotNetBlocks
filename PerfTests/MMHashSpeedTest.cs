@@ -6,8 +6,10 @@ namespace PerfTests
 {
 	public static class MMHashSpeedTest
 	{
+		#pragma warning disable 414
 		private static volatile uint hash;
-		
+		#pragma warning restore 414
+
 		public static void Test()
 		{
 			const int iter=2000;
