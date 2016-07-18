@@ -20,6 +20,17 @@ namespace Tests
 			var data = serializer.SerializeToString(source);
 			return serializer.Deserialize(data);
 		}
+
+		public static TC GenericInterfaceBinaryRange<TC, SER>(TC source, SER serializer)
+			where SER : ISerializationHelper<TC>
+		{
+			var random = new Random();
+			var data = new byte[8192];
+			var offset = random.Next(0, 4096);
+			random.NextBytes(data);
+			var len = serializer.Serialize(source, data, offset);
+			return serializer.Deserialize(data, offset, len);
+		}
 		
 		public static object InterfaceBinary<SER>(object source,SER serializer)
 			where SER : ISerializationHelper
@@ -33,6 +44,17 @@ namespace Tests
 		{
 			var data = serializer.SerializeObjToString(source);
 			return serializer.DeserializeObj(data);
+		}
+
+		public static object InterfaceBinaryRange<SER>(object source, SER serializer)
+			where SER : ISerializationHelper
+		{
+			var random = new Random();
+			var data = new byte[8192];
+			var offset = random.Next(0, 4096);
+			random.NextBytes(data);
+			var len = serializer.SerializeObj(source, data, offset);
+			return serializer.DeserializeObj(data, offset, len);
 		}
 		
 		public static void SerializersCompare<TC,SER1,SER2>(TC source, SER1 genSer, SER2 objSer)

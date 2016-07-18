@@ -54,6 +54,10 @@ namespace Tests
 			Assert.AreEqual(test.V,((TestClass)check3).V);
 			var check4=SerializationHelpersTests.InterfaceText(test,ser);
 			Assert.AreEqual(test.V,((TestClass)check4).V);
+			var check5 = SerializationHelpersTests.GenericInterfaceBinaryRange(test, ser);
+			Assert.AreEqual(test.V, check5.V);
+			var check6 = SerializationHelpersTests.InterfaceBinaryRange(test, ser);
+			Assert.AreEqual(test.V, ((TestClass)check6).V);
 		}
 		
 		[Test]
