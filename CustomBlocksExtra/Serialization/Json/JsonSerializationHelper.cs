@@ -54,13 +54,24 @@ namespace DarkCaster.Serialization
 			}
 		}
 
+		public int SerializeObj(object target, byte[] dest, int offset = 0)
+		{
+			throw new NotImplementedException("TODO");
+		}
+
 		public byte[] Serialize(T target)
 		{
 			return SerializeObj(target);
 		}
 
-		public T Deserialize(byte[] data)
+		public int Serialize(T target, byte[] dest, int offset = 0)
 		{
+			return SerializeObj(target, dest, offset);
+		}
+
+		public T Deserialize(byte[] data, int offset = 0, int len = 0)
+		{
+			throw new NotImplementedException("TODO");
 			try
 			{
 				using(var stream = new MemoryStream(data))
@@ -76,9 +87,9 @@ namespace DarkCaster.Serialization
 			}
 		}
 
-		public object DeserializeObj(byte[] data)
+		public object DeserializeObj(byte[] data, int offset = 0, int len = 0)
 		{
-			return Deserialize(data);
+			return Deserialize(data, offset, len);
 		}
 
 		public string SerializeToString(T target)

@@ -111,9 +111,25 @@ namespace DarkCaster.Serialization
 			return Serialize((T)target);
 		}
 
-		public object DeserializeObj(byte[] data)
+		public int SerializeObj(object target, byte[] dest, int offset = 0)
 		{
-			return Deserialize(data);
+			if(target == null)
+				throw new MsgPackSerializationException(typeof(T),
+					new ArgumentException("Object to serialize is NULL", "target"));
+			if(!(target is T))
+				throw new MsgPackSerializationException(typeof(T),
+					new ArgumentException("Cannot serialize object with wrong type", "target"));
+			return Serialize((T)target, dest, offset);
+		}
+
+		public object DeserializeObj(byte[] data, int offset = 0, int len = 0)
+		{
+			return Deserialize(data, offset, len);
+		}
+
+		public int Serialize(T target, byte[] dest, int offset = 0)
+		{
+			throw new NotImplementedException("TODO");
 		}
 
 		public byte[] Serialize(T target)
@@ -142,13 +158,15 @@ namespace DarkCaster.Serialization
 			}
 		}
 
-		public T Deserialize(byte[] data)
+		public T Deserialize(byte[] data, int offset = 0, int len = 0)
 		{
+			throw new NotImplementedException("TODO");
 			try
 			{
 				if( data==null || data.Length==0 )
 					throw new ArgumentException("Could not deserialize object from empty data", "data");
-				var len = data.Length;
+				//TODO: len var conflict
+				len = data.Length;
 				if(useCheckSum)
 				{
 					if(data.Length<5)
