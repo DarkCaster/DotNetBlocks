@@ -37,6 +37,13 @@ namespace DarkCaster.Serialization.Private
 	/// </summary>
 	public sealed class ByteWriterStream : Stream
 	{
+		public int AffectedRange { get { throw new NotSupportedException("AffectedRange: SORRY, BUT NO!"); } }
+
+		public ByteWriterStream(byte[] source, int offset = 0)
+		{
+			//TODO:
+		}
+
 		public override bool CanRead { get { throw new NotSupportedException("CanRead: SORRY, BUT NO!"); } }
 		public override bool CanSeek { get { throw new NotSupportedException("CanSeek: SORRY, BUT NO!"); } }
 		public override bool CanTimeout { get { throw new NotSupportedException("CanTimeout: SORRY, BUT NO!"); } }
