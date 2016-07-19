@@ -27,6 +27,7 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using DarkCaster.Converters;
+using DarkCaster.Serialization.Private;
 
 namespace DarkCaster.Serialization
 {
@@ -56,7 +57,21 @@ namespace DarkCaster.Serialization
 
 		public int SerializeObj(object target, byte[] dest, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			try
+			{
+				if(!(target is T))
+					throw new ArgumentException("Cannot serialize object with wrong type", "target");
+				using(var stream = new ByteWriterStream(dest, offset))
+				{
+					var formatter = new BinaryFormatter();
+					formatter.Serialize(stream, (T)target);
+					return stream.AffectedRange;
+				}
+			}
+			catch(Exception ex)
+			{
+				throw new BinarySerializationException(typeof(T), ex);
+			}
 		}
 
 		public byte[] Serialize(T target)
@@ -76,10 +91,9 @@ namespace DarkCaster.Serialization
 
 		public object DeserializeObj(byte[] data, int offset = 0, int len = 0)
 		{
-			throw new NotImplementedException("TODO");
 			try
 			{
-				using(var stream = new MemoryStream(data))
+				using(var stream = new ByteReaderStream(data, offset, len))
 				{
 					var formatter = new BinaryFormatter();
 					var result = formatter.Deserialize(stream);

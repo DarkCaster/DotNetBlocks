@@ -29,6 +29,7 @@ using MsgPack;
 using MsgPack.Serialization;
 using DarkCaster.Converters;
 using DarkCaster.Hash;
+using DarkCaster.Serialization.Private;
 
 namespace DarkCaster.Serialization
 {
@@ -129,7 +130,31 @@ namespace DarkCaster.Serialization
 
 		public int Serialize(T target, byte[] dest, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			try
+			{
+				if(!typeof(T).IsValueType && target == null)
+					throw new ArgumentException("Object to serialize is NULL");
+				using(var stream = new ByteWriterStream(dest, offset))
+				{
+					serializer.Pack(stream, target);
+					//stream.Flush() //noop for current ByteWriterStream implementation
+					var len = stream.AffectedRange;
+					if(useCheckSum)
+					{
+						//current ByteWriterStream allow us to acces byte array directly
+						var hash = MMHash32.GetHash(42U, dest, offset, len);
+						stream.WriteByte((byte)(hash & 0xff));
+						stream.WriteByte((byte)(hash >> 8 & 0xff));
+						stream.WriteByte((byte)(hash >> 16 & 0xff));
+						stream.WriteByte((byte)(hash >> 24));
+					}
+					return stream.AffectedRange;
+				}
+			}
+			catch(Exception ex)
+			{
+				throw new MsgPackSerializationException(typeof(T), ex);
+			}
 		}
 
 		public byte[] Serialize(T target)
@@ -160,24 +185,23 @@ namespace DarkCaster.Serialization
 
 		public T Deserialize(byte[] data, int offset = 0, int len = 0)
 		{
-			throw new NotImplementedException("TODO");
 			try
 			{
 				if( data==null || data.Length==0 )
 					throw new ArgumentException("Could not deserialize object from empty data", "data");
-				//TODO: len var conflict
-				len = data.Length;
+				if(len <= 0)
+					len = data.Length - offset;
 				if(useCheckSum)
 				{
-					if(data.Length<5)
-						throw new ArgumentException("Data array is too small", "data");
+					if(len < 5)
+						throw new ArgumentException("Array length is too small", "data");
 					len -= 4;
-					var check = unchecked((uint)( data[len] | data[len + 1] << 8 | data[len + 2] << 16 | data[len + 3] << 24 ));
-					var hash = MMHash32.GetHash(42, data, 0, len);
+					var check = unchecked((uint)(data[offset + len] | data[offset + len + 1] << 8 | data[offset + len + 2] << 16 | data[offset + len + 3] << 24 ));
+					var hash = MMHash32.GetHash(42, data, offset, len);
 					if(check!=hash)
 						throw new Exception("Checksum do not match, cannot deserialize broken data!");
 				}
-				using(var stream = new MemoryStream(data,0,len))
+				using(var stream = new ByteReaderStream(data, offset, len))
 				{
 					var result=serializer.Unpack(stream);
 					if(!typeof(T).IsValueType && result==null)
