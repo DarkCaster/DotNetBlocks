@@ -138,7 +138,7 @@ namespace DarkCaster.Serialization
 				{
 					serializer.Pack(stream, target);
 					//stream.Flush() //noop for current ByteWriterStream implementation
-					var len = stream.AffectedRange;
+					var len = (int)stream.Length;
 					if(useCheckSum)
 					{
 						//current ByteWriterStream allow us to acces byte array directly
@@ -148,7 +148,7 @@ namespace DarkCaster.Serialization
 						stream.WriteByte((byte)(hash >> 16 & 0xff));
 						stream.WriteByte((byte)(hash >> 24));
 					}
-					return stream.AffectedRange;
+					return (int)stream.Length;
 				}
 			}
 			catch(Exception ex)

@@ -68,7 +68,7 @@ namespace DarkCaster.Serialization
 						var serializer = new JsonSerializer();
 						serializer.Serialize(writer, target);
 					}
-					return stream.AffectedRange;
+					return (int)stream.Length;
 				}
 			}
 			catch(Exception ex)

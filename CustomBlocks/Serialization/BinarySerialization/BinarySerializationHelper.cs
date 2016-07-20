@@ -65,7 +65,7 @@ namespace DarkCaster.Serialization
 				{
 					var formatter = new BinaryFormatter();
 					formatter.Serialize(stream, (T)target);
-					return stream.AffectedRange;
+					return (int)stream.Length;
 				}
 			}
 			catch(Exception ex)
