@@ -45,8 +45,8 @@ namespace DarkCaster.Serialization
 					{
 						var serializer = new JsonSerializer();
 						serializer.Serialize(writer, target);
+						return stream.ToArray();
 					}
-					return stream.ToArray();
 				}
 			}
 			catch(Exception ex)
@@ -67,8 +67,8 @@ namespace DarkCaster.Serialization
 					{
 						var serializer = new JsonSerializer();
 						serializer.Serialize(writer, target);
+						return (int)stream.Length;
 					}
-					return (int)stream.Length;
 				}
 			}
 			catch(Exception ex)
