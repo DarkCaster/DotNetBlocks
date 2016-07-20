@@ -33,94 +33,147 @@ namespace DarkCaster.Serialization.Private
 	/// <summary>
 	/// Service class for use with serialization herlpers.
 	/// Used to overwrite data INSIDE already created byte array at specified offset.
-	/// Implements only minimal functional, needed for current serialization helpers to work. 
 	/// </summary>
 	public sealed class ByteWriterStream : Stream
 	{
-		public int AffectedRange { get { throw new NotSupportedException("AffectedRange: SORRY, BUT NO!"); } }
+		private readonly byte[] source;
+		private readonly int lowerBound;
+		private int upperBound;
+
+		private volatile bool isDisposed;
+		private int pos;
 
 		public ByteWriterStream(byte[] source, int offset = 0)
 		{
-			//TODO:
+			if(source == null)
+				throw new ArgumentException("source array cannot be null", "source");
+			this.source = source;
+			//some checks and calculations
+			if(offset < 0)
+				throw new ArgumentException("offset < 0", "offset");
+			lowerBound = upperBound = pos = offset;
+			isDisposed = false;
 		}
 
-		public override bool CanRead { get { throw new NotSupportedException("CanRead: SORRY, BUT NO!"); } }
-		public override bool CanSeek { get { throw new NotSupportedException("CanSeek: SORRY, BUT NO!"); } }
-		public override bool CanTimeout { get { throw new NotSupportedException("CanTimeout: SORRY, BUT NO!"); } }
-		public override bool CanWrite { get { throw new NotSupportedException("CanWrite: SORRY, BUT NO!"); } }
-		public override long Length { get { throw new NotSupportedException("Length: SORRY, BUT NO!"); } }
+		public override bool CanRead { get { return false; } }
+
+		public override bool CanSeek { get { return !isDisposed; } }
+
+		public override bool CanWrite { get { return !isDisposed; } }
+
+		public override long Length
+		{
+			get
+			{
+				if(isDisposed)
+					throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+				return upperBound - lowerBound;
+			}
+		}
 
 		public override long Position
 		{
-			get { throw new NotSupportedException("Position get: SORRY, BUT NO!"); }
-			set { throw new NotSupportedException("Position set: SORRY, BUT NO!"); }
-		}
-
-		public override int ReadTimeout
-		{
-			get { throw new NotSupportedException("ReadTimeout get: SORRY, BUT NO!"); }
-			set { throw new NotSupportedException("ReadTimeout set: SORRY, BUT NO!"); }
-		}
-
-		public override int WriteTimeout
-		{
-			get { throw new NotSupportedException("WriteTimeout get: SORRY, BUT NO!"); }
-			set { throw new NotSupportedException("WriteTimeout set: SORRY, BUT NO!"); }
+			get
+			{
+				if(isDisposed)
+					throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+				return pos - lowerBound;
+			}
+			set
+			{
+				if(isDisposed)
+					throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+				pos = unchecked((int)(value + lowerBound));
+			}
 		}
 
 		public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
-		{ throw new NotSupportedException("BeginRead: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("BeginRead"); }
 
 		public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
-		{ throw new NotSupportedException("BeginWrite: SORRY, BUT NO!"); }
-
-		public override void Close()
-		{ throw new NotSupportedException("Close: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("BeginWrite"); }
 
 		public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
-		{ throw new NotSupportedException("CopyToAsync: SORRY, BUT NO!"); }
-
-		[Obsolete("CreateWaitHandle will throw NotSupportedException")]
-		protected override WaitHandle CreateWaitHandle()
-		{ throw new NotSupportedException("CreateWaitHandle: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("CopyToAsync"); }
 
 		protected override void Dispose(bool disposing)
-		{ throw new NotSupportedException("Dispose: SORRY, BUT NO!"); }
+		{ isDisposed = true; }
 
 		public override int EndRead(IAsyncResult asyncResult)
-		{ throw new NotSupportedException("EndRead: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("EndRead"); }
 
 		public override void EndWrite(IAsyncResult asyncResult)
-		{ throw new NotSupportedException("EndWrite: SORRY, BUT NO!"); }
-
-		public override void Flush()
-		{ throw new NotSupportedException("Flush: SORRY, BUT NO!"); }
-
-		public override Task FlushAsync(CancellationToken cancellationToken)
-		{ throw new NotSupportedException("FlushAsync: SORRY, BUT NO!"); }
-
-		public override int Read(byte[] buffer, int offset, int count)
-		{ throw new NotSupportedException("Read: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("EndWrite"); }
 
 		public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-		{ throw new NotSupportedException("ReadAsync: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("ReadAsync"); }
+
+		public override int Read(byte[] buffer, int offset, int count)
+		{ throw new NotSupportedException("Read"); }
 
 		public override int ReadByte()
-		{ throw new NotSupportedException("ReadAsync: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("ReadByte"); }
 
 		public override long Seek(long offset, SeekOrigin origin)
-		{ throw new NotSupportedException("Seek: SORRY, BUT NO!"); }
+		{
+			if(isDisposed)
+				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+			switch(origin)
+			{
+			case SeekOrigin.Begin:
+				pos = unchecked((int)(lowerBound + offset));
+				break;
+			case SeekOrigin.Current:
+				pos += unchecked((int)offset);
+				break;
+			default:
+				pos = unchecked((int)(upperBound + offset));
+				break;
+			}
+			return Position;
+		}
+
+		public override void Flush() {/* NOOP */}
 
 		public override void SetLength(long value)
-		{ throw new NotSupportedException("SetLength: SORRY, BUT NO!"); }
-
-		public override void Write(byte[] buffer, int offset, int count)
-		{ throw new NotSupportedException("Write: SORRY, BUT NO!"); }
+		{
+			if(isDisposed)
+				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+			if(value < 0)
+				throw new IOException("requested length < 0");
+			upperBound = unchecked((int)(lowerBound + value));
+		}
 
 		public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-		{ throw new NotSupportedException("WriteAsync: SORRY, BUT NO!"); }
+		{ throw new NotSupportedException("WriteAsync"); }
+
+		public override void Write(byte[] buffer, int offset, int count)
+		{
+			if(isDisposed)
+				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+			if(offset < 0)
+				throw new ArgumentOutOfRangeException("offset", "offset < 0");
+			if(count < 0)
+				throw new ArgumentOutOfRangeException("count", "count < 0");
+			if(buffer == null)
+				throw new ArgumentNullException("buffer", "buffer is null");
+			if(offset + count > buffer.Length)
+				throw new ArgumentException("offset+count > buffer.Length");
+			if(count == 0)
+				return;
+			Buffer.BlockCopy(buffer, offset, source, pos, count);
+			pos += count;
+			if(pos > upperBound)
+				upperBound = pos;
+		}
 
 		public override void WriteByte(byte value)
-		{ throw new NotSupportedException("WriteByte: SORRY, BUT NO!"); }
+		{
+			if(isDisposed)
+				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+			source[pos++] = value;
+			if(pos > upperBound)
+				upperBound = pos;
+		}
 	}
 }
