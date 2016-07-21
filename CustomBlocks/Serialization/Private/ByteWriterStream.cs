@@ -208,8 +208,16 @@ namespace DarkCaster.Serialization.Private
 				throw new ArgumentException("offset+count > buffer.Length");
 			if(count == 0)
 				return;
-			Buffer.BlockCopy(buffer, offset, source, pos, count);
-			pos += count;
+			if(count <= 16)
+			{
+				for(int i = 0; i < count; ++i)
+					source[pos++] = buffer[offset++];
+			}
+			else
+			{
+				Buffer.BlockCopy(buffer, offset, source, pos, count);
+				pos += count;
+			}
 			if(pos > upperBound)
 				upperBound = pos;
 		}

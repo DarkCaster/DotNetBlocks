@@ -176,6 +176,12 @@ namespace DarkCaster.Serialization.Private
 			count = count > (upperBound - pos) ? upperBound - pos : count;
 			if(count == 0)
 				return 0;
+			if(count <= 16)
+			{
+				for(int i = 0; i < count; ++i)
+					buffer[offset++] = source[pos++];
+				return count;
+			}
 			Buffer.BlockCopy(source, pos, buffer, offset, count);
 			pos += count;
 			return count;
