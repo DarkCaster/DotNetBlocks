@@ -23,6 +23,9 @@
 // SOFTWARE.
 //
 
+//see explanation at ThrowDisposedException method
+//#define DISPOSE_CHECK
+
 using System;
 using System.IO;
 using System.Threading;
@@ -39,10 +42,10 @@ namespace DarkCaster.Serialization.Private
 		private readonly byte[] source;
 		private readonly int lowerBound;
 		private int upperBound;
-
-		private volatile bool isDisposed;
 		private int pos;
-
+#if DISPOSE_CHECK
+		private volatile bool isDisposed;
+#endif
 		public ByteWriterStream(byte[] source, int offset = 0)
 		{
 			if(source == null)
@@ -52,21 +55,55 @@ namespace DarkCaster.Serialization.Private
 			if(offset < 0)
 				throw new ArgumentException("offset < 0", "offset");
 			lowerBound = upperBound = pos = offset;
+#if DISPOSE_CHECK
 			isDisposed = false;
+#endif
 		}
 
 		public override bool CanRead { get { return false; } }
 
-		public override bool CanSeek { get { return !isDisposed; } }
+		public override bool CanSeek
+		{
+			get
+			{
+#if DISPOSE_CHECK
+				return !isDisposed;
+#else
+				return true;
+#endif
+			}
+		}
 
-		public override bool CanWrite { get { return !isDisposed; } }
+		public override bool CanWrite
+		{
+			get
+			{
+#if DISPOSE_CHECK
+				return !isDisposed;
+#else
+				return true;
+#endif
+			}
+		}
+
+#if DISPOSE_CHECK
+		//normally, stream object cannot be used after being disposed and can throw this exception.
+		//THIS implementation of stream is not required to be disposed,
+		//so this logic can be enabled to help debug errors related to inproper stream object usage.
+		private void ThrowDisposedException()
+		{
+			throw new ObjectDisposedException("ByteWriterStream", "ByteReaderStream is already disposed!");
+		}
+#endif
 
 		public override long Length
 		{
 			get
 			{
+#if DISPOSE_CHECK
 				if(isDisposed)
-					throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+					ThrowDisposedException();
+#endif
 				return upperBound - lowerBound;
 			}
 		}
@@ -75,14 +112,18 @@ namespace DarkCaster.Serialization.Private
 		{
 			get
 			{
+#if DISPOSE_CHECK
 				if(isDisposed)
-					throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+					ThrowDisposedException();
+#endif
 				return pos - lowerBound;
 			}
 			set
 			{
+#if DISPOSE_CHECK
 				if(isDisposed)
-					throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+					ThrowDisposedException();
+#endif
 				pos = unchecked((int)(value + lowerBound));
 			}
 		}
@@ -95,10 +136,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
 		{ throw new NotSupportedException("CopyToAsync"); }
-
+#if DISPOSE_CHECK
 		protected override void Dispose(bool disposing)
 		{ isDisposed = true; }
-
+#endif
 		public override int EndRead(IAsyncResult asyncResult)
 		{ throw new NotSupportedException("EndRead"); }
 
@@ -116,8 +157,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override long Seek(long offset, SeekOrigin origin)
 		{
+#if DISPOSE_CHECK
 			if(isDisposed)
-				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+				ThrowDisposedException();
+#endif
 			switch(origin)
 			{
 			case SeekOrigin.Begin:
@@ -137,8 +180,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override void SetLength(long value)
 		{
+#if DISPOSE_CHECK
 			if(isDisposed)
-				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+				ThrowDisposedException();
+#endif
 			if(value < 0)
 				throw new IOException("requested length < 0");
 			upperBound = unchecked((int)(lowerBound + value));
@@ -149,8 +194,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override void Write(byte[] buffer, int offset, int count)
 		{
+#if DISPOSE_CHECK
 			if(isDisposed)
-				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+				ThrowDisposedException();
+#endif
 			if(offset < 0)
 				throw new ArgumentOutOfRangeException("offset", "offset < 0");
 			if(count < 0)
@@ -169,8 +216,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override void WriteByte(byte value)
 		{
+#if DISPOSE_CHECK
 			if(isDisposed)
-				throw new ObjectDisposedException("ByteWriterStream", "ByteWriterStream is disposed!");
+				ThrowDisposedException();
+#endif
 			source[pos++] = value;
 			if(pos > upperBound)
 				upperBound = pos;

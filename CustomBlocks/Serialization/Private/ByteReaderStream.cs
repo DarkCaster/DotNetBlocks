@@ -23,6 +23,9 @@
 // SOFTWARE.
 //
 
+//see explanation at ThrowDisposedException method
+//#define DISPOSE_CHECK
+
 using System;
 using System.IO;
 using System.Threading;
@@ -40,11 +43,11 @@ namespace DarkCaster.Serialization.Private
 		private readonly int lowerBound;
 		private readonly int upperBound;
 		private readonly long len;
-
-		private volatile bool isDisposed;
 		private int pos;
-
-		public ByteReaderStream( byte[] source, int offset = 0, int len = 0 )
+#if DISPOSE_CHECK
+		private volatile bool isDisposed;
+#endif
+		public ByteReaderStream(byte[] source, int offset = 0, int len = 0)
 		{
 			if(source == null)
 				throw new ArgumentException("source array cannot be null", "source");
@@ -62,21 +65,55 @@ namespace DarkCaster.Serialization.Private
 			lowerBound = offset;
 			pos = lowerBound;
 			this.len = len;
+#if DISPOSE_CHECK
 			isDisposed = false;
+#endif
 		}
 
-		public override bool CanRead { get { return !isDisposed; } }
+		public override bool CanRead
+		{
+			get
+			{
+#if DISPOSE_CHECK
+				return !isDisposed;
+#else
+				return true;
+#endif
+			}
+		}
 
-		public override bool CanSeek { get { return !isDisposed; } }
+		public override bool CanSeek
+		{
+			get
+			{
+#if DISPOSE_CHECK
+				return !isDisposed;
+#else
+				return true;
+#endif
+			}
+		}
 
 		public override bool CanWrite { get { return false; } }
+
+#if DISPOSE_CHECK
+		//normally, stream object cannot be used after being disposed and can throw this exception.
+		//THIS implementation of stream is not required to be disposed,
+		//so this logic can be enabled to help debug errors related to inproper stream object usage.
+		private void ThrowDisposedException()
+		{
+			throw new ObjectDisposedException("ByteReaderStream", "ByteReaderStream is already disposed!");
+		}
+#endif
 
 		public override long Length
 		{
 			get
 			{
+#if DISPOSE_CHECK
 				if(isDisposed)
-					throw new ObjectDisposedException("ByteReaderStream", "ByteReaderStream is disposed!");
+					ThrowDisposedException();
+#endif
 				return len;
 			}
 		}
@@ -85,14 +122,18 @@ namespace DarkCaster.Serialization.Private
 		{
 			get
 			{
+#if DISPOSE_CHECK
 				if(isDisposed)
-					throw new ObjectDisposedException("ByteReaderStream", "ByteReaderStream is disposed!");
+					ThrowDisposedException();
+#endif
 				return pos - lowerBound;
 			}
 			set
 			{
+#if DISPOSE_CHECK
 				if(isDisposed)
-					throw new ObjectDisposedException("ByteReaderStream", "ByteReaderStream is disposed!");
+					ThrowDisposedException();
+#endif
 				pos = unchecked((int)(value + lowerBound));
 			}
 		}
@@ -105,10 +146,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
 		{ throw new NotSupportedException("CopyToAsync"); }
-
+#if DISPOSE_CHECK
 		protected override void Dispose(bool disposing)
 		{ isDisposed = true; }
-
+#endif
 		public override int EndRead(IAsyncResult asyncResult)
 		{ throw new NotSupportedException("EndRead"); }
 
@@ -120,8 +161,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
+#if DISPOSE_CHECK
 			if(isDisposed)
-				throw new ObjectDisposedException("ByteReaderStream", "ByteReaderStream is disposed!");
+				ThrowDisposedException();
+#endif
 			if(offset < 0)
 				throw new ArgumentOutOfRangeException("offset", "offset < 0");
 			if(count < 0)
@@ -140,8 +183,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override int ReadByte()
 		{
+#if DISPOSE_CHECK
 			if(isDisposed)
-				throw new ObjectDisposedException("ByteReaderStream", "ByteReaderStream is disposed!");
+				ThrowDisposedException();
+#endif
 			if(pos >= lowerBound && pos < upperBound)
 				return (int)(source[pos++]);
 			return -1;
@@ -149,8 +194,10 @@ namespace DarkCaster.Serialization.Private
 
 		public override long Seek(long offset, SeekOrigin origin)
 		{
+#if DISPOSE_CHECK
 			if(isDisposed)
-				throw new ObjectDisposedException("ByteReaderStream", "ByteReaderStream is disposed!");
+				ThrowDisposedException();
+#endif
 			switch(origin)
 			{
 			case SeekOrigin.Begin:
