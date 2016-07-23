@@ -76,5 +76,11 @@ namespace Tests
 			var testWrong = new TestClassWrong(ctrlVal,ctrlVal+1,ctrlVal+2);
 			SerializationHelpersTests.WrongTypeSerialize(typeof(JsonSerializationException),testWrong,objSer);
 		}
+
+		[Test]
+		public void FactoryTest()
+		{
+			SerializationHelpersTests.SerializationFactoryTests(new JsonSerializationHelperFactory());
+		}
 	}
 }

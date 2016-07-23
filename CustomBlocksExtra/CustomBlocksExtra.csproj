@@ -49,6 +49,8 @@
     <Compile Include="Serialization\MsgPack\MsgPackDeserializationException.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationException.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationHelper.cs" />
+    <Compile Include="Serialization\Json\JsonSerializationFactoryException.cs" />
+    <Compile Include="Serialization\Json\JsonSerializationHelperFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocks\CustomBlocks.csproj">
