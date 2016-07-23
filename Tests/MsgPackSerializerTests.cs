@@ -106,5 +106,14 @@ namespace Tests
 			var testWrong = new TestClassWrong(ctrlVal,ctrlVal+1,ctrlVal+3);
 			SerializationHelpersTests.WrongTypeSerialize(typeof(MsgPackSerializationException),testWrong,objSer);
 		}
+
+		[Test]
+		public void FactoryTest()
+		{
+			SerializationHelpersTests.SerializationFactoryTests(new MsgPackSerializationHelperFactory(MsgPackMode.Storage));
+			SerializationHelpersTests.SerializationFactoryTests(new MsgPackSerializationHelperFactory(MsgPackMode.StorageCheckSum));
+			SerializationHelpersTests.SerializationFactoryTests(new MsgPackSerializationHelperFactory(MsgPackMode.Transfer));
+			SerializationHelpersTests.SerializationFactoryTests(new MsgPackSerializationHelperFactory(MsgPackMode.TransferCheckSum));
+		}
 	}
 }
