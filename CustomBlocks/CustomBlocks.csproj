@@ -49,6 +49,8 @@
     <Compile Include="Serialization\SerializationException.cs" />
     <Compile Include="Serialization\Private\ByteWriterStream.cs" />
     <Compile Include="Serialization\Private\ByteReaderStream.cs" />
+    <Compile Include="Serialization\ISerializationHelperFactory.cs" />
+    <Compile Include="Serialization\SerializationFactoryException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
