@@ -110,5 +110,29 @@ namespace Tests
 			Assert.Throws(expectedException,()=>wrongSerializer.DeserializeObj(bytes));
 			Assert.Throws(expectedException,()=>wrongSerializer.DeserializeObj(str));
 		}
+
+		[Serializable]
+		public class SFTestClass
+		{
+			public int v = 0;
+		}
+
+		public static void SerializationFactoryTests(ISerializationHelperFactory factory)
+		{
+			var random = new Random();
+			var test = new SFTestClass();
+			test.v = random.Next();
+			var serializer = factory.GetHelper<SFTestClass>();
+			var deserializer = factory.GetHelper<SFTestClass>();
+			var data=serializer.Serialize(test);
+			var restore = deserializer.Deserialize(data);
+			Assert.AreEqual(test.v, restore.v);
+			var serializer2 = factory.GetHelper(typeof(SFTestClass));
+			var deserializer2 = factory.GetHelper(typeof(SFTestClass));
+			var data2 = serializer2.SerializeObj(test);
+			Assert.AreEqual(data, data2);
+			var restore2 = deserializer2.DeserializeObj(data);
+			Assert.AreEqual(test.v, ((SFTestClass)restore2).v);
+		}
 	}
 }
