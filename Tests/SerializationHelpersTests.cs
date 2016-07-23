@@ -118,6 +118,12 @@ namespace Tests
 			public string str = null;
 		}
 
+		private class PSFTestClass
+		{
+			public int v = 0;
+			public string str = null;
+		}
+
 		public static void SerializationFactoryTests(ISerializationHelperFactory factory)
 		{
 			var random = new Random();
@@ -137,6 +143,19 @@ namespace Tests
 			var restore2 = deserializer2.DeserializeObj(data);
 			Assert.AreEqual(test.v, ((SFTestClass)restore2).v);
 			Assert.AreEqual(test.str, ((SFTestClass)restore2).str);
+		}
+
+		//For now it works only with MsgPackSerializationHelperFactory,
+		//because MsgPackSerializationHelper create all needed serialization stuff at it's constructor,
+		//other SerializationHelpers for now create it's stuff dynamically, so its will only throw SerializationException on serialization
+		public static void SerializationFactoryExceptionTests(ISerializationHelperFactory factory, Type expectedException)
+		{
+			var random = new Random();
+			var test = new PSFTestClass();
+			test.v = random.Next();
+			test.str = "test" + random.Next().ToString();
+			Assert.Throws(expectedException, () => factory.GetHelper<PSFTestClass>());
+			Assert.Throws(expectedException, () => factory.GetHelper(typeof(PSFTestClass)));
 		}
 	}
 }

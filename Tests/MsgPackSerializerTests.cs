@@ -115,5 +115,18 @@ namespace Tests
 			SerializationHelpersTests.SerializationFactoryTests(new MsgPackSerializationHelperFactory(MsgPackMode.Transfer));
 			SerializationHelpersTests.SerializationFactoryTests(new MsgPackSerializationHelperFactory(MsgPackMode.TransferCheckSum));
 		}
+
+		[Test]
+		public void FactoryExceptionTest()
+		{
+			SerializationHelpersTests.SerializationFactoryExceptionTests(new MsgPackSerializationHelperFactory(MsgPackMode.Storage),
+			                                                             typeof(MsgPackSerializationFactoryException));
+			SerializationHelpersTests.SerializationFactoryExceptionTests(new MsgPackSerializationHelperFactory(MsgPackMode.StorageCheckSum),
+			                                                             typeof(MsgPackSerializationFactoryException));
+			SerializationHelpersTests.SerializationFactoryExceptionTests(new MsgPackSerializationHelperFactory(MsgPackMode.Transfer),
+			                                                             typeof(MsgPackSerializationFactoryException));
+			SerializationHelpersTests.SerializationFactoryExceptionTests(new MsgPackSerializationHelperFactory(MsgPackMode.TransferCheckSum),
+			                                                             typeof(MsgPackSerializationFactoryException));
+		}
 	}
 }
