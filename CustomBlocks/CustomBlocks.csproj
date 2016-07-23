@@ -51,6 +51,7 @@
     <Compile Include="Serialization\Private\ByteReaderStream.cs" />
     <Compile Include="Serialization\ISerializationHelperFactory.cs" />
     <Compile Include="Serialization\SerializationFactoryException.cs" />
+    <Compile Include="Serialization\BinarySerialization\BinarySerializationHelperFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />

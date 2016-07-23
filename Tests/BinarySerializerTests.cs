@@ -92,5 +92,11 @@ namespace Tests
 			var obj = new TestClass(ctrlVal);
 			SerializationHelpersTests.WrongTypeDeserialize(typeof(BinaryDeserializationException),obj,objSer,wrongSer);
 		}
+
+		[Test]
+		public void FactoryTest()
+		{
+			SerializationHelpersTests.SerializationFactoryTests(new BinarySerializationHelperFactory());
+		}
 	}
 }
