@@ -1,4 +1,4 @@
-﻿// BinarySerializationHelperFactory.cs
+﻿// BinarySerializationFactoryException.cs
 //
 // The MIT License (MIT)
 //
@@ -27,33 +27,13 @@ using System;
 
 namespace DarkCaster.Serialization
 {
-	/// <summary>
-	/// SerializationHelperFactory example for BinarySerializationHelper
-	/// </summary>
-	public sealed class BinarySerializationHelperFactory : ISerializationHelperFactory
+	public sealed class BinarySerializationFactoryException : SerializationFactoryException
 	{
-		public ISerializationHelper<T> GetHelper<T>()
-		{
-			try
-			{
-				return new BinarySerializationHelper<T>();
-			}
-			catch(Exception ex)
-			{
-				throw new BinarySerializationFactoryException(typeof(T), true, ex);
-			}
-		}
-
-		public ISerializationHelper GetHelper(Type type)
-		{
-			try
-			{
-				return (ISerializationHelper)Activator.CreateInstance(typeof(BinarySerializationHelper<>).MakeGenericType(new Type[] { type }));
-			}
-			catch(Exception ex)
-			{
-				throw new BinarySerializationFactoryException(type, false, ex);
-			}
-		}
+		public BinarySerializationFactoryException(Type requested, bool isGeneric, Exception inner) :
+		base(typeof(BinarySerializationHelperFactory),
+		     requested,
+		     string.Format("Failed to create {0} BinarySerializationHelper for type {1}",isGeneric?"generic":"non-generic",requested.FullName),
+		     inner) {}
 	}
 }
+
