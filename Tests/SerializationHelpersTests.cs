@@ -115,6 +115,7 @@ namespace Tests
 		public class SFTestClass
 		{
 			public int v = 0;
+			public string str = null;
 		}
 
 		public static void SerializationFactoryTests(ISerializationHelperFactory factory)
@@ -122,17 +123,20 @@ namespace Tests
 			var random = new Random();
 			var test = new SFTestClass();
 			test.v = random.Next();
+			test.str = "test" + random.Next().ToString();
 			var serializer = factory.GetHelper<SFTestClass>();
 			var deserializer = factory.GetHelper<SFTestClass>();
 			var data=serializer.Serialize(test);
 			var restore = deserializer.Deserialize(data);
 			Assert.AreEqual(test.v, restore.v);
+			Assert.AreEqual(test.str, restore.str);
 			var serializer2 = factory.GetHelper(typeof(SFTestClass));
 			var deserializer2 = factory.GetHelper(typeof(SFTestClass));
 			var data2 = serializer2.SerializeObj(test);
 			Assert.AreEqual(data, data2);
 			var restore2 = deserializer2.DeserializeObj(data);
 			Assert.AreEqual(test.v, ((SFTestClass)restore2).v);
+			Assert.AreEqual(test.str, ((SFTestClass)restore2).str);
 		}
 	}
 }
