@@ -53,6 +53,7 @@
     <Compile Include="Serialization\SerializationFactoryException.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationHelperFactory.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationFactoryException.cs" />
+    <Compile Include="Config\IConfigProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
@@ -60,6 +61,7 @@
     <Folder Include="Serialization\BinarySerialization" />
     <Folder Include="Hash" />
     <Folder Include="Serialization\Private\" />
+    <Folder Include="Config\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
