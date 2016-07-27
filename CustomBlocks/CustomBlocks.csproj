@@ -54,6 +54,7 @@
     <Compile Include="Serialization\BinarySerialization\BinarySerializationHelperFactory.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationFactoryException.cs" />
     <Compile Include="Config\IConfigProvider.cs" />
+    <Compile Include="Events\SafeEvents.cs" />
     <Compile Include="Events\IEventPublisher.cs" />
   </ItemGroup>
   <ItemGroup>

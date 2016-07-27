@@ -1,4 +1,4 @@
-﻿// IEventPublisher.cs
+﻿// SafeEvents.cs
 //
 // The MIT License (MIT)
 //
@@ -28,11 +28,24 @@ using System;
 namespace DarkCaster.Events
 {
 	/// <summary>
-	/// Generic interface for various custom events and messaging implementations.
+	/// Custom event system, that aims to mitigate some flaws of default c# events.
+	/// Main features of this custom event system:
+	/// - thread safety: TODO detailed description
+	/// - weak references: TODO detailed description
+	/// - optional async enevt invocation: TODO detailed description
 	/// </summary>
-	public interface IEventPublisher<T> where T : EventArgs
+	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
-		void Subscribe(EventHandler<T> subscriber);
-		void Unsubscribe(EventHandler<T> subscriber);
+		public void Subscribe(EventHandler<T> subscriber)
+		{
+			
+		}
+
+		public void Unsubscribe(EventHandler<T> subscriber)
+		{
+			
+		}
+
+
 	}
 }
