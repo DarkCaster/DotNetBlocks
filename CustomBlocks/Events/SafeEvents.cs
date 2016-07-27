@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Reflection;
 
 namespace DarkCaster.Events
 {
@@ -36,6 +37,46 @@ namespace DarkCaster.Events
 	/// </summary>
 	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
+		private sealed class WeakDelegate
+		{
+			private readonly MethodInfo method;
+			private readonly WeakReference target;
+			private readonly bool isStatic;
+
+			public WeakDelegate(MethodInfo method, object target)
+			{
+				if(target != null)
+				{
+					this.target = new WeakReference(target);
+					this.isStatic = false;
+				}
+				else
+				{
+					this.target = null;
+					this.isStatic = false;
+				}
+				this.method = method;
+			}
+
+			public override bool Equals(object obj)
+			{
+				if(!(obj is WeakDelegate))
+					return false;
+				var other = (WeakDelegate)obj;
+				if(isStatic != other.isStatic)
+					return false;
+				if(isStatic)
+					return method == other.method;
+				else
+					return method == other.method && target.Target == other.target.Target;
+			}
+
+			public override int GetHashCode()
+			{
+				return method.GetHashCode();
+			}
+		}
+
 		public void Subscribe(EventHandler<T> subscriber)
 		{
 			
@@ -44,8 +85,7 @@ namespace DarkCaster.Events
 		public void Unsubscribe(EventHandler<T> subscriber)
 		{
 			
+
 		}
-
-
 	}
 }
