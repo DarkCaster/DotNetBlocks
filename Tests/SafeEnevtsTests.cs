@@ -85,7 +85,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void SingleEvent()
+		public void OneSubscriber_Sync()
 		{
 			var publisher = new TestSTPublisher();
 			var listener = new TestSubscriber(publisher.testEvent);
@@ -100,6 +100,55 @@ namespace Tests
 			publisher.Raise();
 			Assert.AreEqual(2, listener.lCounter);
 			Assert.AreEqual(2, listener.pCounter);
+		}
+
+		[Test]
+		public void MultipleSubscribers_Sync()
+		{
+			var publisher = new TestSTPublisher();
+			var listeners = new TestSubscriber[128];
+			for(int i = 0; i < listeners.Length; ++i)
+				listeners[i] = new TestSubscriber(publisher.testEvent);
+			for(int i = 0; i < listeners.Length; ++i)
+				listeners[i].Subscribe();
+			publisher.Raise();
+			for(int i = 0; i < listeners.Length; ++i)
+			{
+				Assert.AreEqual(1, listeners[i].lCounter);
+				Assert.AreEqual(1, listeners[i].pCounter);
+			}
+			publisher.Raise();
+			for(int i = 0; i < listeners.Length; ++i)
+			{
+				Assert.AreEqual(2, listeners[i].lCounter);
+				Assert.AreEqual(2, listeners[i].pCounter);
+			}
+			for(int i = 0; i < listeners.Length/2; ++i)
+				listeners[i].Unsubscribe();
+			publisher.Raise();
+			for(int i = 0; i < listeners.Length/2; ++i)
+			{
+				Assert.AreEqual(2, listeners[i].lCounter);
+				Assert.AreEqual(2, listeners[i].pCounter);
+			}
+			for(int i = listeners.Length / 2; i < listeners.Length; ++i)
+			{
+				Assert.AreEqual(3, listeners[i].lCounter);
+				Assert.AreEqual(3, listeners[i].pCounter);
+			}
+			for(int i = 0; i < listeners.Length / 2; ++i)
+				listeners[i].Subscribe();
+			publisher.Raise();
+			for(int i = 0; i < listeners.Length / 2; ++i)
+			{
+				Assert.AreEqual(3, listeners[i].lCounter);
+				Assert.AreEqual(4, listeners[i].pCounter);
+			}
+			for(int i = listeners.Length / 2; i < listeners.Length; ++i)
+			{
+				Assert.AreEqual(4, listeners[i].lCounter);
+				Assert.AreEqual(4, listeners[i].pCounter);
+			}
 		}
 	}
 }
