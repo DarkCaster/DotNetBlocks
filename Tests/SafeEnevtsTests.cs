@@ -39,38 +39,67 @@ namespace Tests
 
 		public class TestSubscriber
 		{
-			private void TheEvent(object sender, TestEventArgs args)
-			{
+			public volatile int lCounter;
+			public volatile int pCounter;
+			private readonly IEventPublisher<TestEventArgs> testEvent;
 
+			private void OnTestEvent(object sender, TestEventArgs args)
+			{
+				lCounter++;
+				pCounter = args.Val;
 			}
 
-			public TestSubscriber(IEventPublisher<TestEventArgs> publisher)
+			public TestSubscriber(IEventPublisher<TestEventArgs> testEvent)
 			{
-				publisher.Subscribe(TheEvent);
+				lCounter = 0;
+				pCounter = 0;
+				this.testEvent = testEvent;
+			}
+
+			public void Subscribe()
+			{
+				testEvent.Subscribe(OnTestEvent);
+			}
+
+			public void Unsubscribe()
+			{
+				testEvent.Unsubscribe(OnTestEvent);
 			}
 		}
 
-		public class TestPublisher
+		public class TestSTPublisher
 		{
 			public SafeEventPublisher<TestEventArgs> testEvent = new SafeEventPublisher<TestEventArgs>();
 			private int counter;
-			public TestPublisher()
+
+			public TestSTPublisher()
 			{
 				counter = 0;
 			}
+
 			public void Raise()
 			{
-				testEvent.Raise(new TestEventArgs() { Val = counter });
 				++counter;
+				testEvent.Raise(new TestEventArgs() { Val = counter });
 			}
 		}
 
 		[Test]
-		public void SafeEnevtSampleTest()
+		public void SingleEvent()
 		{
-			var publisher = new TestPublisher();
+			var publisher = new TestSTPublisher();
 			var listener = new TestSubscriber(publisher.testEvent);
+			listener.Subscribe();
 			publisher.Raise();
+			Assert.AreEqual(1, listener.lCounter);
+			Assert.AreEqual(1, listener.pCounter);
+			publisher.Raise();
+			Assert.AreEqual(2, listener.lCounter);
+			Assert.AreEqual(2, listener.pCounter);
+			listener.Unsubscribe();
+			publisher.Raise();
+			Assert.AreEqual(2, listener.lCounter);
+			Assert.AreEqual(2, listener.pCounter);
 		}
 	}
 }
