@@ -25,6 +25,7 @@
 
 using System;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace DarkCaster.Events
 {
@@ -58,6 +59,7 @@ namespace DarkCaster.Events
 				this.method = method;
 			}
 
+			//TODO
 			public override bool Equals(object obj)
 			{
 				if(!(obj is WeakDelegate))
@@ -71,21 +73,41 @@ namespace DarkCaster.Events
 					return method == other.method && target.Target == other.target.Target;
 			}
 
+			//TODO
 			public override int GetHashCode()
 			{
 				return method.GetHashCode();
 			}
+
+			public bool Raise(object sender, T args)
+			{
+				if(isStatic)
+					return true; //TODO:
+				var strongReference = target.Target;
+				if(strongReference == null)
+					return false;
+				method.Invoke(strongReference, new object[] { sender, args });
+				return true;
+			}
 		}
+
+		private readonly HashSet<WeakDelegate> subscribers = new HashSet<WeakDelegate>();
 
 		public void Subscribe(EventHandler<T> subscriber)
 		{
-			
+			subscribers.Add(new WeakDelegate(subscriber.Method, subscriber.Target));
 		}
 
 		public void Unsubscribe(EventHandler<T> subscriber)
 		{
 			
+		}
 
+		//TODO:
+		public void Raise(T args)
+		{
+			foreach(var el in subscribers)
+				el.Raise(this, args);
 		}
 	}
 }

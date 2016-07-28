@@ -45,6 +45,7 @@
     <Compile Include="MMHashTests.cs" />
     <Compile Include="MsgPackSerializerTests.cs" />
     <Compile Include="SerializationHelpersTests.cs" />
+    <Compile Include="SafeEnevtsTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
