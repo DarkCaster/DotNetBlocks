@@ -30,6 +30,8 @@ using System.Collections.Generic;
 namespace DarkCaster.Events
 {
 	/// <summary>
+	/// Work in progress. Class is used for some experiments now, it will be changed a lot in future.
+	///
 	/// Custom event system, that aims to mitigate some flaws of default c# events.
 	/// Main features of this custom event system:
 	/// - thread safety: TODO detailed description

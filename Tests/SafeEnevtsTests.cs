@@ -24,11 +24,14 @@
 //
 
 using System;
+using System.Threading;
 using NUnit.Framework;
 using DarkCaster.Events;
 
 namespace Tests
 {
+
+	//a work-in-progress tests, will be changed in future.
 	[TestFixture]
 	public class SafeEnevtsTests
 	{
@@ -64,6 +67,28 @@ namespace Tests
 			public void Unsubscribe()
 			{
 				testEvent.Unsubscribe(OnTestEvent);
+			}
+		}
+
+		public class TestSubscriberForWeakRefTest
+		{
+			private Action<int> extCallback;
+			public int intCounter;
+			private string debugTag;
+
+			public TestSubscriberForWeakRefTest(IEventPublisher<TestEventArgs> testEvent, Action<int> extCallback, string tag)
+			{
+				testEvent.Subscribe(OnTestEvent);
+				this.extCallback = extCallback;
+				intCounter = 0;
+				debugTag = tag;
+			}
+
+			private void OnTestEvent(object sender, TestEventArgs args)
+			{
+				intCounter += 1;
+				debugTag = debugTag + "_invoke:" + args.Val;
+				extCallback(args.Val);
 			}
 		}
 
@@ -149,6 +174,36 @@ namespace Tests
 				Assert.AreEqual(4, listeners[i].lCounter);
 				Assert.AreEqual(4, listeners[i].pCounter);
 			}
+		}
+
+		private volatile int counter=0;
+
+		private void OnWeakRefCallback(int val)
+		{
+			counter += 1;
+		}
+
+		//TODO:
+		[Test]
+		public void WeakReferenceTest()
+		{
+			var publisher = new TestSTPublisher();
+			var listener1 = new TestSubscriberForWeakRefTest(publisher.testEvent, OnWeakRefCallback, "obj1");
+			var listener2 = new TestSubscriberForWeakRefTest(publisher.testEvent, OnWeakRefCallback, "obj2");
+
+			publisher.Raise();
+			GC.KeepAlive(listener1);
+			Volatile.Write(ref listener1, null);
+			Assert.AreEqual(2, counter);
+
+			//run garbage collector and wait for it completion
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+
+			publisher.Raise();
+			Assert.AreEqual(3, counter);
+			 
+			GC.KeepAlive(listener2);
 		}
 	}
 }
