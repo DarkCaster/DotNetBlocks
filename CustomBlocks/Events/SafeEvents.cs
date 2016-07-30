@@ -61,7 +61,7 @@ namespace DarkCaster.Events
 				this.method = method;
 			}
 
-			//TODO
+			//TODO: maybe we should not compare objects by using MethodInfo and weak reference target
 			public override bool Equals(object obj)
 			{
 				if(!(obj is WeakDelegate))
@@ -75,7 +75,7 @@ namespace DarkCaster.Events
 					return method == other.method && target.Target == other.target.Target;
 			}
 
-			//TODO
+			//TODO: check MethodInfo GetHashCode and Equals compliance and behavior on all platforms (?)
 			public override int GetHashCode()
 			{
 				return method.GetHashCode();
@@ -93,16 +93,25 @@ namespace DarkCaster.Events
 			}
 		}
 
+		//TODO: check other structures for effectiveness
 		private readonly HashSet<WeakDelegate> subscribers = new HashSet<WeakDelegate>();
+
+		private readonly object locker = new object();
 
 		public void Subscribe(EventHandler<T> subscriber)
 		{
-			subscribers.Add(new WeakDelegate(subscriber.Method, subscriber.Target));
+			if(subscriber == null)
+				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
+			lock(locker)
+				subscribers.Add(new WeakDelegate(subscriber.Method, subscriber.Target));
 		}
 
 		public void Unsubscribe(EventHandler<T> subscriber)
 		{
-			
+			if(subscriber == null)
+				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
+			lock(locker)
+				subscribers.Remove(new WeakDelegate(subscriber.Method, subscriber.Target));
 		}
 
 		//TODO:
