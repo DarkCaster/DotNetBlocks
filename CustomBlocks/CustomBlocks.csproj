@@ -56,6 +56,8 @@
     <Compile Include="Config\IConfigProvider.cs" />
     <Compile Include="Events\SafeEvents.cs" />
     <Compile Include="Events\IEventPublisher.cs" />
+    <Compile Include="Events\EventException.cs" />
+    <Compile Include="Events\EventSubscriptionException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
