@@ -25,6 +25,7 @@
 
 using System;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Collections.Generic;
 
 namespace DarkCaster.Events
@@ -40,56 +41,55 @@ namespace DarkCaster.Events
 	/// </summary>
 	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
+		private delegate bool Forwarder(object sender, T args);
+
 		private sealed class WeakDelegate
 		{
 			private readonly MethodInfo method;
 			private readonly WeakReference target;
-			private readonly bool isStatic;
+			public Forwarder forwarder;
 
-			public WeakDelegate(MethodInfo method, object target)
+			public WeakDelegate(MethodInfo method, object target, bool generateForwarder=true)
 			{
-				if(target != null)
-				{
-					this.target = new WeakReference(target);
-					this.isStatic = false;
-				}
-				else
-				{
+				if(target == null)
 					this.target = null;
-					this.isStatic = false;
-				}
+				else
+					this.target = new WeakReference(target);
 				this.method = method;
+				if(generateForwarder)
+					forwarder = null;
+				else
+					GenerateForwarder(target == null);
 			}
 
-			//TODO: maybe we should not compare objects by using MethodInfo and weak reference target
+			private static Forwarder GenerateForwarder(bool isStatic)
+			{
+				throw new NotImplementedException("TODO");
+				/*var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(void), new Type[] { typeof(object), typeof(object), typeof(T) }, typeof(WeakDelegate), true);
+				var generator = dynMethod.GetILGenerator();
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Castclass, method.DeclaringType);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Ldarg_2);
+				generator.Emit(OpCodes.Call, method);
+				generator.Emit(OpCodes.Ret);*/
+			}
+
 			public override bool Equals(object obj)
 			{
 				if(!(obj is WeakDelegate))
 					return false;
 				var other = (WeakDelegate)obj;
-				if(isStatic != other.isStatic)
-					return false;
-				if(isStatic)
+				if(target==null && other.target==null)
 					return method == other.method;
-				else
+				if(target != null && other.target != null)
 					return method == other.method && target.Target == other.target.Target;
+				return false;
 			}
 
-			//TODO: check MethodInfo GetHashCode and Equals compliance and behavior on all platforms (?)
 			public override int GetHashCode()
 			{
 				return method.GetHashCode();
-			}
-
-			public bool Raise(object sender, T args)
-			{
-				if(isStatic)
-					return true; //TODO:
-				var strongReference = target.Target;
-				if(strongReference == null)
-					return false;
-				method.Invoke(strongReference, new object[] { sender, args });
-				return true;
 			}
 		}
 
@@ -111,14 +111,14 @@ namespace DarkCaster.Events
 			if(subscriber == null)
 				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
 			lock(locker)
-				subscribers.Remove(new WeakDelegate(subscriber.Method, subscriber.Target));
+				subscribers.Remove(new WeakDelegate(subscriber.Method, subscriber.Target, false));
 		}
 
-		//TODO:
+		//TODO: remove obsolete elements
 		public void Raise(T args)
 		{
 			foreach(var el in subscribers)
-				el.Raise(this, args);
+				el.forwarder(this, args);
 		}
 	}
 }
