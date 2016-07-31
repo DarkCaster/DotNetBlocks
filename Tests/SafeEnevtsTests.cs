@@ -25,6 +25,7 @@
 
 using System;
 using System.Threading;
+using System.Reflection;
 using NUnit.Framework;
 using DarkCaster.Events;
 
@@ -204,6 +205,112 @@ namespace Tests
 			Assert.AreEqual(3, counter);
 			 
 			GC.KeepAlive(listener2);
+		}
+
+		//Optional tests for MethodInfo GetHashCode and Equals compliance,
+		//Generally, needed only for me to determine how this things behave in different situations
+		//And make sure, that it behavior is the same at different .NET implementations (.NET, .NET Core, Mono)
+		private class MTClass1
+		{
+			public void Method1() {}
+			public bool Method2() { throw new NotSupportedException(); }
+			public void Method3(bool param1) { throw new NotSupportedException(); }
+			public void Method4(bool paramX) { throw new NotSupportedException(); }
+
+			public void GenericMethod1<T>() { throw new NotSupportedException(); }
+			public T GenericMethod2<T>() { throw new NotSupportedException(); }
+			public void GenericMethod3<T>(T param1) { throw new NotSupportedException(); }
+			public void GenericMethod4<T>(T param2) { throw new NotSupportedException(); }
+		}
+
+		private class MTClass2
+		{
+			public void Method1() { }
+			public bool Method2() { throw new NotSupportedException(); }
+			public void Method3(bool param1) { throw new NotSupportedException(); }
+			public void Method4(bool paramX) { throw new NotSupportedException(); }
+
+			public void GenericMethod1<T>() { }
+			public T GenericMethod2<T>() { throw new NotSupportedException(); }
+			public void GenericMethod3<T>(T param1) { throw new NotSupportedException(); }
+			public void GenericMethod4<T>(T param2) { throw new NotSupportedException(); }
+		}
+
+		public delegate void Delegate1();
+		public delegate bool Delegate2();
+		public delegate void Delegate3(bool p);
+
+		public delegate void GDelegate1<T>();
+		public delegate T GDelegate2<T>();
+		public delegate void GDelegate3<T>(T p);
+
+		private MethodInfo GetMethodInfo(Delegate target)
+		{
+			return target.Method;
+		}
+
+		private void TestMethodInfo_AreEquals<D1,D2>(D1 target1, D2 target2)
+		{
+			TestMethodInfo_AreEquals((Delegate)(object)target1, (Delegate)(object)target2);
+		}
+
+		private void TestMethodInfo_AreNotEquals<D1, D2>(D1 target1, D2 target2)
+		{
+			TestMethodInfo_AreNotEquals((Delegate)(object)target1, (Delegate)(object)target2);
+		}
+
+		private void TestMethodInfo_AreEquals(Delegate target1, Delegate target2 )
+		{
+			var mi1 = GetMethodInfo(target1);
+			var mi2 = GetMethodInfo(target2);
+			Assert.AreEqual(mi1.GetHashCode(), mi2.GetHashCode());
+			Assert.AreEqual(true, mi1.Equals(mi2));
+		}
+
+		private void TestMethodInfo_AreNotEquals(Delegate target1, Delegate target2)
+		{
+			var mi1 = GetMethodInfo(target1);
+			var mi2 = GetMethodInfo(target2);
+			Assert.AreNotEqual(mi1.GetHashCode(), mi2.GetHashCode());
+			Assert.AreEqual(false, mi1.Equals(mi2));
+		}
+
+		[Test]
+		public void MethodInfo_ComplianceTest()
+		{
+			var obj1 = new MTClass1();
+			var obj2 = new MTClass2();
+
+			TestMethodInfo_AreEquals<Delegate1, Delegate1>(obj1.Method1, obj1.Method1);
+			TestMethodInfo_AreNotEquals<Delegate1, Delegate1>(obj1.Method1, obj1.GenericMethod1<bool>);
+			TestMethodInfo_AreNotEquals<Delegate1, Delegate2>(obj1.Method1, obj1.Method2);
+			TestMethodInfo_AreNotEquals<Delegate3, Delegate3>(obj1.Method3, obj1.Method4);
+
+			TestMethodInfo_AreNotEquals<Delegate1, Delegate1>(obj1.Method1, obj2.Method1);
+			TestMethodInfo_AreNotEquals<Delegate2, Delegate2>(obj1.Method2, obj2.Method2);
+			TestMethodInfo_AreNotEquals<Delegate3, Delegate3>(obj1.Method3, obj2.Method3);
+			TestMethodInfo_AreNotEquals<Delegate3, Delegate3>(obj1.Method4, obj2.Method4);
+
+			TestMethodInfo_AreEquals<GDelegate1<bool>, GDelegate1<bool>>(obj1.Method1, obj1.Method1);
+			TestMethodInfo_AreNotEquals<GDelegate1<bool>, GDelegate1<bool>>(obj1.Method1, obj1.GenericMethod1<bool>);
+			TestMethodInfo_AreNotEquals<GDelegate2<bool>, GDelegate2<bool>>(obj1.Method2, obj1.GenericMethod2<bool>);
+			TestMethodInfo_AreNotEquals<GDelegate3<bool>, GDelegate3<bool>>(obj1.Method3, obj1.GenericMethod3<bool>);
+
+			TestMethodInfo_AreNotEquals<GDelegate1<bool>, GDelegate1<bool>>(obj1.GenericMethod1<bool>, obj2.GenericMethod1<bool>);
+			TestMethodInfo_AreNotEquals<GDelegate2<bool>, GDelegate2<bool>>(obj1.GenericMethod2<bool>, obj2.GenericMethod2<bool>);
+			TestMethodInfo_AreNotEquals<GDelegate3<bool>, GDelegate3<bool>>(obj1.GenericMethod3<bool>, obj2.GenericMethod3<bool>);
+			TestMethodInfo_AreNotEquals<GDelegate3<bool>, GDelegate3<bool>>(obj1.GenericMethod4<bool>, obj2.GenericMethod4<bool>);
+
+			var objX = new MTClass1();
+			TestMethodInfo_AreEquals<Delegate1, Delegate1>(obj1.Method1, objX.Method1);
+			TestMethodInfo_AreEquals<Delegate2, Delegate2>(obj1.Method2, objX.Method2);
+			TestMethodInfo_AreEquals<Delegate3, Delegate3>(obj1.Method3, objX.Method3);
+			TestMethodInfo_AreEquals<Delegate3, Delegate3>(obj1.Method4, objX.Method4);
+
+			TestMethodInfo_AreEquals<GDelegate1<bool>, GDelegate1<bool>>(obj1.GenericMethod1<bool>, objX.GenericMethod1<bool>);
+			TestMethodInfo_AreEquals<GDelegate2<bool>, GDelegate2<bool>>(obj1.GenericMethod2<bool>, objX.GenericMethod2<bool>);
+			TestMethodInfo_AreEquals<GDelegate3<bool>, GDelegate3<bool>>(obj1.GenericMethod3<bool>, objX.GenericMethod3<bool>);
+			TestMethodInfo_AreEquals<GDelegate3<bool>, GDelegate3<bool>>(obj1.GenericMethod4<bool>, objX.GenericMethod4<bool>);
 		}
 	}
 }
