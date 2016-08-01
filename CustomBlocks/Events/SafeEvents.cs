@@ -30,6 +30,11 @@ using System.Collections.Generic;
 
 namespace DarkCaster.Events
 {
+	public static class SafeEventPublisher
+	{
+		public static readonly MethodInfo GetStrongRef = typeof(WeakReference).GetMethod("get_Target");
+	}
+
 	/// <summary>
 	/// Work in progress. Class is used for some experiments now, it will be changed a lot in future.
 	///
@@ -42,12 +47,15 @@ namespace DarkCaster.Events
 	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
 		private delegate bool Forwarder(object sender, T args);
+		private static readonly Type[] forwarderTypes = new Type[] { typeof(WeakDelegate)/*this*/, typeof(object)/*sender*/, typeof(T)/*event args*/ };
+		private static readonly FieldInfo targetField = typeof(WeakDelegate).GetField("target", BindingFlags.NonPublic | BindingFlags.Instance);
 
 		private sealed class WeakDelegate
 		{
 			private readonly MethodInfo method;
 			private readonly WeakReference target;
-			public Forwarder forwarder;
+
+			public readonly Forwarder forwarder;
 
 			public WeakDelegate(MethodInfo method, object target, bool generateForwarder=true)
 			{
@@ -56,23 +64,40 @@ namespace DarkCaster.Events
 				else
 					this.target = new WeakReference(target);
 				this.method = method;
-				if(generateForwarder)
+				if(!generateForwarder)
 					forwarder = null;
 				else
-					GenerateForwarder(target == null);
+					forwarder = GenerateForwarder(target == null);
 			}
 
-			private static Forwarder GenerateForwarder(bool isStatic)
+			private Forwarder GenerateForwarder(bool isStatic)
 			{
-				throw new NotImplementedException("TODO");
-				/*var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(void), new Type[] { typeof(object), typeof(object), typeof(T) }, typeof(WeakDelegate), true);
+				var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(bool), forwarderTypes, typeof(WeakDelegate), true);
 				var generator = dynMethod.GetILGenerator();
-				generator.Emit(OpCodes.Ldarg_0);
-				generator.Emit(OpCodes.Castclass, method.DeclaringType);
-				generator.Emit(OpCodes.Ldarg_1);
-				generator.Emit(OpCodes.Ldarg_2);
-				generator.Emit(OpCodes.Call, method);
-				generator.Emit(OpCodes.Ret);*/
+				if(isStatic)
+				{
+					throw new NotImplementedException("TODO");
+				}
+				else
+				{
+					generator.Emit(OpCodes.Ldarg_0); //stack: this
+					generator.Emit(OpCodes.Ldfld, targetField); //stack: this.target
+					generator.Emit(OpCodes.Call, SafeEventPublisher.GetStrongRef); //stack: this.target.Target
+					generator.Emit(OpCodes.Dup); //stack: this.target.Target, this.target.Target
+					var continueLabel = generator.DefineLabel();
+					generator.Emit(OpCodes.Brtrue_S, continueLabel); //stack: this.target.Target
+					generator.Emit(OpCodes.Pop); //stack:
+					generator.Emit(OpCodes.Ldc_I4_S, 0); //stack: 0(false)
+					generator.Emit(OpCodes.Ret);
+					generator.MarkLabel(continueLabel); //stack: this.target.Target
+					generator.Emit(OpCodes.Castclass, method.DeclaringType); //stack: (EventHandler<T>)this.target.Target 
+					generator.Emit(OpCodes.Ldarg_1);
+					generator.Emit(OpCodes.Ldarg_2);
+					generator.Emit(OpCodes.Call, method);
+					generator.Emit(OpCodes.Ldc_I4_S, 1); //stack: 1(true)
+					generator.Emit(OpCodes.Ret);
+				}
+				return (Forwarder)dynMethod.CreateDelegate(typeof(Forwarder), this);
 			}
 
 			public override bool Equals(object obj)
