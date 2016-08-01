@@ -47,17 +47,17 @@ namespace DarkCaster.Events
 	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
 		private delegate bool Forwarder(object sender, T args);
-		private static readonly Type[] forwarderTypes = new Type[] { typeof(WeakDelegate)/*this*/, typeof(object)/*sender*/, typeof(T)/*event args*/ };
-		private static readonly FieldInfo targetField = typeof(WeakDelegate).GetField("target", BindingFlags.NonPublic | BindingFlags.Instance);
+		private static readonly Type[] forwarderTypes = new Type[] { typeof(DynamicWrapper)/*this*/, typeof(object)/*sender*/, typeof(T)/*event args*/ };
+		private static readonly FieldInfo weakRefField = typeof(DynamicWrapper).GetField("target", BindingFlags.NonPublic | BindingFlags.Instance);
 
-		private sealed class WeakDelegate
+		private sealed class DynamicWrapper
 		{
 			private readonly MethodInfo method;
 			private readonly WeakReference target;
 
 			public readonly Forwarder forwarder;
 
-			public WeakDelegate(MethodInfo method, object target, bool generateForwarder=true)
+			public DynamicWrapper(MethodInfo method, object target, bool generateForwarder=true)
 			{
 				if(target == null)
 					this.target = null;
@@ -72,7 +72,7 @@ namespace DarkCaster.Events
 
 			private Forwarder GenerateForwarder(bool isStatic)
 			{
-				var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(bool), forwarderTypes, typeof(WeakDelegate), true);
+				var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(bool), forwarderTypes, typeof(DynamicWrapper), true);
 				var generator = dynMethod.GetILGenerator();
 				if(isStatic)
 				{
@@ -81,7 +81,7 @@ namespace DarkCaster.Events
 				else
 				{
 					generator.Emit(OpCodes.Ldarg_0); //stack: this
-					generator.Emit(OpCodes.Ldfld, targetField); //stack: this.target
+					generator.Emit(OpCodes.Ldfld, weakRefField); //stack: this.target
 					generator.Emit(OpCodes.Call, SafeEventPublisher.GetStrongRef); //stack: this.target.Target
 					generator.Emit(OpCodes.Dup); //stack: this.target.Target, this.target.Target
 					var continueLabel = generator.DefineLabel();
@@ -102,9 +102,9 @@ namespace DarkCaster.Events
 
 			public override bool Equals(object obj)
 			{
-				if(!(obj is WeakDelegate))
+				if(!(obj is DynamicWrapper))
 					return false;
-				var other = (WeakDelegate)obj;
+				var other = (DynamicWrapper)obj;
 				if(target==null && other.target==null)
 					return method == other.method;
 				if(target != null && other.target != null)
@@ -119,7 +119,7 @@ namespace DarkCaster.Events
 		}
 
 		//TODO: check other structures for effectiveness
-		private readonly HashSet<WeakDelegate> subscribers = new HashSet<WeakDelegate>();
+		private readonly HashSet<DynamicWrapper> subscribers = new HashSet<DynamicWrapper>();
 
 		private readonly object locker = new object();
 
@@ -128,7 +128,7 @@ namespace DarkCaster.Events
 			if(subscriber == null)
 				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
 			lock(locker)
-				subscribers.Add(new WeakDelegate(subscriber.Method, subscriber.Target));
+				subscribers.Add(new DynamicWrapper(subscriber.Method, subscriber.Target));
 		}
 
 		public void Unsubscribe(EventHandler<T> subscriber)
@@ -136,7 +136,7 @@ namespace DarkCaster.Events
 			if(subscriber == null)
 				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
 			lock(locker)
-				subscribers.Remove(new WeakDelegate(subscriber.Method, subscriber.Target, false));
+				subscribers.Remove(new DynamicWrapper(subscriber.Method, subscriber.Target, false));
 		}
 
 		//TODO: remove obsolete elements
