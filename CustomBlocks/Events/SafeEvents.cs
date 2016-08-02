@@ -139,32 +139,6 @@ namespace DarkCaster.Events
 		private int invListUsedLen = 0;
 		private bool rebuildNeeded = false;
 
-		private void Add_Safe(MethodInfo method, object target)
-		{
-			lock(managementLock)
-			{
-				var key = new SafeEventPublisher.WeakHandle(method, target);
-				if(dynamicSubscribers.ContainsKey(key))
-					return;
-				rebuildNeeded = true;
-				var val = new SafeEventPublisher.WeakForwarder(key);
-				dynamicSubscribers.Add(key, val);
-			}
-		}
-
-		private void Remove_Safe(MethodInfo method, object target)
-		{
-			lock(managementLock)
-			{
-				var key = new SafeEventPublisher.WeakHandle(method, target);
-				if(!dynamicSubscribers.ContainsKey(key))
-					return;
-				rebuildNeeded = true;
-				dynamicSubscribers[key].MarkAsRemoved_Safe();
-				dynamicSubscribers.Remove(key);
-			}
-		}
-
 		private int UpdateInvListOnRise_Safe()
 		{
 			lock(managementLock)
@@ -186,6 +160,8 @@ namespace DarkCaster.Events
 				//copy values and set invListUsedLen;
 				dynamicSubscribers.Values.CopyTo(invList, 0);
 				invListUsedLen = dynamicSubscribers.Count;
+				for(int i = invListUsedLen; i < invList.Length; ++i)
+					invList[i] = null;
 				return invListUsedLen;
 			}
 		}
@@ -198,7 +174,27 @@ namespace DarkCaster.Events
 			var target = subscriber.Target;
 			if(target == null)
 				throw new NotImplementedException("TODO: static subscribers");
-			Add_Safe(method, target);
+			lock(managementLock)
+			{
+				var key = new SafeEventPublisher.WeakHandle(method, target);
+				if(dynamicSubscribers.ContainsKey(key))
+					return;
+				rebuildNeeded = true;
+				var val = new SafeEventPublisher.WeakForwarder(key);
+				dynamicSubscribers.Add(key, val);
+			}
+		}
+
+		private void Remove_Safe(SafeEventPublisher.WeakHandle handle)
+		{
+			lock(managementLock)
+			{
+				if(!dynamicSubscribers.ContainsKey(handle))
+					return;
+				rebuildNeeded = true;
+				dynamicSubscribers[handle].MarkAsRemoved_Safe();
+				dynamicSubscribers.Remove(handle);
+			}
 		}
 
 		public void Unsubscribe(EventHandler<T> subscriber)
@@ -209,7 +205,8 @@ namespace DarkCaster.Events
 			var target = subscriber.Target;
 			if(target == null)
 				throw new NotImplementedException("TODO: static subscribers");
-			Remove_Safe(method, target);
+			var handle=new SafeEventPublisher.WeakHandle(method, target);
+			Remove_Safe(handle);
 		}
 
 		//TODO: thread safe variant that lock itself while executing, thread safe async variants of Raise
@@ -217,7 +214,8 @@ namespace DarkCaster.Events
 		{
 			var len = UpdateInvListOnRise_Safe();
 			for(int i = 0; i < len; ++i)
-				invList[i].Raise_Safe(this, args);
+				if(!invList[i].Raise_Safe(this, args))
+					Remove_Safe(invList[i].handle);
 		}
 	}
 }
