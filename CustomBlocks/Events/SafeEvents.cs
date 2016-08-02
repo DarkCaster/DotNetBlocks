@@ -132,12 +132,14 @@ namespace DarkCaster.Events
 	/// </summary>
 	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
+		private readonly object raiseLock = new object();
 		private readonly object managementLock = new object();
 		private readonly Dictionary<SafeEventPublisher.WeakHandle, SafeEventPublisher.WeakForwarder> dynamicSubscribers = new Dictionary<SafeEventPublisher.WeakHandle, SafeEventPublisher.WeakForwarder>();
 		private SafeEventPublisher.WeakForwarder[] invList = { null };
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
 		private bool invListRebuildNeeded = false;
+		private bool recursiveRaiseCheck = false;
 
 		private int UpdateInvListOnRise_Safe()
 		{
@@ -209,13 +211,20 @@ namespace DarkCaster.Events
 			Remove_Safe(handle);
 		}
 
-		//TODO: thread safe variant that lock itself while executing, thread safe async variants of Raise
+		//TODO: thread safe async variants of Raise
 		public void Raise(T args)
 		{
-			var len = UpdateInvListOnRise_Safe();
-			for(int i = 0; i < len; ++i)
-				if(!invList[i].Raise_Safe(this, args))
-					Remove_Safe(invList[i].handle);
+			lock(raiseLock)
+			{
+				if(recursiveRaiseCheck)
+					throw new EventRaiseException("Recursive event activation detected in single thread!", null, null);
+				recursiveRaiseCheck = true;
+				var len = UpdateInvListOnRise_Safe();
+				for(int i = 0; i < len; ++i)
+					if(!invList[i].Raise_Safe(this, args))
+						Remove_Safe(invList[i].handle);
+				recursiveRaiseCheck = false;
+			}
 		}
 	}
 }
