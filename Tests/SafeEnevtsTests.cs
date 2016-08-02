@@ -265,6 +265,8 @@ namespace Tests
 			var mi2 = GetMethodInfo(target2);
 			Assert.AreEqual(mi1.GetHashCode(), mi2.GetHashCode());
 			Assert.AreEqual(true, mi1.Equals(mi2));
+			Assert.AreEqual(true, mi1 == mi2);
+			Assert.AreEqual(false, mi1 != mi2);
 		}
 
 		private void TestMethodInfo_AreNotEquals(Delegate target1, Delegate target2)
@@ -273,6 +275,8 @@ namespace Tests
 			var mi2 = GetMethodInfo(target2);
 			Assert.AreNotEqual(mi1.GetHashCode(), mi2.GetHashCode());
 			Assert.AreEqual(false, mi1.Equals(mi2));
+			Assert.AreEqual(false, mi1 == mi2);
+			Assert.AreEqual(true, mi1 != mi2);
 		}
 
 		[Test]
