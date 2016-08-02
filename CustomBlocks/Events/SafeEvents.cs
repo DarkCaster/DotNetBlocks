@@ -67,16 +67,25 @@ namespace DarkCaster.Events
 		{
 			public readonly WeakHandle handle;
 			private readonly ForwarderDelegate forwarder;
+			private bool isActive;
 
 			public WeakForwarder(WeakHandle handle)
 			{
 				this.handle = handle;
 				this.forwarder = GenerateForwarder(handle.method);
+				this.isActive = true;
 			}
 
-			public bool Raise(object sender, EventArgs args)
+			public bool Raise_Safe(object sender, EventArgs args)
 			{
-				return forwarder(handle.weakTarget, sender, args);
+				lock(this)
+					return isActive && forwarder(handle.weakTarget, sender, args);
+			}
+
+			public void MarkAsRemoved_Safe()
+			{
+				lock(this)
+					isActive = false;
 			}
 		}
 
@@ -123,36 +132,92 @@ namespace DarkCaster.Events
 	/// </summary>
 	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
+		private readonly object managementLock = new object();
 		private readonly Dictionary<SafeEventPublisher.WeakHandle, SafeEventPublisher.WeakForwarder> dynamicSubscribers = new Dictionary<SafeEventPublisher.WeakHandle, SafeEventPublisher.WeakForwarder>();
+		private SafeEventPublisher.WeakForwarder[] invList = { null };
+		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
+		private int invListUsedLen = 0;
+		private bool rebuildNeeded = false;
 
-		private readonly object locker = new object();
+		private void Add_Safe(MethodInfo method, object target)
+		{
+			lock(managementLock)
+			{
+				var key = new SafeEventPublisher.WeakHandle(method, target);
+				if(dynamicSubscribers.ContainsKey(key))
+					return;
+				rebuildNeeded = true;
+				var val = new SafeEventPublisher.WeakForwarder(key);
+				dynamicSubscribers.Add(key, val);
+			}
+		}
+
+		private void Remove_Safe(MethodInfo method, object target)
+		{
+			lock(managementLock)
+			{
+				var key = new SafeEventPublisher.WeakHandle(method, target);
+				if(!dynamicSubscribers.ContainsKey(key))
+					return;
+				rebuildNeeded = true;
+				dynamicSubscribers[key].MarkAsRemoved_Safe();
+				dynamicSubscribers.Remove(key);
+			}
+		}
+
+		private int UpdateInvListOnRise_Safe()
+		{
+			lock(managementLock)
+			{
+				if(!rebuildNeeded)
+					return invListUsedLen;
+				rebuildNeeded = false;
+				//optionally recreate invocationList array if there is not enough space
+				if(dynamicSubscribers.Count < (invListUsedLen / 3) && invList.Length >= INVLIST_MIN_RESIZE_LIMIT)
+					invList = new SafeEventPublisher.WeakForwarder[invList.Length / 2];
+				else
+				{
+					var len = invList.Length;
+					while(dynamicSubscribers.Count > len)
+						len *= 2;
+					if(len != invList.Length)
+						invList = new SafeEventPublisher.WeakForwarder[len];
+				}
+				//copy values and set invListUsedLen;
+				dynamicSubscribers.Values.CopyTo(invList, 0);
+				invListUsedLen = dynamicSubscribers.Count;
+				return invListUsedLen;
+			}
+		}
 
 		public void Subscribe(EventHandler<T> subscriber)
 		{
 			if(subscriber == null)
 				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
-
-			lock(locker)
-			{
-				var key = new SafeEventPublisher.WeakHandle(subscriber.Method, subscriber.Target);
-				var val = new SafeEventPublisher.WeakForwarder(key);
-				dynamicSubscribers.Add(key, val);
-			}
+			var method = subscriber.Method;
+			var target = subscriber.Target;
+			if(target == null)
+				throw new NotImplementedException("TODO: static subscribers");
+			Add_Safe(method, target);
 		}
 
 		public void Unsubscribe(EventHandler<T> subscriber)
 		{
 			if(subscriber == null)
 				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
-			lock(locker)
-				dynamicSubscribers.Remove(new SafeEventPublisher.WeakHandle(subscriber.Method, subscriber.Target));
+			var method = subscriber.Method;
+			var target = subscriber.Target;
+			if(target == null)
+				throw new NotImplementedException("TODO: static subscribers");
+			Remove_Safe(method, target);
 		}
 
-		//TODO: remove obsolete elements
+		//TODO: thread safe variant that lock itself while executing, thread safe async variants of Raise
 		public void Raise(T args)
 		{
-			foreach(var el in dynamicSubscribers)
-				el.Value.Raise(this, args);
+			var len = UpdateInvListOnRise_Safe();
+			for(int i = 0; i < len; ++i)
+				invList[i].Raise_Safe(this, args);
 		}
 	}
 }
