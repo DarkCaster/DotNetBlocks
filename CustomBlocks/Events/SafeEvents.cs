@@ -32,22 +32,19 @@ namespace DarkCaster.Events
 {
 	internal static class SafeEventPublisher
 	{
-		internal static readonly MethodInfo GetStrongRef = typeof(WeakReference).GetMethod("get_Target");
-
+		private static readonly MethodInfo GetStrongRef = typeof(WeakReference).GetMethod("get_Target");
 		private static readonly Type[] forwarderParams = new Type[] { typeof(WeakReference)/*weakRefToSubscriber*/, typeof(object)/*sender*/, typeof(EventArgs)/*event args*/ };
-		internal delegate bool Forwarder(WeakReference reference, object sender, EventArgs args);
+		private delegate bool ForwarderDelegate(WeakReference reference, object sender, EventArgs args);
 
-		internal sealed class WeakHandle
+		internal struct WeakHandle
 		{
 			public readonly MethodInfo method;
 			public readonly WeakReference weakTarget;
-			public readonly Forwarder forwarder;
 
-			public WeakHandle(MethodInfo method, object target, bool generateForwarder = false)
+			public WeakHandle(MethodInfo method, object target)
 			{
 				this.weakTarget = new WeakReference(target);
 				this.method = method;
-				this.forwarder = generateForwarder ? GenerateForwarder(method) : null;
 			}
 
 			public override bool Equals(object obj)
@@ -55,6 +52,8 @@ namespace DarkCaster.Events
 				if(!(obj is WeakHandle))
 					return false;
 				var other = (WeakHandle)obj;
+				if(other.weakTarget == null || weakTarget == null)
+					return false;
 				return method == other.method && ReferenceEquals(weakTarget.Target, other.weakTarget.Target);
 			}
 
@@ -64,9 +63,26 @@ namespace DarkCaster.Events
 			}
 		}
 
-		private static Dictionary<MethodInfo, Forwarder> forwarderCache = new Dictionary<MethodInfo, Forwarder>();
+		internal sealed class WeakForwarder
+		{
+			public readonly WeakHandle handle;
+			private readonly ForwarderDelegate forwarder;
 
-		private static Forwarder GenerateForwarder(MethodInfo method)
+			public WeakForwarder(WeakHandle handle)
+			{
+				this.handle = handle;
+				this.forwarder = GenerateForwarder(handle.method);
+			}
+
+			public bool Raise(object sender, EventArgs args)
+			{
+				return forwarder(handle.weakTarget, sender, args);
+			}
+		}
+
+		private static readonly Dictionary<MethodInfo, ForwarderDelegate> forwarderCache = new Dictionary<MethodInfo, ForwarderDelegate>();
+
+		private static ForwarderDelegate GenerateForwarder(MethodInfo method)
 		{
 			lock(forwarderCache)
 			{
@@ -89,7 +105,7 @@ namespace DarkCaster.Events
 				generator.Emit(OpCodes.Call, method); //stack: [empty]
 				generator.Emit(OpCodes.Ldc_I4_S, 1); //stack: 1(true)
 				generator.Emit(OpCodes.Ret);
-				var result=(Forwarder)dynMethod.CreateDelegate(typeof(Forwarder));
+				var result=(ForwarderDelegate)dynMethod.CreateDelegate(typeof(ForwarderDelegate));
 				forwarderCache.Add(method, result);
 				return result;
 			}
@@ -107,16 +123,21 @@ namespace DarkCaster.Events
 	/// </summary>
 	public class SafeEventPublisher<T> : IEventPublisher<T> where T : EventArgs
 	{
-		//TODO: check other structures for effectiveness
-		private readonly HashSet<SafeEventPublisher.WeakHandle> subscribers = new HashSet<SafeEventPublisher.WeakHandle>();
+		private readonly Dictionary<SafeEventPublisher.WeakHandle, SafeEventPublisher.WeakForwarder> dynamicSubscribers = new Dictionary<SafeEventPublisher.WeakHandle, SafeEventPublisher.WeakForwarder>();
+
 		private readonly object locker = new object();
 
 		public void Subscribe(EventHandler<T> subscriber)
 		{
 			if(subscriber == null)
 				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
+
 			lock(locker)
-				subscribers.Add(new SafeEventPublisher.WeakHandle(subscriber.Method, subscriber.Target, true));
+			{
+				var key = new SafeEventPublisher.WeakHandle(subscriber.Method, subscriber.Target);
+				var val = new SafeEventPublisher.WeakForwarder(key);
+				dynamicSubscribers.Add(key, val);
+			}
 		}
 
 		public void Unsubscribe(EventHandler<T> subscriber)
@@ -124,14 +145,14 @@ namespace DarkCaster.Events
 			if(subscriber == null)
 				throw new EventSubscriptionException(null, "Failed to add a null subscriber of type " + typeof(T).FullName, null);
 			lock(locker)
-				subscribers.Remove(new SafeEventPublisher.WeakHandle(subscriber.Method, subscriber.Target));
+				dynamicSubscribers.Remove(new SafeEventPublisher.WeakHandle(subscriber.Method, subscriber.Target));
 		}
 
 		//TODO: remove obsolete elements
 		public void Raise(T args)
 		{
-			foreach(var el in subscribers)
-				el.forwarder(el.weakTarget, this, args);
+			foreach(var el in dynamicSubscribers)
+				el.Value.Raise(this, args);
 		}
 	}
 }
