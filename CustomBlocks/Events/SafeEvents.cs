@@ -137,15 +137,15 @@ namespace DarkCaster.Events
 		private SafeEventPublisher.WeakForwarder[] invList = { null };
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
-		private bool rebuildNeeded = false;
+		private bool invListRebuildNeeded = false;
 
 		private int UpdateInvListOnRise_Safe()
 		{
 			lock(managementLock)
 			{
-				if(!rebuildNeeded)
+				if(!invListRebuildNeeded)
 					return invListUsedLen;
-				rebuildNeeded = false;
+				invListRebuildNeeded = false;
 				//optionally recreate invocationList array if there is not enough space
 				if(dynamicSubscribers.Count < (invListUsedLen / 3) && invList.Length >= INVLIST_MIN_RESIZE_LIMIT)
 					invList = new SafeEventPublisher.WeakForwarder[invList.Length / 2];
@@ -179,7 +179,7 @@ namespace DarkCaster.Events
 				var key = new SafeEventPublisher.WeakHandle(method, target);
 				if(dynamicSubscribers.ContainsKey(key))
 					return;
-				rebuildNeeded = true;
+				invListRebuildNeeded = true;
 				var val = new SafeEventPublisher.WeakForwarder(key);
 				dynamicSubscribers.Add(key, val);
 			}
@@ -191,7 +191,7 @@ namespace DarkCaster.Events
 			{
 				if(!dynamicSubscribers.ContainsKey(handle))
 					return;
-				rebuildNeeded = true;
+				invListRebuildNeeded = true;
 				dynamicSubscribers[handle].MarkAsRemoved_Safe();
 				dynamicSubscribers.Remove(handle);
 			}
