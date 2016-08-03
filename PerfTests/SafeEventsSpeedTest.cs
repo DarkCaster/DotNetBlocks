@@ -79,7 +79,9 @@ namespace PerfTests
 			public void Raise()
 			{
 				++counter;
-				testEvent(this, new TestEventArgs() { Val = counter });
+				var testEventCopy = testEvent;
+				if(testEventCopy != null)
+					testEventCopy(this, new TestEventArgs() { Val = counter });
 			}
 		}
 
