@@ -102,6 +102,49 @@ namespace PerfTests
 			}
 		}
 
+		/*private class TestFastPublisher : ISpeedTestPublisher, IEventPublisher<TestEventArgs>
+		{
+			private FastSmartWeakEvent<EventHandler<TestEventArgs>> _testEvent = new FastSmartWeakEvent<EventHandler<TestEventArgs>>();
+			private event EventHandler<TestEventArgs> testEvent
+			{
+				add { _testEvent.Add(value); }
+				remove { _testEvent.Remove(value); }
+			}
+
+			public void Subscribe(EventHandler<TestEventArgs> subscriber)
+			{
+				testEvent += subscriber;
+			}
+
+			public void Unsubscribe(EventHandler<TestEventArgs> subscriber)
+			{
+				testEvent -= subscriber;
+			}
+
+			public IEventPublisher<TestEventArgs> GetEvent()
+			{
+				return this;
+			}
+
+			private int counter;
+
+			public TestFastPublisher()
+			{
+				counter = 0;
+			}
+
+			public void Raise()
+			{
+				++counter;
+				_testEvent.Raise(this, new TestEventArgs() { Val = counter });
+			}
+		}
+
+		public static void SpeedTest_FastEvents()
+		{
+			SpeedTest("FastEvents", new TestFastPublisher());
+		}*/
+
 		public static void SpeedTest_SafeEvents()
 		{
 			SpeedTest("SafeEvents", new TestSafeEventPublisher());
