@@ -59,6 +59,9 @@
     <Compile Include="Events\EventException.cs" />
     <Compile Include="Events\EventSubscriptionException.cs" />
     <Compile Include="Events\EventRaiseException.cs" />
+    <Compile Include="Events\ISafeEvent.cs" />
+    <Compile Include="Events\ISafeEventCtrl.cs" />
+    <Compile Include="Events\SafeEvent.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
