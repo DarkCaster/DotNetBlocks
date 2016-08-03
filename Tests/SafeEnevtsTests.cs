@@ -106,7 +106,7 @@ namespace Tests
 			public void Raise()
 			{
 				++counter;
-				testEvent.Raise(new TestEventArgs() { Val = counter });
+				testEvent.Raise(this, new TestEventArgs() { Val = counter });
 			}
 		}
 

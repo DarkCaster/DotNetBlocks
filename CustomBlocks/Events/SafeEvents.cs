@@ -211,8 +211,7 @@ namespace DarkCaster.Events
 			Remove_Safe(handle);
 		}
 
-		//TODO: thread safe async variants of Raise
-		public void Raise(T args)
+		public void Raise(object sender, T args)
 		{
 			lock(raiseLock)
 			{
@@ -221,7 +220,7 @@ namespace DarkCaster.Events
 				recursiveRaiseCheck = true;
 				var len = UpdateInvListOnRise_Safe();
 				for(int i = 0; i < len; ++i)
-					if(!invList[i].Raise_Safe(this, args))
+					if(!invList[i].Raise_Safe(sender, args))
 						Remove_Safe(invList[i].handle);
 				recursiveRaiseCheck = false;
 			}
