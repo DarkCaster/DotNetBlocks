@@ -46,7 +46,7 @@ namespace PerfTests
 			JsonSerHelperSpeedTest.TestDeserializeText();
 			BinarySerHelperSpeedTest.TestSerialize();
 			BinarySerHelperSpeedTest.TestDeserialize();
-			SafeEventsSpeedTest.SpeedTest();
+			SafeEventsSpeedTest.SpeedTest_SafeEvents();
 			SafeEventsSpeedTest.SpeedTest_DefaultEvents();
 			Console.Write("Press any key to continue . . . ");
 			Console.ReadKey(true);

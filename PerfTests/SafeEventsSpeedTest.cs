@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
 using DarkCaster.Events;
+//using PerfTests.External;
 
 namespace PerfTests
 {
 	public static class SafeEventsSpeedTest
 	{
-		public class TestEventArgs : EventArgs
+		private class TestEventArgs : EventArgs
 		{
 			public int Val { get; set; }
 		}
 
-		public class TestSubscriber
+		private class TestSubscriber
 		{
 			public int counter;
 			private readonly IEventPublisher<TestEventArgs> testEvent;
@@ -38,12 +39,23 @@ namespace PerfTests
 			}
 		}
 
-		public class TestSTPublisher
+		private interface ISpeedTestPublisher
 		{
-			public SafeEventPublisher<TestEventArgs> testEvent = new SafeEventPublisher<TestEventArgs>();
+			IEventPublisher<TestEventArgs> GetEvent();
+			void Raise();
+		}
+
+		private class TestSafeEventPublisher : ISpeedTestPublisher
+		{
+			private SafeEventPublisher<TestEventArgs> testEvent = new SafeEventPublisher<TestEventArgs>();
 			private int counter;
 
-			public TestSTPublisher()
+			public IEventPublisher<TestEventArgs> GetEvent()
+			{
+				return testEvent;
+			}
+
+			public TestSafeEventPublisher()
 			{
 				counter = 0;
 			}
@@ -55,7 +67,7 @@ namespace PerfTests
 			}
 		}
 
-		public class TestDefaultPublisher : IEventPublisher<TestEventArgs>
+		private class TestDefaultPublisher : ISpeedTestPublisher, IEventPublisher<TestEventArgs>
 		{
 			private event EventHandler<TestEventArgs> testEvent;
 
@@ -67,6 +79,11 @@ namespace PerfTests
 			public void Unsubscribe(EventHandler<TestEventArgs> subscriber)
 			{
 				testEvent -= subscriber;
+			}
+
+			public IEventPublisher<TestEventArgs> GetEvent()
+			{
+				return this;
 			}
 
 			private int counter;
@@ -85,36 +102,20 @@ namespace PerfTests
 			}
 		}
 
-		public static void SpeedTest()
+		public static void SpeedTest_SafeEvents()
 		{
-			const int iter = 50000000;
-			var publisher = new TestSTPublisher();
-			var listener = new TestSubscriber(publisher.testEvent);
-			listener.Subscribe();
-
-			var sw = new Stopwatch();
-			var process = Process.GetCurrentProcess();
-
-			var startCpuTime = process.TotalProcessorTime;
-			sw.Start();
-			for(int i = 0; i < iter; ++i)
-				publisher.Raise();
-			sw.Stop();
-			var stopCpuTime = process.TotalProcessorTime;
-
-			var cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
-			var diff = sw.Elapsed.TotalSeconds;
-			var speed = iter / diff;
-
-			Console.WriteLine(string.Format("SafeEvents : {0} events in {1:##.##} S. Speed=={2:##.###} ev/S.", listener.counter, diff, speed));
-			Console.WriteLine(string.Format("SafeEvents : total processor time {0:##.###} S", cpuDiff));
+			SpeedTest("SafeEvents", new TestSafeEventPublisher());
 		}
 
 		public static void SpeedTest_DefaultEvents()
 		{
+			SpeedTest("SafeEvents", new TestDefaultPublisher());
+		}
+
+		private static void SpeedTest( string name, ISpeedTestPublisher publisher )
+		{
 			const int iter = 50000000;
-			var publisher = new TestDefaultPublisher();
-			var listener = new TestSubscriber(publisher);
+			var listener = new TestSubscriber(publisher.GetEvent());
 			listener.Subscribe();
 
 			var sw = new Stopwatch();
@@ -131,8 +132,8 @@ namespace PerfTests
 			var diff = sw.Elapsed.TotalSeconds;
 			var speed = iter / diff;
 
-			Console.WriteLine(string.Format("Default events : {0} events in {1:##.##} S. Speed=={2:##.###} ev/S.", listener.counter, diff, speed));
-			Console.WriteLine(string.Format("Default events : total processor time {0:##.###} S", cpuDiff));
+			Console.WriteLine(string.Format("{0} : {1} events in {2:##.##} S. Speed=={3:##.###} ev/S.", name, listener.counter, diff, speed));
+			Console.WriteLine(string.Format("{0} : total processor time {1:##.###} S", name, cpuDiff));
 		}
 	}
 }
