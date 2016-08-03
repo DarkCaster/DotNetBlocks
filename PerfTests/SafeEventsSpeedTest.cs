@@ -109,7 +109,7 @@ namespace PerfTests
 
 		public static void SpeedTest_DefaultEvents()
 		{
-			SpeedTest("SafeEvents", new TestDefaultPublisher());
+			SpeedTest("DefaultEvents", new TestDefaultPublisher());
 		}
 
 		private static void SpeedTest( string name, ISpeedTestPublisher publisher )
