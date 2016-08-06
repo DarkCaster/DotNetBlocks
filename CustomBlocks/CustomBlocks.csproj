@@ -54,14 +54,14 @@
     <Compile Include="Serialization\BinarySerialization\BinarySerializationHelperFactory.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationFactoryException.cs" />
     <Compile Include="Config\IConfigProvider.cs" />
-    <Compile Include="Events\SafeEvents.cs" />
-    <Compile Include="Events\IEventPublisher.cs" />
     <Compile Include="Events\EventException.cs" />
     <Compile Include="Events\EventSubscriptionException.cs" />
     <Compile Include="Events\EventRaiseException.cs" />
     <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
     <Compile Include="Events\SafeEvent.cs" />
+    <Compile Include="Events\ToRemove\IEventPublisher.cs" />
+    <Compile Include="Events\ToRemove\SafeEvents.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
@@ -71,6 +71,7 @@
     <Folder Include="Serialization\Private\" />
     <Folder Include="Config\" />
     <Folder Include="Events\" />
+    <Folder Include="Events\ToRemove\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
