@@ -22,18 +22,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 using System;
-namespace DarkCaster
+
+namespace DarkCaster.Events
 {
 	/// <summary>
-	/// Events implementation, that aims to mitigate some typical problems with default c# events.
+	/// Simple wrapper on top of events, that aims to simplify some particular usage patterns,
+	/// and restrict usage of some other unsafe and error-prone practices.
 	/// This particular class designed to effectively work with a small count of simultaneous subscribers, as standard events.
-	/// It does not scale good, but performance is similar to regular c# events.
+	/// It does not scale good, but performance is similar to regular c# events (it is based on default events).
+	/// Also there is a special "debug" version of SafeEvent class, that may be used to debug situations when you forgot to unsubscribe,
+	/// check for recursive invoke and perform some other checks (see it's docs for detailed description);
 	///
 	/// Key features of this custom events class:
-	/// Thread safety for publisher: raising event is thread safe and will block when it is run from different threads simultaneously.
-	/// Thread safety for subscriber: subscription management methods are thread safe.
-	/// It is also possible to unsubscribe in such way that subscriber's event callback will not be ever triggered after unsubscribe method exit
+	/// Publisher: raising event is thread safe and will block when it is run from different threads simultaneously.
+	/// Subscriber: it is possible to unsubscribe in such way that subscriber's event callback will not be ever triggered after unsubscribe method exit
 	/// (optional behavior, see interface docs).
 	///
 	/// Things to consider at subscriber side:
@@ -45,16 +49,90 @@ namespace DarkCaster
 	/// but still not garbage collected. So subscriber's logic should be robust enough to be called in such "disconnected" state (also there is a needless overhead).
 	/// There is no way to accurately predict from the publisher side when exactly subscriber is disposed and disconnected (especially in multithreaded scenario).
 	/// That why it is a subscriber's responsibility to unsubscribe from publisher when it is shuting down.
-	/// This events implementation will not trigger subscriber's event callback after unsubscribe method is exited.
-	///
-	/// Also there is special "debug" version of SafeEvent class, that may be used to debug situations when you forgot to unsubscribe
-	/// (see it's docs for detailed description)
+	/// This events implementation guaranteed not to trigger subscriber's event callback after unsubscribe method is exited (when waitForRemoval param set to true).
 	/// </summary>
-	public class SafeEvent
+	public sealed class SafeEvent<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs
 	{
-		public SafeEvent()
+		private EventHandler<T> curSubscribers;
+
+		private readonly object raiseLock = new object();
+		private readonly object manageLock = new object();
+
+		private int CheckAndRemoveDublicates(Delegate[] target)
 		{
+			var curLen = target.Length;
+			for(int sp = 0; sp < curLen; ++sp)
+				for(int tp = sp + 1; tp < curLen; ++tp)
+					while(target[tp].Equals(target[sp]) && tp < curLen)
+					{
+						target[tp] = target[curLen - 1];
+						target[curLen - 1] = null;
+						--curLen;
+					}
+			return curLen;
+		}
+
+		private int RemoveDublicatesFromTarget(Delegate[] source, Delegate[] target, int curTargetLen)
+		{
+			//remove dublicates from target using source list
+			for(int sp = 0; sp < source.Length; ++sp)
+				for(int tp = 0; tp < curTargetLen; ++tp)
+					while(target[tp].Equals(source[sp]) && tp < curTargetLen)
+					{
+						target[tp] = target[curTargetLen - 1];
+						target[curTargetLen - 1] = null;
+						--curTargetLen;
+					}
+			return curTargetLen;
+		}
+
+		public void Subscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
+		{
+			if(subscriber == null)
+			{
+				if(ignoreErrors)
+					return;
+				throw new EventSubscriptionException(null, "Trying to subscribe a null delegate", null);
+			}
+
+			var newSubList = subscriber.GetInvocationList();
+			var newSubLen1 = CheckAndRemoveDublicates(newSubList);
+			if(!ignoreErrors && newSubLen1 != newSubList.Length)
+				throw new EventSubscriptionException(subscriber, "Delegate list contain dublicates", null);
+
+			lock(manageLock)
+			{
+				if(curSubscribers != null)
+				{
+					var curSubList = curSubscribers.GetInvocationList();
+					var newSubLen2 = RemoveDublicatesFromTarget(curSubList, newSubList, newSubLen1);
+					if(newSubLen2 != newSubLen1 && !ignoreErrors)
+						throw new EventSubscriptionException(subscriber, "New delegate list contain dublicates from current list", null);
+				}
+				Delegate.Combine(curSubscribers, Delegate.Combine(newSubList));
+			}
+		}
+
+		public void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false, bool waitForRemoval = false)
+		{
+			throw new NotImplementedException("TODO");
+		}
+
+		public void Raise(object sender, T args)
+		{
+			lock(raiseLock)
+			{
+				//TODO: switch to eventList?.Invoke(this, args);
+				var invokeList = curSubscribers;
+				if(invokeList != null)
+					invokeList.Invoke(sender, args);
+			}
+		}
+
+		public event EventHandler<T> Event
+		{
+			add { Subscribe(value); }
+			remove { Unsubscribe(value, false); }
 		}
 	}
 }
-
