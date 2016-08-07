@@ -32,10 +32,6 @@ namespace DarkCaster.Events
 	/// </summary>
 	public sealed class EventRaiseException : EventException
 	{
-		public readonly object subscriber;
-		public EventRaiseException(string message, Exception inner, object subscriber=null) : base(message, inner)
-		{
-			this.subscriber = subscriber;
-		}
+		public EventRaiseException(string message, Exception inner, Delegate subscriber = null) : base(message, subscriber, inner) { }
 	}
 }

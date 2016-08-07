@@ -32,6 +32,10 @@ namespace DarkCaster.Events
 	/// </summary>
 	public abstract class EventException : Exception
 	{
-		protected EventException(string message, Exception inner) : base(message, inner) { }
+		public readonly Delegate subscriber;
+		protected EventException(string message, Delegate subscriber, Exception inner) : base(message, inner)
+		{
+			this.subscriber = subscriber;
+		}
 	}
 }

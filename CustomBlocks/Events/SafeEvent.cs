@@ -51,6 +51,9 @@ namespace DarkCaster.Events
 	/// That why it is a subscriber's responsibility to unsubscribe from publisher when it is shuting down.
 	/// This events implementation guaranteed not to trigger subscriber's event callback after unsubscribe method is exited (when waitForRemoval param set to true).
 	/// </summary>
+	/// 
+	/// 
+	/// TODO: check performance for different subscribers count, maybe switch to different underlying storage and simplify delegate management logic
 	public sealed class SafeEvent<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs
 	{
 		private EventHandler<T> curSubscribers;
@@ -58,7 +61,8 @@ namespace DarkCaster.Events
 		private readonly object raiseLock = new object();
 		private readonly object manageLock = new object();
 
-		private int CheckAndRemoveDublicates(Delegate[] target)
+		//remove dublicates from target invocation list
+		private int RemoveDublicates(Delegate[] target)
 		{
 			var curLen = target.Length;
 			for(int sp = 0; sp < curLen; ++sp)
@@ -72,18 +76,18 @@ namespace DarkCaster.Events
 			return curLen;
 		}
 
-		private int RemoveDublicatesFromTarget(Delegate[] source, Delegate[] target, int curTargetLen)
+		//remove dublicates from target using source list
+		private int RemoveDublicates(Delegate[] source, int usedSourceLen, Delegate[] target, int usedTargetLen)
 		{
-			//remove dublicates from target using source list
-			for(int sp = 0; sp < source.Length; ++sp)
-				for(int tp = 0; tp < curTargetLen; ++tp)
-					while(target[tp].Equals(source[sp]) && tp < curTargetLen)
+			for(int sp = 0; sp < usedSourceLen; ++sp)
+				for(int tp = 0; tp < usedTargetLen; ++tp)
+					while(target[tp].Equals(source[sp]) && tp < usedTargetLen)
 					{
-						target[tp] = target[curTargetLen - 1];
-						target[curTargetLen - 1] = null;
-						--curTargetLen;
+						target[tp] = target[usedTargetLen - 1];
+						target[usedTargetLen - 1] = null;
+						--usedTargetLen;
 					}
-			return curTargetLen;
+			return usedTargetLen;
 		}
 
 		public void Subscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
@@ -92,40 +96,71 @@ namespace DarkCaster.Events
 			{
 				if(ignoreErrors)
 					return;
-				throw new EventSubscriptionException(null, "Trying to subscribe a null delegate", null);
+				throw new EventSubscriptionException(null, "Subscriber is null", null);
 			}
 
-			var newSubList = subscriber.GetInvocationList();
-			var newSubLen1 = CheckAndRemoveDublicates(newSubList);
-			if(!ignoreErrors && newSubLen1 != newSubList.Length)
-				throw new EventSubscriptionException(subscriber, "Delegate list contain dublicates", null);
+			var subList = subscriber.GetInvocationList();
+			var subLenPre = RemoveDublicates(subList);
+			if(!ignoreErrors && subLenPre != subList.Length)
+				throw new EventSubscriptionException(subscriber, "Subscriber's delegate list contains dublicates", null);
 
 			lock(manageLock)
 			{
 				if(curSubscribers != null)
 				{
 					var curSubList = curSubscribers.GetInvocationList();
-					var newSubLen2 = RemoveDublicatesFromTarget(curSubList, newSubList, newSubLen1);
-					if(newSubLen2 != newSubLen1 && !ignoreErrors)
-						throw new EventSubscriptionException(subscriber, "New delegate list contain dublicates from current list", null);
+					var subLenPost = RemoveDublicates(curSubList, curSubList.Length, subList, subLenPre);
+					if(subLenPost != subLenPre && !ignoreErrors)
+						throw new EventSubscriptionException(subscriber, "Subscriber's delegate list contains dublicates from current list", null);
 				}
-				Delegate.Combine(curSubscribers, Delegate.Combine(newSubList));
+				curSubscribers = (EventHandler<T>)Delegate.Combine(curSubscribers, Delegate.Combine(subList));
+			}
+		}
+
+		private void Unsubscribe_Internal(Delegate[] subList, int subLen, bool ignoreErrors)
+		{
+			lock(manageLock)
+			{
+				if(curSubscribers == null)
+				{
+					if(ignoreErrors)
+						return;
+					throw new EventSubscriptionException(null, "Current subscribers list is already null", null);
+				}
+				var curList = curSubscribers.GetInvocationList();
+				var newCurLen=RemoveDublicates(subList, subLen, curList, curList.Length);
+				if(curList.Length-newCurLen!=subLen && !ignoreErrors)
+					throw new EventSubscriptionException(null, "Current subscribers list do not contain some subscribers requested for remove", null);
+				curSubscribers = (EventHandler<T>)Delegate.Combine(curList);
 			}
 		}
 
 		public void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false, bool waitForRemoval = false)
 		{
-			throw new NotImplementedException("TODO");
+			if(subscriber == null)
+			{
+				if(ignoreErrors)
+					return;
+				throw new EventSubscriptionException(null, "Subscriber is null", null);
+			}
+
+			var subList = subscriber.GetInvocationList();
+			var subLenPre = RemoveDublicates(subList);
+			if(!ignoreErrors && subLenPre != subList.Length)
+				throw new EventSubscriptionException(subscriber, "Subscriber's delegate list contains dublicates", null);
+
+			if(waitForRemoval)
+				lock(raiseLock)
+					Unsubscribe_Internal(subList, subLenPre, ignoreErrors);
+			else
+				Unsubscribe_Internal(subList, subLenPre, ignoreErrors);
 		}
 
 		public void Raise(object sender, T args)
 		{
 			lock(raiseLock)
 			{
-				//TODO: switch to eventList?.Invoke(this, args);
-				var invokeList = curSubscribers;
-				if(invokeList != null)
-					invokeList.Invoke(sender, args);
+				throw new NotImplementedException("TODO");
 			}
 		}
 
