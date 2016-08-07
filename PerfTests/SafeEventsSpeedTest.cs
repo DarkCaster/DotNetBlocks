@@ -5,6 +5,8 @@ using DarkCaster.Events;
 
 namespace PerfTests
 {
+	//to be removed
+	/*
 	public static class SafeEventsSpeedTest
 	{
 		private class TestEventArgs : EventArgs
@@ -143,7 +145,7 @@ namespace PerfTests
 		public static void SpeedTest_FastEvents()
 		{
 			SpeedTest("FastEvents", new TestFastPublisher());
-		}*/
+		}
 
 		public static void SpeedTest_SafeEvents()
 		{
@@ -178,5 +180,5 @@ namespace PerfTests
 			Console.WriteLine(string.Format("{0} : {1} events in {2:##.##} S. Speed=={3:##.###} ev/S.", name, listener.counter, diff, speed));
 			Console.WriteLine(string.Format("{0} : total processor time {1:##.###} S", name, cpuDiff));
 		}
-	}
+	}*/
 }

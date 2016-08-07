@@ -60,7 +60,6 @@
     <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
     <Compile Include="Events\SafeEvent.cs" />
-    <Compile Include="Events\ToRemove\IEventPublisher.cs" />
     <Compile Include="Events\ToRemove\SafeEvents.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -32,7 +32,8 @@ using DarkCaster.Events;
 namespace Tests
 {
 
-	//a work-in-progress tests, will be changed in future.
+	//obsolete
+	/*
 	[TestFixture]
 	public class SafeEnevtsTests
 	{
@@ -317,4 +318,5 @@ namespace Tests
 			TestMethodInfo_AreEquals<GDelegate3<bool>, GDelegate3<bool>>(obj1.GenericMethod4<bool>, objX.GenericMethod4<bool>);
 		}
 	}
+	*/
 }

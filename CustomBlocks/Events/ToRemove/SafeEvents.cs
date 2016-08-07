@@ -30,10 +30,12 @@ using System.Collections.Generic;
 
 namespace DarkCaster.Events
 {
-	internal static class SafeEventPublisher
+	//obsolete, to be removed
+	/*
+	 internal static class SafeEventPublisher
 	{
 		private static readonly MethodInfo GetStrongRef = typeof(WeakReference).GetMethod("get_Target");
-		private static readonly Type[] forwarderParams = new Type[] { typeof(WeakReference)/*weakRefToSubscriber*/, typeof(object)/*sender*/, typeof(EventArgs)/*event args*/ };
+		private static readonly Type[] forwarderParams = new Type[] { typeof(WeakReference), typeof(object), typeof(EventArgs) };
 		private delegate bool ForwarderDelegate(WeakReference reference, object sender, EventArgs args);
 
 		internal struct WeakHandle
@@ -225,5 +227,5 @@ namespace DarkCaster.Events
 				recursiveRaiseCheck = false;
 			}
 		}
-	}
+	}*/
 }
