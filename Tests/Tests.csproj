@@ -46,6 +46,8 @@
     <Compile Include="MsgPackSerializerTests.cs" />
     <Compile Include="SerializationHelpersTests.cs" />
     <Compile Include="SafeEnevtsTests.cs" />
+    <Compile Include="SafeEventTests.cs" />
+    <Compile Include="Shared\SafeEventTestsStuff.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
@@ -56,6 +58,9 @@
       <Project>{2c871c2e-1544-413f-8654-ad0b3838dcb3}</Project>
       <Name>CustomBlocks</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Shared\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
