@@ -45,7 +45,6 @@
     <Compile Include="MMHashTests.cs" />
     <Compile Include="MsgPackSerializerTests.cs" />
     <Compile Include="SerializationHelpersTests.cs" />
-    <Compile Include="SafeEnevtsTests.cs" />
     <Compile Include="SafeEventTests.cs" />
     <Compile Include="Shared\SafeEventTestsStuff.cs" />
     <Compile Include="CommonEventTests.cs" />
