@@ -33,29 +33,40 @@ namespace Tests.SafeEventStuff
 		public int Val { get; set; }
 	}
 
-	public class SimpleSubscriber
+	public interface IPublisher
+	{
+		ISafeEvent<TestEventArgs> TheEvent { get; }
+		ISafeEventCtrl<TestEventArgs> TheEventCtrl { get; }
+	}
+
+	public interface ISubscriber
+	{
+		int Counter { get; set; }
+		int LastValue { get; set; }
+		EventHandler<TestEventArgs> OnEvent { get; }
+	}
+
+	public class SimpleSubscriber : ISubscriber
 	{
 		public int counter = 0;
 		public int lastValue = 0;
-
 		public void OnTestEvent(object sender, TestEventArgs args)
 		{
 			++counter;
 			lastValue = args.Val;
 		}
+		public int Counter { get { return counter; } set { counter = value; } }
+		public int LastValue { get { return lastValue; } set { lastValue = value; } }
+		public EventHandler<TestEventArgs> OnEvent { get { return OnTestEvent; } }
 	}
 
-	public class SimplePublisher
+	public class SimplePublisher : IPublisher
 	{
 		private int counter;
 		private SafeEvent<TestEventArgs> theEvent = new SafeEvent<TestEventArgs>();
 		public ISafeEvent<TestEventArgs> TheEvent { get { return theEvent; } }
-
-		public SimplePublisher()
-		{
-			counter = 0;
-		}
-
+		public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEvent; } }
+		public SimplePublisher() { counter = 0; }
 		public void Raise()
 		{
 			++counter;

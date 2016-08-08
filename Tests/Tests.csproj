@@ -48,6 +48,7 @@
     <Compile Include="SafeEnevtsTests.cs" />
     <Compile Include="SafeEventTests.cs" />
     <Compile Include="Shared\SafeEventTestsStuff.cs" />
+    <Compile Include="CommonEventTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">

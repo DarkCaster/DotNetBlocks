@@ -34,6 +34,13 @@ namespace Tests
 	[TestFixture]
 	public class SafeEventTests
 	{
-		
+		[Test]
+		public void SubscribeUnsubscribe()
+		{
+			var sub1 = new SimpleSubscriber();
+			var sub2 = new SimpleSubscriber();
+			var pub = new SimplePublisher();
+			CommonEventTests.SubscribeUnsubscribe(sub1, sub2, pub);
+		}
 	}
 }
