@@ -67,7 +67,7 @@ namespace DarkCaster.Events
 			var curLen = target.Length;
 			for(int sp = 0; sp < curLen; ++sp)
 				for(int tp = sp + 1; tp < curLen; ++tp)
-					while(target[tp].Equals(target[sp]) && tp < curLen)
+					while(tp < curLen && target[tp].Equals(target[sp]))
 					{
 						target[tp] = target[curLen - 1];
 						target[curLen - 1] = null;
@@ -81,7 +81,7 @@ namespace DarkCaster.Events
 		{
 			for(int sp = 0; sp < usedSourceLen; ++sp)
 				for(int tp = 0; tp < usedTargetLen; ++tp)
-					while(target[tp].Equals(source[sp]) && tp < usedTargetLen)
+					while(tp < usedTargetLen && target[tp].Equals(source[sp]))
 					{
 						target[tp] = target[usedTargetLen - 1];
 						target[usedTargetLen - 1] = null;
