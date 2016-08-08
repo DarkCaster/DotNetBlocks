@@ -169,5 +169,14 @@ namespace DarkCaster.Events
 			add { Subscribe(value); }
 			remove { Unsubscribe(value, false); }
 		}
+
+		public int SubCount
+		{
+			get
+			{
+				lock(manageLock)
+					return curSubscribers == null ? 0 : curSubscribers.GetInvocationList().Length;
+			}
+		}
 	}
 }

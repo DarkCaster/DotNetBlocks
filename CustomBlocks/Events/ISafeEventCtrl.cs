@@ -34,5 +34,6 @@ namespace DarkCaster.Events
 	public interface ISafeEventCtrl<T> where T : EventArgs
 	{
 		void Raise(object sender, T args);
+		int SubCount { get; }
 	}
 }
