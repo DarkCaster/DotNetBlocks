@@ -96,13 +96,13 @@ namespace DarkCaster.Events
 			{
 				if(ignoreErrors)
 					return;
-				throw new EventSubscriptionException(null, "Subscriber is null", null);
+				throw new EventSubscriptionException("Subscriber is null", null, null);
 			}
 
 			var subList = subscriber.GetInvocationList();
 			var subLenPre = RemoveDublicates(subList);
 			if(!ignoreErrors && subLenPre != subList.Length)
-				throw new EventSubscriptionException(subscriber, "Subscriber's delegate list contains dublicates", null);
+				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
 
 			lock(manageLock)
 			{
@@ -111,7 +111,7 @@ namespace DarkCaster.Events
 					var curSubList = curSubscribers.GetInvocationList();
 					var subLenPost = RemoveDublicates(curSubList, curSubList.Length, subList, subLenPre);
 					if(subLenPost != subLenPre && !ignoreErrors)
-						throw new EventSubscriptionException(subscriber, "Subscriber's delegate list contains dublicates from current list", null);
+						throw new EventSubscriptionException("Subscriber's delegate list contains dublicates from current list", subscriber, null);
 				}
 				curSubscribers = (EventHandler<T>)Delegate.Combine(curSubscribers, Delegate.Combine(subList));
 			}
@@ -125,12 +125,12 @@ namespace DarkCaster.Events
 				{
 					if(ignoreErrors)
 						return;
-					throw new EventSubscriptionException(null, "Current subscribers list is already null", null);
+					throw new EventSubscriptionException("Current subscribers list is already null", null, null);
 				}
 				var curList = curSubscribers.GetInvocationList();
 				var newCurLen=RemoveDublicates(subList, subLen, curList, curList.Length);
 				if(curList.Length-newCurLen!=subLen && !ignoreErrors)
-					throw new EventSubscriptionException(null, "Current subscribers list do not contain some subscribers requested for remove", null);
+					throw new EventSubscriptionException("Current subscribers list do not contain some subscribers requested for remove", null, null);
 				curSubscribers = (EventHandler<T>)Delegate.Combine(curList);
 			}
 		}
@@ -141,13 +141,13 @@ namespace DarkCaster.Events
 			{
 				if(ignoreErrors)
 					return;
-				throw new EventSubscriptionException(null, "Subscriber is null", null);
+				throw new EventSubscriptionException("Subscriber is null", null, null);
 			}
 
 			var subList = subscriber.GetInvocationList();
 			var subLenPre = RemoveDublicates(subList);
 			if(!ignoreErrors && subLenPre != subList.Length)
-				throw new EventSubscriptionException(subscriber, "Subscriber's delegate list contains dublicates", null);
+				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
 
 			if(waitForRemoval)
 				lock(raiseLock)

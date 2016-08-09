@@ -32,6 +32,6 @@ namespace DarkCaster.Events
 	/// </summary>
 	public sealed class EventRaiseException : EventException
 	{
-		public EventRaiseException(string message, Exception inner, Delegate subscriber = null) : base(message, subscriber, inner) { }
+		public EventRaiseException(string message, Delegate subscriber, Exception inner) : base(message, subscriber, inner) { }
 	}
 }

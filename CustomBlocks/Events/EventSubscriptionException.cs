@@ -32,6 +32,6 @@ namespace DarkCaster.Events
 	/// </summary>
 	public sealed class EventSubscriptionException : EventException
 	{
-		public EventSubscriptionException(Delegate subscriber, string message, Exception inner) : base(message, subscriber, inner) { }
+		public EventSubscriptionException(string message, Delegate subscriber, Exception inner) : base(message, subscriber, inner) { }
 	}
 }
