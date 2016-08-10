@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 
 namespace DarkCaster.Events
 {
@@ -33,7 +34,7 @@ namespace DarkCaster.Events
 	/// </summary>
 	public interface ISafeEventCtrl<T> where T : EventArgs
 	{
-		void Raise(object sender, T args);
+		bool Raise(object sender, T args, ICollection<EventRaiseException> exceptions = null);
 		int SubCount { get; }
 	}
 }

@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 
 namespace DarkCaster.Events
 {
@@ -156,11 +157,31 @@ namespace DarkCaster.Events
 				Unsubscribe_Internal(subList, subLenPre, ignoreErrors);
 		}
 
-		public void Raise(object sender, T args)
+		public bool Raise(object sender, T args, ICollection<EventRaiseException> exceptions = null)
 		{
 			lock(raiseLock)
 			{
-				throw new NotImplementedException("TODO");
+				if(exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				EventHandler<T>[] invocationList;
+				lock(manageLock)
+				{
+					if(curSubscribers == null)
+						return true;
+					invocationList = (EventHandler<T>[])curSubscribers.GetInvocationList();
+				}
+				var result = true;
+				for(int i = 0; i < invocationList.Length; ++i)
+				{
+					try { invocationList[i](sender, args); }
+					catch(Exception ex)
+					{
+						if(exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invocationList[i], ex));
+						result = false;
+					}
+				}
+				return result;
 			}
 		}
 
