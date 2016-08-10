@@ -163,17 +163,17 @@ namespace DarkCaster.Events
 			{
 				if(exceptions != null && exceptions.IsReadOnly)
 					exceptions = null;
-				EventHandler<T>[] invocationList;
+				Delegate[] invocationList;
 				lock(manageLock)
 				{
 					if(curSubscribers == null)
 						return true;
-					invocationList = (EventHandler<T>[])curSubscribers.GetInvocationList();
+					invocationList = curSubscribers.GetInvocationList();
 				}
 				var result = true;
 				for(int i = 0; i < invocationList.Length; ++i)
 				{
-					try { invocationList[i](sender, args); }
+					try { ((EventHandler<T>)invocationList[i])(sender, args); }
 					catch(Exception ex)
 					{
 						if(exceptions != null)
