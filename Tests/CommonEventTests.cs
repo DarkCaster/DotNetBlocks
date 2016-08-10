@@ -156,6 +156,27 @@ namespace Tests
 			Assert.AreEqual(false, pub.Raise(null));
 			Assert.AreEqual(false, pub.Raise(exceptions));
 			Assert.AreEqual(1, exceptions.Count);
+			Assert.AreEqual(badSub.OnEvent, exceptions[0].subscriber);
+			Assert.AreEqual(4, goodSub1.Counter);
+			Assert.AreEqual(4, goodSub1.LastValue);
+			Assert.AreEqual(2, goodSub2.Counter);
+			Assert.AreEqual(4, goodSub2.LastValue);
+			Assert.AreEqual(2, badSub.Counter);
+			Assert.AreEqual(4, badSub.LastValue);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(badSub.OnEvent));
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(true, pub.Raise(exceptions));
+			Assert.AreEqual(1, exceptions.Count);
+			Assert.AreEqual(badSub.OnEvent, exceptions[0].subscriber);
+			Assert.AreEqual(2, badSub.Counter);
+			Assert.AreEqual(4, badSub.LastValue);
+			Assert.AreEqual(6, goodSub1.Counter);
+			Assert.AreEqual(6, goodSub1.LastValue);
+			Assert.AreEqual(4, goodSub2.Counter);
+			Assert.AreEqual(6, goodSub2.LastValue);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(goodSub1.OnEvent));
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(goodSub2.OnEvent));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
 		}
 	}
 }
