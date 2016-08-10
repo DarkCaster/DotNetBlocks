@@ -141,7 +141,7 @@ namespace Tests
 			public EventHandler<TestEventArgs> OnEvent { get { return OnTestEvent; } }
 		}
 
-		public static void SubscriberException(ISubscriber goodSub1, ISubscriber goodSub2, ISubscriber badSub, IPublisher pub)
+		public static void SubscriberException(ISubscriber goodSub1, ISubscriber goodSub2, ISubscriber failingSub, IPublisher pub)
 		{
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
 			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(goodSub1.OnEvent));
@@ -149,27 +149,27 @@ namespace Tests
 			var exceptions = new List<EventRaiseException>();
 			Assert.AreEqual(true, pub.Raise(null));
 			Assert.AreEqual(true, pub.Raise(exceptions));
-			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(badSub.OnEvent));
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(failingSub.OnEvent));
 			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
 			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(goodSub2.OnEvent));
 			Assert.AreEqual(3, pub.TheEventCtrl.SubCount);
 			Assert.AreEqual(false, pub.Raise(null));
 			Assert.AreEqual(false, pub.Raise(exceptions));
 			Assert.AreEqual(1, exceptions.Count);
-			Assert.AreEqual(badSub.OnEvent, exceptions[0].subscriber);
+			Assert.AreEqual(failingSub.OnEvent, exceptions[0].subscriber);
 			Assert.AreEqual(4, goodSub1.Counter);
 			Assert.AreEqual(4, goodSub1.LastValue);
 			Assert.AreEqual(2, goodSub2.Counter);
 			Assert.AreEqual(4, goodSub2.LastValue);
-			Assert.AreEqual(2, badSub.Counter);
-			Assert.AreEqual(4, badSub.LastValue);
-			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(badSub.OnEvent));
+			Assert.AreEqual(2, failingSub.Counter);
+			Assert.AreEqual(4, failingSub.LastValue);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(failingSub.OnEvent));
 			Assert.AreEqual(true, pub.Raise(null));
 			Assert.AreEqual(true, pub.Raise(exceptions));
 			Assert.AreEqual(1, exceptions.Count);
-			Assert.AreEqual(badSub.OnEvent, exceptions[0].subscriber);
-			Assert.AreEqual(2, badSub.Counter);
-			Assert.AreEqual(4, badSub.LastValue);
+			Assert.AreEqual(failingSub.OnEvent, exceptions[0].subscriber);
+			Assert.AreEqual(2, failingSub.Counter);
+			Assert.AreEqual(4, failingSub.LastValue);
 			Assert.AreEqual(6, goodSub1.Counter);
 			Assert.AreEqual(6, goodSub1.LastValue);
 			Assert.AreEqual(4, goodSub2.Counter);
