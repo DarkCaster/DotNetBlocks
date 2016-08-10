@@ -39,7 +39,8 @@ namespace Tests
 		{
 			var sub1 = new SimpleSubscriber();
 			var sub2 = new SimpleSubscriber();
-			var pub = new SimplePublisher();
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>,SafeEvent<TestEventArgs>>(ev, ev);
 			CommonEventTests.SubscribeUnsubscribe(sub1, sub2, pub);
 		}
 
@@ -49,7 +50,8 @@ namespace Tests
 			var sub1 = new SimpleSubscriber();
 			var sub2 = new SimpleSubscriber();
 			var sub3 = new CommonEventTests.FailingSubscriber();
-			var pub = new SimplePublisher();
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>,SafeEvent<TestEventArgs>>(ev, ev);
 			CommonEventTests.SubscriberException(sub1, sub2, sub3, pub);
 		}
 	}

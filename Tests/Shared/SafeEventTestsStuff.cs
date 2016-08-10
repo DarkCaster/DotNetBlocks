@@ -62,17 +62,21 @@ namespace Tests.SafeEventStuff
 		public EventHandler<TestEventArgs> OnEvent { get { return OnTestEvent; } }
 	}
 
-	public class SimplePublisher : IPublisher
+	public class SimplePublisher<T, C> : IPublisher
+		where T : ISafeEvent<TestEventArgs>
+		where C : ISafeEventCtrl<TestEventArgs>
 	{
 		private int counter;
-		private SafeEvent<TestEventArgs> theEvent = new SafeEvent<TestEventArgs>();
+		private readonly C theEventCtrl;
+		private readonly T theEvent;
 		public ISafeEvent<TestEventArgs> TheEvent { get { return theEvent; } }
-		public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEvent; } }
-		public SimplePublisher() { counter = 0; }
-		public bool Raise(ICollection<EventRaiseException> exceptions=null)
+		public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEventCtrl; } }
+		private SimplePublisher() { throw new NotSupportedException(); }
+		public SimplePublisher(T iSafeEvent, C iSafeEventCtrl) { counter = 0; theEvent = iSafeEvent; theEventCtrl = iSafeEventCtrl; }
+		public bool Raise(ICollection<EventRaiseException> exceptions = null)
 		{
 			++counter;
-			return theEvent.Raise(this, new TestEventArgs() { Val = counter }, exceptions);
+			return theEventCtrl.Raise(this, new TestEventArgs() { Val = counter }, exceptions);
 		}
 	}
 }
