@@ -54,5 +54,14 @@ namespace Tests
 			var pub = new SimplePublisher<SafeEvent<TestEventArgs>,SafeEvent<TestEventArgs>>(ev, ev);
 			CommonEventTests.SubscriberException(sub1, sub2, sub3, pub);
 		}
+
+		[Test]
+		public void Raise()
+		{
+			var sub1 = new SimpleSubscriber();
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			CommonEventTests.Raise(sub1, pub);
+		}
 	}
 }

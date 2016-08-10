@@ -141,6 +141,21 @@ namespace Tests
 			public EventHandler<TestEventArgs> OnEvent { get { return OnTestEvent; } }
 		}
 
+		public static void Raise(ISubscriber sub1, IPublisher pub)
+		{
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(sub1.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(1, sub1.Counter);
+			Assert.AreEqual(1, sub1.LastValue);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(sub1.OnEvent));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(1, sub1.Counter);
+			Assert.AreEqual(1, sub1.LastValue);
+		}
+
 		public static void SubscriberException(ISubscriber goodSub1, ISubscriber goodSub2, ISubscriber failingSub, IPublisher pub)
 		{
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
