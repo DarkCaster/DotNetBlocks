@@ -50,7 +50,10 @@
     <Compile Include="MsgPackSerHelperSpeedTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SafeEventsSpeedTest.cs" />
+    <Compile Include="..\Tests\Shared\SafeEventTestsStuff.cs">
+      <Link>SafeEventTestsStuff.cs</Link>
+    </Compile>
+    <Compile Include="SafeEventSpeedTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

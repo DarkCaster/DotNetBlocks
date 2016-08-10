@@ -46,6 +46,10 @@ namespace PerfTests
 			JsonSerHelperSpeedTest.TestDeserializeText();
 			BinarySerHelperSpeedTest.TestSerialize();
 			BinarySerHelperSpeedTest.TestDeserialize();
+			var subs=SafeEventSpeedTests.SafeEvent_Subscribe(1000);
+			SafeEventSpeedTests.SafeEvent_Unsubscribe(subs);
+			subs = SafeEventSpeedTests.SafeEvent_Subscribe(5000);
+			SafeEventSpeedTests.SafeEvent_Unsubscribe(subs);
 			Console.Write("Press any key to continue . . . ");
 			Console.ReadKey(true);
 		}
