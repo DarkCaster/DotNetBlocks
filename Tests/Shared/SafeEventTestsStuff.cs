@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Collections.Generic;
 using DarkCaster.Events;
 
 namespace Tests.SafeEventStuff
@@ -37,6 +38,7 @@ namespace Tests.SafeEventStuff
 	{
 		ISafeEvent<TestEventArgs> TheEvent { get; }
 		ISafeEventCtrl<TestEventArgs> TheEventCtrl { get; }
+		bool Raise(ICollection<EventRaiseException> exceptions = null);
 	}
 
 	public interface ISubscriber
@@ -67,10 +69,10 @@ namespace Tests.SafeEventStuff
 		public ISafeEvent<TestEventArgs> TheEvent { get { return theEvent; } }
 		public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEvent; } }
 		public SimplePublisher() { counter = 0; }
-		public void Raise()
+		public bool Raise(ICollection<EventRaiseException> exceptions=null)
 		{
 			++counter;
-			theEvent.Raise(this, new TestEventArgs() { Val = counter });
+			return theEvent.Raise(this, new TestEventArgs() { Val = counter }, exceptions);
 		}
 	}
 }

@@ -24,7 +24,7 @@
 //
 
 using System;
-using System.Threading;
+using System.Collections.Generic;
 using NUnit.Framework;
 using DarkCaster.Events;
 using Tests.SafeEventStuff;
@@ -124,6 +124,38 @@ namespace Tests
 			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(sub1.OnEvent));
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+		}
+
+		public class FailingSubscriber : ISubscriber
+		{
+			public int counter = 0;
+			public int lastValue = 0;
+			public void OnTestEvent(object sender, TestEventArgs args)
+			{
+				++counter;
+				lastValue = args.Val;
+				throw new Exception(string.Format("Expected failure. Counter={0}, LastValue={1}", counter, lastValue));
+			}
+			public int Counter { get { return counter; } set { counter = value; } }
+			public int LastValue { get { return lastValue; } set { lastValue = value; } }
+			public EventHandler<TestEventArgs> OnEvent { get { return OnTestEvent; } }
+		}
+
+		public static void SubscriberException(ISubscriber goodSub1, ISubscriber goodSub2, ISubscriber badSub, IPublisher pub)
+		{
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(goodSub1.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			var exceptions = new List<EventRaiseException>();
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(true, pub.Raise(exceptions));
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(badSub.OnEvent));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(goodSub2.OnEvent));
+			Assert.AreEqual(3, pub.TheEventCtrl.SubCount);
+			Assert.AreEqual(false, pub.Raise(null));
+			Assert.AreEqual(false, pub.Raise(exceptions));
+			Assert.AreEqual(1, exceptions.Count);
 		}
 	}
 }

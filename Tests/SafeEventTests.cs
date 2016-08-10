@@ -42,5 +42,15 @@ namespace Tests
 			var pub = new SimplePublisher();
 			CommonEventTests.SubscribeUnsubscribe(sub1, sub2, pub);
 		}
+
+		[Test]
+		public void SubscriberException()
+		{
+			var sub1 = new SimpleSubscriber();
+			var sub2 = new SimpleSubscriber();
+			var sub3 = new CommonEventTests.FailingSubscriber();
+			var pub = new SimplePublisher();
+			CommonEventTests.SubscriberException(sub1, sub2, sub3, pub);
+		}
 	}
 }
