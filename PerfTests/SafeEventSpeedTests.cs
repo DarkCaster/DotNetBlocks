@@ -71,41 +71,6 @@ namespace PerfTests
 			Console.WriteLine(string.Format("{0} Unsubscribe: {1} delegates in {2:##.##} S. Speed=={3:##.###} subs/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Unsubscribe: total processor time {1:##.###} S", className, cpuDiff));
 		}
-
-		public class SafeEventSpeedTempObject
-		{
-			public IPublisher pub;
-			public ISubscriber[] subs;
-		}
-
-		public static SafeEventSpeedTempObject SafeEvent_Subscribe(int iter)
-		{
-			var ev = new SafeEvent<TestEventArgs>();
-			var tmp = new SafeEventSpeedTempObject();
-			tmp.pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
-			tmp.subs = new SimpleSubscriber[iter];
-			for(int i = 0; i < iter; ++i)
-				tmp.subs[i] = new SimpleSubscriber();
-			ISafeEvents_Subscribe(tmp.pub, tmp.subs, "SafeEvent");
-			return tmp;
-		}
-
-		public static void SafeEvent_Unsubscribe(SafeEventSpeedTempObject tmp)
-		{
-			ISafeEvents_Unsubscribe(tmp.pub,tmp.subs, "SafeEvent");
-		}
-		
-		public static SafeEventSpeedTempObject SafeEvent_SubscribeRaise(int subCount)
-		{
-			var ev = new SafeEvent<TestEventArgs>();
-			var tmp = new SafeEventSpeedTempObject();
-			tmp.pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
-			tmp.subs = new SimpleSubscriber[subCount];
-			for(int i = 0; i < subCount; ++i)
-				tmp.subs[i] = new SimpleSubscriber();
-			SubscribeRaise(tmp.pub,tmp.subs,"SafeEvent");
-			return tmp;
-		}
 		
 		private static void SubscribeRaise(IPublisher pub, ISubscriber[] subs, string className)
 		{
@@ -130,22 +95,6 @@ namespace PerfTests
 			Console.WriteLine(string.Format("{0} Seq Sub+Raise: total processor time {1:##.###} S", className, cpuDiff));
 		}
 		
-		public static void SafeEvent_Raise(SafeEventSpeedTempObject subs, int iter)
-		{
-			Raise(subs.pub,subs.subs,iter,"SafeEvent");
-		}
-		
-		public static void SafeEvent_RaiseSingle(int iter)
-		{
-			var ev = new SafeEvent<TestEventArgs>();
-			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
-			var subs = new SimpleSubscriber[1];
-			for(int i = 0; i < subs.Length; ++i)
-				subs[i] = new SimpleSubscriber();
-			pub.TheEvent.Subscribe(subs[0].OnEvent);
-			Raise(pub,subs,iter,"SafeEvent");
-		}
-		
 		private static void Raise(IPublisher pub, ISubscriber[] subs, int iter, string className)
 		{
 			var sw = new Stopwatch();
@@ -164,11 +113,6 @@ namespace PerfTests
 
 			Console.WriteLine(string.Format("{0} Raise {1} delegates: {2} calls in {3:##.##} S. Speed=={4:##.###} calls/S.", className, subs.Length, iter, diff, speed));
 			Console.WriteLine(string.Format("{0} Raise: total processor time {1:##.###} S", className, cpuDiff));
-		}
-		
-		public static void SafeEvent_UnsubscribeRaise(SafeEventSpeedTempObject subs)
-		{
-			UnsubscribeRaise(subs.pub,subs.subs,"SafeEvent");
 		}
 		
 		private static void UnsubscribeRaise(IPublisher pub, ISubscriber[] subs, string className)
@@ -192,6 +136,62 @@ namespace PerfTests
 
 			Console.WriteLine(string.Format("{0} Seq UnSub+Raise: {1} delegates in {2:##.##} S. Speed=={3:##.###} ops/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Seq UnSub+Raise: total processor time {1:##.###} S", className, cpuDiff));
+		}
+		
+		public class SafeEventSpeedTempObject
+		{
+			public IPublisher pub;
+			public ISubscriber[] subs;
+		}
+		
+		public static SafeEventSpeedTempObject SafeEvent_Subscribe(int iter)
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var tmp = new SafeEventSpeedTempObject();
+			tmp.pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			tmp.subs = new SimpleSubscriber[iter];
+			for(int i = 0; i < iter; ++i)
+				tmp.subs[i] = new SimpleSubscriber();
+			ISafeEvents_Subscribe(tmp.pub, tmp.subs, "SafeEvent");
+			return tmp;
+		}
+		
+		public static void SafeEvent_Unsubscribe(SafeEventSpeedTempObject tmp)
+		{
+			ISafeEvents_Unsubscribe(tmp.pub,tmp.subs, "SafeEvent");
+		}
+		
+		public static SafeEventSpeedTempObject SafeEvent_SubscribeRaise(int subCount)
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var tmp = new SafeEventSpeedTempObject();
+			tmp.pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			tmp.subs = new SimpleSubscriber[subCount];
+			for(int i = 0; i < subCount; ++i)
+				tmp.subs[i] = new SimpleSubscriber();
+			SubscribeRaise(tmp.pub,tmp.subs,"SafeEvent");
+			return tmp;
+		}
+		
+		public static void SafeEvent_Raise(SafeEventSpeedTempObject subs, int iter)
+		{
+			Raise(subs.pub,subs.subs,iter,"SafeEvent");
+		}
+		
+		public static void SafeEvent_UnsubscribeRaise(SafeEventSpeedTempObject subs)
+		{
+			UnsubscribeRaise(subs.pub,subs.subs,"SafeEvent");
+		}
+		
+		public static void SafeEvent_RaiseSingle(int iter)
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			var subs = new SimpleSubscriber[1];
+			for(int i = 0; i < subs.Length; ++i)
+				subs[i] = new SimpleSubscriber();
+			pub.TheEvent.Subscribe(subs[0].OnEvent);
+			Raise(pub,subs,iter,"SafeEvent");
 		}
 	}
 }
