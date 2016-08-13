@@ -44,6 +44,7 @@
     <Compile Include="JsonSerializerTests.cs" />
     <Compile Include="MMHashTests.cs" />
     <Compile Include="MsgPackSerializerTests.cs" />
+    <Compile Include="SafeEventBigTests.cs" />
     <Compile Include="SerializationHelpersTests.cs" />
     <Compile Include="SafeEventTests.cs" />
     <Compile Include="Shared\SafeEventTestsStuff.cs" />
