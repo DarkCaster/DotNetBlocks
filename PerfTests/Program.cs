@@ -53,6 +53,7 @@ namespace PerfTests
 			subs=SafeEventSpeedTests.SafeEvent_SubscribeRaise(5000);
 			SafeEventSpeedTests.SafeEvent_Raise(subs,10000);
 			SafeEventSpeedTests.SafeEvent_UnsubscribeRaise(subs);
+			SafeEventSpeedTests.SafeEvent_RaiseSingle(10000);
 			Console.Write("Press any key to continue . . . ");
 			Console.ReadKey(true);
 		}

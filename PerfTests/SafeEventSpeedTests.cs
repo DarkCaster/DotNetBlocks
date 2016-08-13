@@ -135,6 +135,17 @@ namespace PerfTests
 			Raise(subs.pub,subs.subs,iter,"SafeEvent");
 		}
 		
+		public static void SafeEvent_RaiseSingle(int iter)
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			var subs = new SimpleSubscriber[1];
+			for(int i = 0; i < subs.Length; ++i)
+				subs[i] = new SimpleSubscriber();
+			pub.TheEvent.Subscribe(subs[0].OnEvent);
+			Raise(pub,subs,iter,"SafeEvent");
+		}
+		
 		private static void Raise(IPublisher pub, ISubscriber[] subs, int iter, string className)
 		{
 			var sw = new Stopwatch();
