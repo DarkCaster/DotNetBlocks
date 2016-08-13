@@ -48,7 +48,7 @@ namespace PerfTests
 			var diff = sw.Elapsed.TotalSeconds;
 			var speed = subs.Length / diff;
 
-			Console.WriteLine(string.Format("{0} Subscribe: {1} delegates processed in {2:##.##} S. Speed=={3:##.###} subs/S.", className, subs.Length, diff, speed));
+			Console.WriteLine(string.Format("{0} Subscribe: {1} delegates in {2:##.##} S. Speed=={3:##.###} subs/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Subscribe: total processor time {1:##.###} S", className, cpuDiff));
 		}
 
@@ -68,7 +68,7 @@ namespace PerfTests
 			var diff = sw.Elapsed.TotalSeconds;
 			var speed = subs.Length / diff;
 
-			Console.WriteLine(string.Format("{0} Unsubscribe: {1} delegates processed in {2:##.##} S. Speed=={3:##.###} subs/S.", className, subs.Length, diff, speed));
+			Console.WriteLine(string.Format("{0} Unsubscribe: {1} delegates in {2:##.##} S. Speed=={3:##.###} subs/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Unsubscribe: total processor time {1:##.###} S", className, cpuDiff));
 		}
 
@@ -93,6 +93,94 @@ namespace PerfTests
 		public static void SafeEvent_Unsubscribe(SafeEventSpeedTempObject tmp)
 		{
 			ISafeEvents_Unsubscribe(tmp.pub,tmp.subs, "SafeEvent");
+		}
+		
+		public static SafeEventSpeedTempObject SafeEvent_SubscribeRaise(int subCount)
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var tmp = new SafeEventSpeedTempObject();
+			tmp.pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			tmp.subs = new SimpleSubscriber[subCount];
+			for(int i = 0; i < subCount; ++i)
+				tmp.subs[i] = new SimpleSubscriber();
+			SubscribeRaise(tmp.pub,tmp.subs,"SafeEvent");
+			return tmp;
+		}
+		
+		private static void SubscribeRaise(IPublisher pub, ISubscriber[] subs, string className)
+		{
+			var sw = new Stopwatch();
+			var process = Process.GetCurrentProcess();
+
+			var startCpuTime = process.TotalProcessorTime;
+			sw.Start();
+			for(int i = 0; i < subs.Length; ++i)
+			{
+				pub.TheEvent.Subscribe(subs[i].OnEvent);
+				pub.Raise();
+			}
+			sw.Stop();
+			var stopCpuTime = process.TotalProcessorTime;
+
+			var cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
+			var diff = sw.Elapsed.TotalSeconds;
+			var speed = subs.Length / diff;
+
+			Console.WriteLine(string.Format("{0} Seq Sub+Raise: {1} delegates in {2:##.##} S. Speed=={3:##.###} ops/S.", className, subs.Length, diff, speed));
+			Console.WriteLine(string.Format("{0} Seq Sub+Raise: total processor time {1:##.###} S", className, cpuDiff));
+		}
+		
+		public static void SafeEvent_Raise(SafeEventSpeedTempObject subs, int iter)
+		{
+			Raise(subs.pub,subs.subs,iter,"SafeEvent");
+		}
+		
+		private static void Raise(IPublisher pub, ISubscriber[] subs, int iter, string className)
+		{
+			var sw = new Stopwatch();
+			var process = Process.GetCurrentProcess();
+
+			var startCpuTime = process.TotalProcessorTime;
+			sw.Start();
+			for(int i = 0; i < iter; ++i)
+				pub.Raise();
+			sw.Stop();
+			var stopCpuTime = process.TotalProcessorTime;
+
+			var cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
+			var diff = sw.Elapsed.TotalSeconds;
+			var speed = iter / diff;
+
+			Console.WriteLine(string.Format("{0} Raise {1} delegates: {2} calls in {3:##.##} S. Speed=={4:##.###} calls/S.", className, subs.Length, iter, diff, speed));
+			Console.WriteLine(string.Format("{0} Raise: total processor time {1:##.###} S", className, cpuDiff));
+		}
+		
+		public static void SafeEvent_UnsubscribeRaise(SafeEventSpeedTempObject subs)
+		{
+			UnsubscribeRaise(subs.pub,subs.subs,"SafeEvent");
+		}
+		
+		private static void UnsubscribeRaise(IPublisher pub, ISubscriber[] subs, string className)
+		{
+			var sw = new Stopwatch();
+			var process = Process.GetCurrentProcess();
+
+			var startCpuTime = process.TotalProcessorTime;
+			sw.Start();
+			for(int i = 0; i < subs.Length; ++i)
+			{
+				pub.TheEvent.Unsubscribe(subs[i].OnEvent);
+				pub.Raise();
+			}
+			sw.Stop();
+			var stopCpuTime = process.TotalProcessorTime;
+
+			var cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
+			var diff = sw.Elapsed.TotalSeconds;
+			var speed = subs.Length / diff;
+
+			Console.WriteLine(string.Format("{0} Seq UnSub+Raise: {1} delegates in {2:##.##} S. Speed=={3:##.###} ops/S.", className, subs.Length, diff, speed));
+			Console.WriteLine(string.Format("{0} Seq UnSub+Raise: total processor time {1:##.###} S", className, cpuDiff));
 		}
 	}
 }
