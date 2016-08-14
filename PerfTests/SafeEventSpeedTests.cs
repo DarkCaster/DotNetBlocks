@@ -194,8 +194,18 @@ namespace PerfTests
 			Raise(pub,subs,iter,"SafeEvent");
 		}
 		
-		
-		
+		public static void SafeEvent_RaiseMulti(int subsCount, int iter)
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			var subs = new SimpleSubscriber[subsCount];
+			for(int i = 0; i < subs.Length; ++i)
+			{
+				subs[i] = new SimpleSubscriber();
+				pub.TheEvent.Subscribe(subs[i].OnEvent);
+			}
+			Raise(pub,subs,iter,"SafeEvent");
+		}
 		
 		public static SafeEventSpeedTempObject SafeEventBig_Subscribe(int iter)
 		{
@@ -244,6 +254,19 @@ namespace PerfTests
 			for(int i = 0; i < subs.Length; ++i)
 				subs[i] = new SimpleSubscriber();
 			pub.TheEvent.Subscribe(subs[0].OnEvent);
+			Raise(pub,subs,iter,"SafeEvBig");
+		}
+		
+		public static void SafeEventBig_RaiseMulti(int subsCount, int iter)
+		{
+			var ev = new SafeEvent_Big<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent_Big<TestEventArgs>, SafeEvent_Big<TestEventArgs>>(ev, ev);
+			var subs = new SimpleSubscriber[subsCount];
+			for(int i = 0; i < subs.Length; ++i)
+			{
+				subs[i] = new SimpleSubscriber();
+				pub.TheEvent.Subscribe(subs[i].OnEvent);
+			}
 			Raise(pub,subs,iter,"SafeEvBig");
 		}
 	}
