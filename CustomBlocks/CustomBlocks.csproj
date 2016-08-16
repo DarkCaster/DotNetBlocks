@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Converters\Base85.cs" />
+    <Compile Include="Events\EventDbgException.cs" />
     <Compile Include="Events\SafeEvent_Big.cs" />
     <Compile Include="Events\SafeEvent_Dbg.cs" />
     <Compile Include="Hash\MMHash32.cs" />
