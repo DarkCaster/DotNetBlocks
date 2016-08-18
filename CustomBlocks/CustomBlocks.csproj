@@ -63,7 +63,6 @@
     <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
     <Compile Include="Events\SafeEvent.cs" />
-    <Compile Include="Events\ToRemove\SafeEvents.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
@@ -73,7 +72,6 @@
     <Folder Include="Serialization\Private\" />
     <Folder Include="Config\" />
     <Folder Include="Events\" />
-    <Folder Include="Events\ToRemove\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
