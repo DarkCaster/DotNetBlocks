@@ -32,7 +32,7 @@ namespace DarkCaster.Events
 {
 	internal static class SafeEventDbg
 	{
-		private static readonly MethodInfo GetStrongTargetMethod = typeof(Forwarder).GetMethod("GetStrongTarget");
+		private static readonly MethodInfo GetStrongTargetMethod = typeof(Forwarder).GetMethod("GetStrongTarget", BindingFlags.NonPublic | BindingFlags.Instance);
 		private static readonly Type[] forwarderParams = new Type[] { typeof(Forwarder), typeof(object), typeof(EventArgs) };
 		
 		internal struct DelegateHandle
@@ -68,7 +68,7 @@ namespace DarkCaster.Events
 			{
 				if(forwardersCache.ContainsKey(method))
 					return forwardersCache[method].CreateDelegate(typeof(EventHandler<EventArgs>),target);
-				var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(bool), forwarderParams, true);
+				var dynMethod = new DynamicMethod("InvokeEventOnObject",typeof(void), forwarderParams,typeof(Forwarder), true);
 				var generator = dynMethod.GetILGenerator();
 				generator.Emit(OpCodes.Ldarg_0); //stack: this
 				generator.Emit(OpCodes.Call, GetStrongTargetMethod); //stack: weakTarget.Target
@@ -77,7 +77,7 @@ namespace DarkCaster.Events
 				generator.Emit(OpCodes.Ldarg_2); //stack: (<type of subscriber>)weakRef.Target, sender, args
 				generator.Emit(OpCodes.Call, method); //stack: [empty]
 				generator.Emit(OpCodes.Ret);
-				var result=dynMethod.CreateDelegate(typeof(EventHandler<EventArgs>));
+				var result=dynMethod.CreateDelegate(typeof(EventHandler<EventArgs>),target);
 				forwardersCache.Add(method, dynMethod);
 				return result;
 			}
