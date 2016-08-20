@@ -259,7 +259,8 @@ namespace DarkCaster.Events
 				var result = true;
 				for(int i = 0; i < len; ++i)
 				{
-					var curDelegate=Delegate.CreateDelegate(typeof(EventHandler<EventArgs>),invList[i].weakTarget.Target,invList[i].method,false);
+					var curDelegate=Delegate.CreateDelegate(typeof(EventHandler<T>),invList[i].weakTarget.Target,invList[i].method,false);
+					currentSubObjType = invList[i].method.DeclaringType;
 					try{ invList[i].fwdDelegate(sender, args); }
 					catch(EventDbgException ex)
 					{
