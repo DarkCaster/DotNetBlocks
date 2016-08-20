@@ -124,6 +124,10 @@ namespace Tests
 			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(sub1.OnEvent));
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+
+			GC.KeepAlive(sub1);
+			GC.KeepAlive(sub2);
+			GC.KeepAlive(pub);
 		}
 
 		public class FailingSubscriber : ISubscriber
@@ -154,6 +158,9 @@ namespace Tests
 			Assert.AreEqual(true, pub.Raise(null));
 			Assert.AreEqual(1, sub1.Counter);
 			Assert.AreEqual(1, sub1.LastValue);
+
+			GC.KeepAlive(sub1);
+			GC.KeepAlive(pub);
 		}
 
 		public static void SubscriberException(ISubscriber goodSub1, ISubscriber goodSub2, ISubscriber failingSub, IPublisher pub)
@@ -192,6 +199,11 @@ namespace Tests
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(goodSub1.OnEvent));
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(goodSub2.OnEvent));
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+
+			GC.KeepAlive(goodSub1);
+			GC.KeepAlive(goodSub2);
+			GC.KeepAlive(failingSub);
+			GC.KeepAlive(pub);
 		}
 	}
 }
