@@ -181,17 +181,30 @@ namespace DarkCaster.Events
 
 			lock(manageLock)
 			{
+				if(ignoreErrors)
+				{
+					for(int i = 0; i < subLen; ++i)
+					{
+						var handle = new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target);
+						if(dynamicSubscribers.ContainsKey(handle))
+							continue;
+						dynamicSubscribers.Add(handle, new SafeEventDbg.Forwarder(subList[i]));
+						invListRebuildNeeded = true;
+					}
+					return;
+				}
+
 				for(int i = 0; i < subLen; ++i)
 				{
-					var handle=new SafeEventDbg.DelegateHandle(subList[i].Method,subList[i].Target);
+					var handle = new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target);
 					if(dynamicSubscribers.ContainsKey(handle))
-					{
-						if(!ignoreErrors)
-							throw new EventSubscriptionException("Subscriber's delegate list contains dublicates from active subscribers", subscriber, null);
-						continue;
-					}
-					dynamicSubscribers.Add(handle, new SafeEventDbg.Forwarder(subList[i]));
-					invListRebuildNeeded=true;
+						throw new EventSubscriptionException("Subscriber's delegate list contains dublicates from active subscribers", subscriber, null);
+				}
+
+				for(int i = 0; i < subLen; ++i)
+				{
+					dynamicSubscribers.Add(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target), new SafeEventDbg.Forwarder(subList[i]));
+					invListRebuildNeeded = true;
 				}
 			}
 		}
@@ -206,19 +219,24 @@ namespace DarkCaster.Events
 						return;
 					throw new EventSubscriptionException("Current subscribers list is already empty", null, null);
 				}
-				
+
+				if(ignoreErrors)
+				{
+					for(int i = 0; i < subLen; ++i)
+						invListRebuildNeeded |= dynamicSubscribers.Remove(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target));
+					return;
+				}
+
 				for(int i = 0; i < subLen; ++i)
 				{
-					var handle=new SafeEventDbg.DelegateHandle(subList[i].Method,subList[i].Target);
+					var handle = new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target);
 					if(!dynamicSubscribers.ContainsKey(handle))
-					{
-						if(!ignoreErrors)
-							throw new EventSubscriptionException("Current subscribers list do not contain some subscribers requested for remove", null, null);
-						continue;
-					}
-					dynamicSubscribers.Remove(handle);
-					invListRebuildNeeded=true;
+						throw new EventSubscriptionException("Current subscribers list do not contain some subscribers requested for remove", null, null);
 				}
+
+				for(int i = 0; i < subLen; ++i)
+					dynamicSubscribers.Remove(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target));
+				invListRebuildNeeded = true;
 			}
 		}
 		
