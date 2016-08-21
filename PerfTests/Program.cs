@@ -46,28 +46,51 @@ namespace PerfTests
 			JsonSerHelperSpeedTest.TestDeserializeText();
 			BinarySerHelperSpeedTest.TestSerialize();
 			BinarySerHelperSpeedTest.TestDeserialize();
-			var subs=SafeEventSpeedTests.SafeEvent_Subscribe(1000);
+
+			const int spass1 = 1000;
+			const int spass2 = 2000;
+			const int spass3 = 3000;
+
+			const int srpass1 = 3000;
+			const int srpass2 = 5000;
+			const int srpass3 = 10000000;
+
+			var subs=SafeEventSpeedTests.SafeEvent_Subscribe(spass1);
 			SafeEventSpeedTests.SafeEvent_Unsubscribe(subs);
-			subs = SafeEventSpeedTests.SafeEvent_Subscribe(5000);
+			subs = SafeEventSpeedTests.SafeEvent_Subscribe(spass2);
 			SafeEventSpeedTests.SafeEvent_Unsubscribe(subs);
-			subs = SafeEventSpeedTests.SafeEvent_Subscribe(10000);
+			subs = SafeEventSpeedTests.SafeEvent_Subscribe(spass3);
 			SafeEventSpeedTests.SafeEvent_Unsubscribe(subs);
-			subs=SafeEventSpeedTests.SafeEvent_SubscribeRaise(5000);
-			SafeEventSpeedTests.SafeEvent_Raise(subs,10000);
+			subs=SafeEventSpeedTests.SafeEvent_SubscribeRaise(srpass1);
+			SafeEventSpeedTests.SafeEvent_Raise(subs,srpass2);
 			SafeEventSpeedTests.SafeEvent_UnsubscribeRaise(subs);
-			SafeEventSpeedTests.SafeEvent_RaiseSingle(10000000);
-			SafeEventSpeedTests.SafeEvent_RaiseMulti(5,10000000);
-			subs=SafeEventSpeedTests.SafeEventBig_Subscribe(1000);
+			SafeEventSpeedTests.SafeEvent_RaiseSingle(srpass3);
+			SafeEventSpeedTests.SafeEvent_RaiseMulti(5,srpass3);
+
+			subs=SafeEventSpeedTests.SafeEventBig_Subscribe(spass1);
 			SafeEventSpeedTests.SafeEventBig_Unsubscribe(subs);
-			subs = SafeEventSpeedTests.SafeEventBig_Subscribe(5000);
+			subs = SafeEventSpeedTests.SafeEventBig_Subscribe(spass2);
 			SafeEventSpeedTests.SafeEventBig_Unsubscribe(subs);
-			subs = SafeEventSpeedTests.SafeEventBig_Subscribe(10000);
+			subs = SafeEventSpeedTests.SafeEventBig_Subscribe(spass3);
 			SafeEventSpeedTests.SafeEventBig_Unsubscribe(subs);
-			subs=SafeEventSpeedTests.SafeEventBig_SubscribeRaise(5000);
-			SafeEventSpeedTests.SafeEventBig_Raise(subs,10000);
+			subs=SafeEventSpeedTests.SafeEventBig_SubscribeRaise(srpass1);
+			SafeEventSpeedTests.SafeEventBig_Raise(subs,srpass2);
 			SafeEventSpeedTests.SafeEventBig_UnsubscribeRaise(subs);
-			SafeEventSpeedTests.SafeEventBig_RaiseSingle(10000000);
-			SafeEventSpeedTests.SafeEventBig_RaiseMulti(5,10000000);
+			SafeEventSpeedTests.SafeEventBig_RaiseSingle(srpass3);
+			SafeEventSpeedTests.SafeEventBig_RaiseMulti(5,srpass3);
+
+			subs = SafeEventSpeedTests.SafeEventDbg_Subscribe(spass1);
+			SafeEventSpeedTests.SafeEventDbg_Unsubscribe(subs);
+			subs = SafeEventSpeedTests.SafeEventDbg_Subscribe(spass2);
+			SafeEventSpeedTests.SafeEventDbg_Unsubscribe(subs);
+			subs = SafeEventSpeedTests.SafeEventDbg_Subscribe(spass3);
+			SafeEventSpeedTests.SafeEventDbg_Unsubscribe(subs);
+			subs = SafeEventSpeedTests.SafeEventDbg_SubscribeRaise(srpass1);
+			SafeEventSpeedTests.SafeEventDbg_Raise(subs, srpass2);
+			SafeEventSpeedTests.SafeEventDbg_UnsubscribeRaise(subs);
+			SafeEventSpeedTests.SafeEventDbg_RaiseSingle(srpass3);
+			SafeEventSpeedTests.SafeEventDbg_RaiseMulti(5, srpass3);
+
 			Console.Write("Press any key to continue . . . ");
 			Console.ReadKey(true);
 		}
