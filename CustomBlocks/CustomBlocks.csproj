@@ -73,5 +73,8 @@
     <Folder Include="Config\" />
     <Folder Include="Events\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Events\README.md" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
