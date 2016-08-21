@@ -125,6 +125,7 @@ namespace Tests
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(sub1.OnEvent));
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
 
+			//not necessary, just precaution for my solace
 			GC.KeepAlive(sub1);
 			GC.KeepAlive(sub2);
 			GC.KeepAlive(pub);
@@ -159,6 +160,7 @@ namespace Tests
 			Assert.AreEqual(1, sub1.Counter);
 			Assert.AreEqual(1, sub1.LastValue);
 
+			//not necessary, just precaution for my solace
 			GC.KeepAlive(sub1);
 			GC.KeepAlive(pub);
 		}
@@ -200,6 +202,7 @@ namespace Tests
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(goodSub2.OnEvent));
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
 
+			//not necessary, just precaution for my solace
 			GC.KeepAlive(goodSub1);
 			GC.KeepAlive(goodSub2);
 			GC.KeepAlive(failingSub);

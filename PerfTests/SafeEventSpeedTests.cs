@@ -50,6 +50,10 @@ namespace PerfTests
 
 			Console.WriteLine(string.Format("{0} Subscribe: {1} delegates in {2:##.##} S. Speed=={3:##.###} subs/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Subscribe: total processor time {1:##.###} S", className, cpuDiff));
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+			GC.KeepAlive(subs);
 		}
 
 		private static void ISafeEvents_Unsubscribe(IPublisher pub, ISubscriber[] subs, string className)
@@ -70,6 +74,10 @@ namespace PerfTests
 
 			Console.WriteLine(string.Format("{0} Unsubscribe: {1} delegates in {2:##.##} S. Speed=={3:##.###} subs/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Unsubscribe: total processor time {1:##.###} S", className, cpuDiff));
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+			GC.KeepAlive(subs);
 		}
 		
 		private static void SubscribeRaise(IPublisher pub, ISubscriber[] subs, string className)
@@ -93,6 +101,10 @@ namespace PerfTests
 
 			Console.WriteLine(string.Format("{0} Seq Sub+Raise: {1} delegates in {2:##.##} S. Speed=={3:##.###} ops/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Seq Sub+Raise: total processor time {1:##.###} S", className, cpuDiff));
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+			GC.KeepAlive(subs);
 		}
 		
 		private static void Raise(IPublisher pub, ISubscriber[] subs, int iter, string className)
@@ -113,6 +125,10 @@ namespace PerfTests
 
 			Console.WriteLine(string.Format("{0} Raise {1} delegates: {2} calls in {3:##.##} S. Speed=={4:##.###} calls/S.", className, subs.Length, iter, diff, speed));
 			Console.WriteLine(string.Format("{0} Raise: total processor time {1:##.###} S", className, cpuDiff));
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+			GC.KeepAlive(subs);
 		}
 		
 		private static void UnsubscribeRaise(IPublisher pub, ISubscriber[] subs, string className)
@@ -136,6 +152,10 @@ namespace PerfTests
 
 			Console.WriteLine(string.Format("{0} Seq UnSub+Raise: {1} delegates in {2:##.##} S. Speed=={3:##.###} ops/S.", className, subs.Length, diff, speed));
 			Console.WriteLine(string.Format("{0} Seq UnSub+Raise: total processor time {1:##.###} S", className, cpuDiff));
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+			GC.KeepAlive(subs);
 		}
 		
 		public class SafeEventSpeedTempObject
