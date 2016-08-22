@@ -27,7 +27,8 @@ simplify use of events in multithreaded applications and restrict some common un
   I think that instead it is more correct to use explicit unsubscribe call from subscriber's side at the right moment
   (when subscriber complete it's purpose and going to be disposed).
   So, this check will help to detect situations when you forget to unsubscribe or store link to subscriber object.
-  You can read more about weak events here: http://www.codeproject.com/Articles/29922/Weak-Events-in-C . Some ideas implemented there, was also inspired by that publication)
+  You can read more about weak events here: http://www.codeproject.com/Articles/29922/Weak-Events-in-C .
+  Some ideas implemented in SafeEventDbg class was also inspired by that publication.
   * TODO (maybe): additional checks for custom EventArgs class implementation to be immutable (so, subscribers could not modify it fields or properties)
 
 ## Features and notes when implementing subscriber's callback logic:
