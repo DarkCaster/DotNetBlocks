@@ -29,13 +29,13 @@ simplify use of events in multithreaded applications and restrict some common un
   So, this check will help to detect situations when you forget to unsubscribe or store link to subscriber object.
   You can read more about weak events here: http://www.codeproject.com/Articles/29922/Weak-Events-in-C .
   Some ideas implemented in SafeEventDbg class was also inspired by that publication.
-  * TODO (maybe): additional checks for custom EventArgs class implementation to be immutable (so, subscribers could not modify it fields or properties)
+  * TODO (maybe): additional checks for custom EventArgs class implementation to be immutable (so, subscribers could not modify it's fields or properties)
 
 ## Features and notes when implementing subscriber's callback logic:
- * Subscribing to event is thread safe and atomic. Trying to subscribe the same event callback delegate multiple times considered as error,
+ * Subscribing to event is thread safe and atomic. Trying to subscribe the same event callback delegate multiple times considered as error:
    EventSubscriptionException is thrown in such cases. You can also pass a delegate list (because delegates are multicast by default),
    but no subscription will be done at all if any single delegate from this list is already subscribed.
    There is a special param `ignoreErrors` that may be used to override this behavior
    in situations when you subscribe to event from diffetent places and do not want to perform any checks.
-   When this parametes is used, subscription is done only for that delegates (and single delegates from multicast delegate list) that was not subscribed earlier.
+   When this parameter is used, subscription is done only for that delegates (and single delegates from multicast delegate list) that was not subscribed earlier.
  * Unsubscribing from event is also thread safe and atomic. ...
