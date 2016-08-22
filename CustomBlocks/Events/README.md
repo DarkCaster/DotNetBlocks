@@ -20,7 +20,7 @@ simplify use of events in multithreaded applications and restrict some common un
   * Checks for recursive event raise. Will throw exception on `Raise` method execution in case when recursion detected.
   * Checks for missing "unsubscribe" call from the subscriber's side.
   This check may help to detect a "stall" subscriber that disconnected from any logic, but still not unsubscribed from publisher.
-  When using default events (or SafeEvent class), this will lead to memory leak, because event delegate at publisher's side store strong link to subscriber-object,
+  When using default events (or SafeEvent class), this will lead to memory leak, because event delegate at publisher's side store strong reference to subscriber-object,
   so subscriber may never be garbage collected. One possible solution is to use so called "weak events" that do not store strong reference to subscriber-objects.
   This will lead to some performance loss on event raise, and also require that subscriber logic is robust enogh not to break things
   when it is triggered in such disconnected (but still not garbage collected!) state.
