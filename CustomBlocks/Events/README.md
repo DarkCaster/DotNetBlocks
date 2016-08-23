@@ -49,6 +49,7 @@ simplify use of events in multithreaded applications and restrict some common un
    When this parameter is used, unsubscribe is performed only for that delegates (single delegates from multicast delegate list) that is active now.
 
    __Notes for mitigating race conditions between ubsubscribe and event raise:__
+
    Usually, when performing event subscription management from different thread than thread wich is raising the event,
    there is no guarantee that event callback will not be triggered once again after unsubscribe is called.
    Even in situations when subscribtion management is performed from event callback method itself,
