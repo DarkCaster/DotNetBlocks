@@ -33,9 +33,29 @@ simplify use of events in multithreaded applications and restrict some common un
 
 ## Features and notes when implementing subscriber's callback logic:
  * Subscribing to event is thread safe and atomic. Trying to subscribe the same event callback delegate multiple times considered as error:
-   EventSubscriptionException is thrown in such cases. You can also pass a delegate list (because delegates are multicast by default),
-   but no subscription will be done at all if any single delegate from this list is already subscribed.
+   EventSubscriptionException is thrown in such cases. You can also pass a delegate list (because delegates are multicast),
+   but EventSubscriptionException is thrown and no action will be done at all if any single delegate from this list is already subscribed.
+   Also this exception is thrown, if multicast delegate contain dublicates. 
    There is a special param `ignoreErrors` that may be used to override this behavior
-   in situations when you subscribe to event from diffetent places and do not want to perform any checks.
-   When this parameter is used, subscription is done only for that delegates (and single delegates from multicast delegate list) that was not subscribed earlier.
- * Unsubscribing from event is also thread safe and atomic. ...
+   in situations when you subscribe to event from diffetent places and\or do not want to perform any checks.
+   When this parameter is used, subscription is done only for that delegates (single delegates from multicast delegate list) that was not already subscribed for this event,
+   dublicates are simply ignored.
+ * Unsubscribing from event is also thread safe and atomic. Trying to unsubscribe the same event callback delegate multiple times considered as error:
+   EventSubscriptionException is thrown in such cases. You can also pass a delegate list (because delegates are multicast),
+   but EventSubscriptionException is thrown and no action will be done at all if any single delegate from this list is already unsubscribed.
+   Also this exception is thrown if multicast delegate contain dublicates.
+   There is a special param `ignoreErrors` that may be used to override this behavior
+   in situations when you unsubscribe from event from diffetent places in your code and\or do not want to perform any checks.
+   When this parameter is used, unsubscribe is performed only for that delegates (single delegates from multicast delegate list) that is active now.
+   = Notes for mitigating race conditions between ubsubscribe and event raise: =
+
+   Usually, when performing event subscription management from different thread than thread wich is raising the event,
+   there is no guarantee that event callback will not be triggered once again after unsubscribe is called.
+   Even in situations when subscribtion management is performed from event callback method itself,
+   callback may be triggered again in cases when single event is raised by multiple threads at the same time.
+   With this event system implementation, there is not possible to raise same event in parallel, so calling to unsubscribe from event callback method
+   guarantees that event callback method will not be triggered ever again after return from `Unsubscribe` method.
+   But, also there is an additional `waitForRemoval` optional parameter, which can be used to unsubscribe from event when subscription management is performed by external thread.
+   Calling to `Unsubscribe` will lock while current event callback is processing, and unsibscribe after event raise is complete.
+   So be aware that using same shared locks (mutexes, semaphores, etc) inside callback's methods
+   and external thread's methods that calling to `Unsubscribe` with `waitForRemoval=true` at the same time may lead to deadlocks.
