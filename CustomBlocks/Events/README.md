@@ -47,8 +47,8 @@ simplify use of events in multithreaded applications and restrict some common un
    There is a special param `ignoreErrors` that may be used to override this behavior
    in situations when you unsubscribe from event from diffetent places in your code and\or do not want to perform any checks.
    When this parameter is used, unsubscribe is performed only for that delegates (single delegates from multicast delegate list) that is active now.
-   = Notes for mitigating race conditions between ubsubscribe and event raise: =
 
+   __Notes for mitigating race conditions between ubsubscribe and event raise:__
    Usually, when performing event subscription management from different thread than thread wich is raising the event,
    there is no guarantee that event callback will not be triggered once again after unsubscribe is called.
    Even in situations when subscribtion management is performed from event callback method itself,
