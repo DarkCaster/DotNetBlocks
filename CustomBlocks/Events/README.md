@@ -1,4 +1,4 @@
-# Custom event system.
+# Custom event system
 
 This is a simple event system, made on top of `EventHandler<EventArgs>` delegates.
 It is not a functionally equivalent replacement for default events.
