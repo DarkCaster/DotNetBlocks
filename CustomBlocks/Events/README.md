@@ -66,9 +66,8 @@ simplify use of events in multithreaded applications and restrict some common un
 ### ISafeEvent<T>
 `interface ISafeEvent<T> where T : EventArgs`. This interface may (and should) be used to provide subscription management to subscribers.
 There is a special "drop-in" replacement for regular events `event EventHandler<T> Event` described by this interface.
-It may be used to help changing default event mechanics to SafeEvents. Event `add` is just a wrapper for `Subscribe(value, true)` method call,
-`remove` is a wrapper for `Unsubscribe(value, true, false)`.
-See detailed method usage description at build-in XML docs.
+It may be used when switching from default events to SafeEvents. Event `add` is just a wrapper for `Subscribe(value, true)` method call,
+`remove` is a wrapper for `Unsubscribe(value, true, false)`. See detailed method usage description at build-in XML docs.
 
 ### ISafeEventCtrl<T>
 `interface ISafeEventCtrl<T> where T : EventArgs`. This interface should be used by publisher to initiate event raise,
