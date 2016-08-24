@@ -57,6 +57,60 @@ simplify use of events in multithreaded applications and restrict some common un
    With this event system implementation, there is not possible to raise same event in parallel, so calling to unsubscribe from event callback method
    guarantees that event callback method will not be triggered ever again after return from `Unsubscribe` method.
    But, also there is an additional `waitForRemoval` optional parameter, which can be used to unsubscribe from event when subscription management is performed by external thread.
-   Calling to `Unsubscribe` will lock while current event callback is processing, and unsibscribe after event raise is complete.
+   Calling to `Unsubscribe` will lock while current event callback is processing, and when current event processing is complete - subscriber is removed.
    So be aware that using same shared locks (mutexes, semaphores, etc) inside callback's methods
    and external thread's methods that calling to `Unsubscribe` with `waitForRemoval=true` at the same time may lead to deadlocks.
+
+## Additional notes for interfaces and classes
+
+### ISafeEvent<T>
+`interface ISafeEvent<T> where T : EventArgs`. This interface may (and should) be used to provide subscription management to subscribers.
+There is a special "drop-in" replacement for regular events `event EventHandler<T> Event` described by this interface.
+It may be used to help changing default event mechanics to SafeEvents. Event `add` is just a wrapper for `Subscribe(value, true)` method call,
+`remove` is a wrapper for `Unsubscribe(value, true, false)`.
+See detailed method usage description at build-in XML docs.
+
+### ISafeEventCtrl<T>
+`interface ISafeEventCtrl<T> where T : EventArgs`. This interface should be used by publisher to initiate event raise,
+gather statistics, and perform other publisher-side-stuff. See detailed method usage description at build-in XML docs.
+
+### EventException
+`abstract class EventException : Exception`. This class is a base class for all exceptions that may be emitted by SafeEvent class in expected error situations.
+If such exception is received, this means that some expected error is happened (see this doc, XML docs, or `message` field from exception class for more information).
+SafeEvent function IS NOT FLAWED when such exception is thrown, you may continue to use SafeEvent object as normal after you manually handle exception in your logic.
+
+### EventRaiseException
+`sealed class EventRaiseException : EventException`. This exception is not thrown by default.
+This is just a wrapper for exception that may occur in subscriber's logic while processing event callbacks.
+See this doc (earlier) to understand how subscriber's exceptions is handled and how to deal with it.
+
+### EventSubscriptionException
+`sealed class EventSubscriptionException : EventException`. This exception may be thrown only when you adding or removing subscribers for event,
+in case of errors described earlier in this doc.
+
+### EventDbgException
+`sealed class EventDbgException : Exception`. THIS CLASS IS NOT BASED ON `EventException`.
+This type of exception is thrown only when using SafeEventDbg class.
+This exception means that SafeEventDbg class detected some serious problem or event misuse in your event processing logic.
+Normal operation usually is not possible in such situations, you should interfere and fix the problem in your logic.
+See `message` field from exception class for information about detected problem.
+
+### SafeEvent<T>
+`sealed class SafeEvent<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs`.
+This is a main class of this custom event system.
+It may be used when building your local event processing logic at publisher's side,
+but it is recommended to use this class indirectly by it's ISafeEventCtrl and ISafeEvent interfaces for better portability and extensibility.
+
+### SafeEventDbg<T>
+`sealed class SafeEventDbg<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs`.
+This class may be used as drop-in replacement for SafeEvent to detect some rare misuses and bugs in your event-related logic.
+See this doc for more info (earlier) about logical errors that may be detected by this class.
+Do not use SafeEventDbg in production builds because of it's bad performance.
+
+## TODO:
+ * More checks and debug features when using SafeEventDbg class
+ * Factory class for creating SafeEvent or SafeEventDbg for better use with IOC and such
+ * Maybe, distributed variants of SafeEvent (as drop-in replacement for regular SafeEvent by using factory-classes and IOC) - 
+ to easily create events distributed over processes, networks... Maybe by using stuff like DBus and such.
+ * Abstract class for all SafeEvent-based classes, for better scalability and extensibility
+ * Remove sealed modifier and allow to extend SafeEvent functionality
