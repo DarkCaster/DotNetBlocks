@@ -186,8 +186,8 @@ namespace DarkCaster.Events
 		
 		public event EventHandler<T> Event
 		{
-			add { Subscribe(value); }
-			remove { Unsubscribe(value, false); }
+			add { Subscribe(value, true); }
+			remove { Unsubscribe(value, true, false); }
 		}
 
 		public int SubCount
