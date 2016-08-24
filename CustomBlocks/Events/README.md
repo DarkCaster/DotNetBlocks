@@ -110,7 +110,7 @@ Do not use SafeEventDbg in production builds because of it's bad performance.
 ## TODO:
  * More checks and debug features when using SafeEventDbg class
  * Factory class for creating SafeEvent or SafeEventDbg for better use with IOC and such
- * Maybe, distributed variants of SafeEvent (as drop-in replacement for regular SafeEvent by using factory-classes and IOC) - 
+ * Maybe, distributed variants of SafeEvent (as drop-in replacement for regular SafeEvent by using factory-classes and IOC) -
  to easily create events distributed over processes, networks... Maybe by using stuff like DBus and such.
  * Abstract class for all SafeEvent-based classes, for better scalability and extensibility
  * Remove sealed modifier and allow to extend SafeEvent functionality
