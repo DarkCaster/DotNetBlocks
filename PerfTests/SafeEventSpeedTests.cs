@@ -226,69 +226,6 @@ namespace PerfTests
 			}
 			Raise(pub,subs,iter,"SafeEvent");
 		}
-		
-		public static SafeEventSpeedTempObject SafeEventBig_Subscribe(int iter)
-		{
-			var ev = new SafeEvent_Big<TestEventArgs>();
-			var tmp = new SafeEventSpeedTempObject();
-			tmp.pub = new SimplePublisher<SafeEvent_Big<TestEventArgs>, SafeEvent_Big<TestEventArgs>>(ev, ev);
-			tmp.subs = new SimpleSubscriber[iter];
-			for(int i = 0; i < iter; ++i)
-				tmp.subs[i] = new SimpleSubscriber();
-			ISafeEvents_Subscribe(tmp.pub, tmp.subs, "SafeEvBig");
-			return tmp;
-		}
-		
-		public static void SafeEventBig_Unsubscribe(SafeEventSpeedTempObject tmp)
-		{
-			ISafeEvents_Unsubscribe(tmp.pub,tmp.subs, "SafeEvBig");
-		}
-		
-		public static SafeEventSpeedTempObject SafeEventBig_SubscribeRaise(int subCount)
-		{
-			var ev = new SafeEvent_Big<TestEventArgs>();
-			var tmp = new SafeEventSpeedTempObject();
-			tmp.pub = new SimplePublisher<SafeEvent_Big<TestEventArgs>, SafeEvent_Big<TestEventArgs>>(ev, ev);
-			tmp.subs = new SimpleSubscriber[subCount];
-			for(int i = 0; i < subCount; ++i)
-				tmp.subs[i] = new SimpleSubscriber();
-			SubscribeRaise(tmp.pub,tmp.subs,"SafeEvBig");
-			return tmp;
-		}
-		
-		public static void SafeEventBig_Raise(SafeEventSpeedTempObject subs, int iter)
-		{
-			Raise(subs.pub,subs.subs,iter,"SafeEvBig");
-		}
-		
-		public static void SafeEventBig_UnsubscribeRaise(SafeEventSpeedTempObject subs)
-		{
-			UnsubscribeRaise(subs.pub,subs.subs,"SafeEvBig");
-		}
-		
-		public static void SafeEventBig_RaiseSingle(int iter)
-		{
-			var ev = new SafeEvent_Big<TestEventArgs>();
-			var pub = new SimplePublisher<SafeEvent_Big<TestEventArgs>, SafeEvent_Big<TestEventArgs>>(ev, ev);
-			var subs = new SimpleSubscriber[1];
-			for(int i = 0; i < subs.Length; ++i)
-				subs[i] = new SimpleSubscriber();
-			pub.TheEvent.Subscribe(subs[0].OnEvent);
-			Raise(pub,subs,iter,"SafeEvBig");
-		}
-		
-		public static void SafeEventBig_RaiseMulti(int subsCount, int iter)
-		{
-			var ev = new SafeEvent_Big<TestEventArgs>();
-			var pub = new SimplePublisher<SafeEvent_Big<TestEventArgs>, SafeEvent_Big<TestEventArgs>>(ev, ev);
-			var subs = new SimpleSubscriber[subsCount];
-			for(int i = 0; i < subs.Length; ++i)
-			{
-				subs[i] = new SimpleSubscriber();
-				pub.TheEvent.Subscribe(subs[i].OnEvent);
-			}
-			Raise(pub,subs,iter,"SafeEvBig");
-		}
 
 		public static SafeEventSpeedTempObject SafeEventDbg_Subscribe(int iter)
 		{

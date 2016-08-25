@@ -67,18 +67,6 @@ namespace PerfTests
 			SafeEventSpeedTests.SafeEvent_RaiseSingle(srpass3);
 			SafeEventSpeedTests.SafeEvent_RaiseMulti(5,srpass3);
 
-			subs=SafeEventSpeedTests.SafeEventBig_Subscribe(spass1);
-			SafeEventSpeedTests.SafeEventBig_Unsubscribe(subs);
-			subs = SafeEventSpeedTests.SafeEventBig_Subscribe(spass2);
-			SafeEventSpeedTests.SafeEventBig_Unsubscribe(subs);
-			subs = SafeEventSpeedTests.SafeEventBig_Subscribe(spass3);
-			SafeEventSpeedTests.SafeEventBig_Unsubscribe(subs);
-			subs=SafeEventSpeedTests.SafeEventBig_SubscribeRaise(srpass1);
-			SafeEventSpeedTests.SafeEventBig_Raise(subs,srpass2);
-			SafeEventSpeedTests.SafeEventBig_UnsubscribeRaise(subs);
-			SafeEventSpeedTests.SafeEventBig_RaiseSingle(srpass3);
-			SafeEventSpeedTests.SafeEventBig_RaiseMulti(5,srpass3);
-
 			subs = SafeEventSpeedTests.SafeEventDbg_Subscribe(spass1);
 			SafeEventSpeedTests.SafeEventDbg_Unsubscribe(subs);
 			subs = SafeEventSpeedTests.SafeEventDbg_Subscribe(spass2);
