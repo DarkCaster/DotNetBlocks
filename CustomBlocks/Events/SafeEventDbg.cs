@@ -1,4 +1,4 @@
-﻿// SafeEvent_Dbg.cs
+﻿// SafeEventDbg.cs
 //
 // The MIT License (MIT)
 //
