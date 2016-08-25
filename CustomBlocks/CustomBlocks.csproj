@@ -42,7 +42,7 @@
     <Compile Include="Converters\Base85.cs" />
     <Compile Include="Events\EventDbgException.cs" />
     <Compile Include="Events\SafeEvent.cs" />
-    <Compile Include="Events\SafeEvent_Dbg.cs" />
+    <Compile Include="Events\SafeEventDbg.cs" />
     <Compile Include="Hash\MMHash32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization\BinarySerialization\BinaryDeserializationException.cs" />

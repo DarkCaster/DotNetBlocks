@@ -34,12 +34,12 @@ namespace DarkCaster.Events
 	{
 		private static readonly MethodInfo GetStrongTargetMethod = typeof(Forwarder).GetMethod("GetStrongTarget", BindingFlags.NonPublic | BindingFlags.Instance);
 		private static readonly Type[] forwarderParams = new Type[] { typeof(Forwarder), typeof(object), typeof(EventArgs) };
-		
+
 		internal struct DelegateHandle
 		{
 			public readonly MethodInfo method;
 			public readonly WeakReference weakTarget;
-			
+
 			public DelegateHandle(MethodInfo method, object target)
 			{
 				this.weakTarget = new WeakReference(target);
@@ -59,7 +59,7 @@ namespace DarkCaster.Events
 				return method.GetHashCode();
 			}
 		}
-		
+
 		private static readonly Dictionary<MethodInfo, DynamicMethod> forwardersCache = new Dictionary<MethodInfo, DynamicMethod>();
 
 		private static Delegate GenerateDelegate(MethodInfo method, object target)
@@ -67,8 +67,8 @@ namespace DarkCaster.Events
 			lock(forwardersCache)
 			{
 				if(forwardersCache.ContainsKey(method))
-					return forwardersCache[method].CreateDelegate(typeof(EventHandler<EventArgs>),target);
-				var dynMethod = new DynamicMethod("InvokeEventOnObject",typeof(void), forwarderParams,typeof(Forwarder), true);
+					return forwardersCache[method].CreateDelegate(typeof(EventHandler<EventArgs>), target);
+				var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(void), forwarderParams, typeof(Forwarder), true);
 				var generator = dynMethod.GetILGenerator();
 				generator.Emit(OpCodes.Ldarg_0); //stack: this
 				generator.Emit(OpCodes.Call, GetStrongTargetMethod); //stack: weakTarget.Target
@@ -77,52 +77,52 @@ namespace DarkCaster.Events
 				generator.Emit(OpCodes.Ldarg_2); //stack: (<type of subscriber>)weakRef.Target, sender, args
 				generator.Emit(OpCodes.Call, method); //stack: [empty]
 				generator.Emit(OpCodes.Ret);
-				var result=dynMethod.CreateDelegate(typeof(EventHandler<EventArgs>),target);
+				var result = dynMethod.CreateDelegate(typeof(EventHandler<EventArgs>), target);
 				forwardersCache.Add(method, dynMethod);
 				return result;
 			}
 		}
-		
+
 		internal sealed class Forwarder
 		{
 			public readonly WeakReference weakTarget;
 			public readonly MethodInfo method;
 			public readonly EventHandler<EventArgs> fwdDelegate;
-			
+
 			public Forwarder(Delegate singleDelegate)
 			{
-				this.method=singleDelegate.Method;
-				//TODO: add some logic to check delegate param validity			
-				fwdDelegate=(singleDelegate.Target==null?(EventHandler<EventArgs>)singleDelegate:(EventHandler<EventArgs>)GenerateDelegate(singleDelegate.Method,this));
+				this.method = singleDelegate.Method;
+				//TODO: add some logic to check delegate param validity
+				fwdDelegate = (singleDelegate.Target == null ? (EventHandler<EventArgs>)singleDelegate : (EventHandler<EventArgs>)GenerateDelegate(singleDelegate.Method, this));
 				this.weakTarget = new WeakReference(singleDelegate.Target);
 			}
-			
+
 			private object GetStrongTarget()
 			{
-				var result=weakTarget.Target;
-				if(result==null)
-					throw new EventDbgException(string.Format("Invoking callback delegate on dead object of type {0}. Did you remember to save your subscriber reference to field or variable, or call unsubscribe before object disposal ?",method.DeclaringType.ToString()));
+				var result = weakTarget.Target;
+				if(result == null)
+					throw new EventDbgException(string.Format("Invoking callback delegate on dead object of type {0}. Did you remember to save your subscriber reference to field or variable, or call unsubscribe before object disposal ?", method.DeclaringType.ToString()));
 				return result;
 			}
 		}
 	}
-	
+
 	/// <summary>
 	/// Variant of SafeEvent class, used for debug purposes
 	/// </summary>
-	public sealed class SafeEventDbg<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs
+	public sealed class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T> where T : EventArgs
 	{
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
 		private bool invListRebuildNeeded = false;
 		private SafeEventDbg.Forwarder[] invList = { null };
-		private readonly Dictionary<SafeEventDbg.DelegateHandle,SafeEventDbg.Forwarder> dynamicSubscribers=new Dictionary<SafeEventDbg.DelegateHandle,SafeEventDbg.Forwarder>();
-		
+		private readonly Dictionary<SafeEventDbg.DelegateHandle, SafeEventDbg.Forwarder> dynamicSubscribers = new Dictionary<SafeEventDbg.DelegateHandle, SafeEventDbg.Forwarder>();
+
 		private readonly object raiseLock = new object();
 		private readonly object manageLock = new object();
 		private bool recursiveRaiseCheck = false;
 		private Type currentSubObjType = null;
-		
+
 		//remove dublicates from target invocation list
 		private int RemoveDublicates(Delegate[] target)
 		{
@@ -137,7 +137,7 @@ namespace DarkCaster.Events
 					}
 			return curLen;
 		}
-		
+
 		private int UpdateInvListOnRise_Safe()
 		{
 			lock(manageLock)
@@ -164,7 +164,7 @@ namespace DarkCaster.Events
 				return invListUsedLen;
 			}
 		}
-		
+
 		public void Subscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
 		{
 			if(subscriber == null)
@@ -208,7 +208,7 @@ namespace DarkCaster.Events
 				}
 			}
 		}
-		
+
 		private void Unsubscribe_Internal(Delegate[] subList, int subLen, bool ignoreErrors)
 		{
 			lock(manageLock)
@@ -239,7 +239,7 @@ namespace DarkCaster.Events
 				invListRebuildNeeded = true;
 			}
 		}
-		
+
 		public void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false, bool waitForRemoval = false)
 		{
 			if(subscriber == null)
@@ -260,26 +260,26 @@ namespace DarkCaster.Events
 			else
 				Unsubscribe_Internal(subList, subLen, ignoreErrors);
 		}
-		
+
 		public bool Raise(object sender, T args, ICollection<EventRaiseException> exceptions = null)
 		{
 			lock(raiseLock)
 			{
 				if(recursiveRaiseCheck)
 				{
-					recursiveRaiseCheck=false;
-					throw new EventDbgException(string.Format("Recursion detected while processing event callback on object of type {0}",currentSubObjType.FullName));
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(string.Format("Recursion detected while processing event callback on object of type {0}", currentSubObjType.FullName));
 				}
-				recursiveRaiseCheck=true;
+				recursiveRaiseCheck = true;
 				if(exceptions != null && exceptions.IsReadOnly)
 					exceptions = null;
 				var len = UpdateInvListOnRise_Safe();
 				var result = true;
 				for(int i = 0; i < len; ++i)
 				{
-					var curDelegate=Delegate.CreateDelegate(typeof(EventHandler<T>),invList[i].weakTarget.Target,invList[i].method,false);
+					var curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
 					currentSubObjType = invList[i].method.DeclaringType;
-					try{ invList[i].fwdDelegate(sender, args); }
+					try { invList[i].fwdDelegate(sender, args); }
 					catch(EventDbgException ex)
 					{
 						throw ex;
@@ -287,16 +287,16 @@ namespace DarkCaster.Events
 					catch(Exception ex)
 					{
 						if(exceptions != null)
-							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message),curDelegate,ex));
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
 						result = false;
 					}
 				}
-				currentSubObjType=null;
-				recursiveRaiseCheck=false;
+				currentSubObjType = null;
+				recursiveRaiseCheck = false;
 				return result;
 			}
 		}
-		
+
 		public event EventHandler<T> Event
 		{
 			add { Subscribe(value, true); }
