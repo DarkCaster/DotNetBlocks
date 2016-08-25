@@ -32,10 +32,20 @@ namespace DarkCaster.Events
 	/// </summary>
 	public sealed class EventDbgException : Exception
 	{
+		/// <summary>
+		/// Single delegate, pointing to method instance which caused EventDbgException, if applicable.
+		/// When debugging "stale" objects this field may be null. Make sure to check it before use!
+		/// </summary>
 		public readonly Delegate subscriber;
-		public EventDbgException(string message, Delegate subscriber = null) : base(message, null) 
+		/// <summary>
+		/// Type of object that contais method that caused EventDbgException. This field is equialent to Method.DeclaringType.
+		/// But it cannot be null, you can use it when debugging "stale" objects.
+		/// </summary>
+		public readonly Type declaringType;
+		public EventDbgException(string message, Type declaringType, Delegate subscriber) : base(message, null)
 		{
-			this.subscriber=subscriber;
+			this.subscriber = subscriber;
+			this.declaringType = declaringType;
 		}
 	}
 }

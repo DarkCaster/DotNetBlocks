@@ -92,7 +92,6 @@ namespace DarkCaster.Events
 			public Forwarder(Delegate singleDelegate)
 			{
 				this.method = singleDelegate.Method;
-				//TODO: add some logic to check delegate param validity
 				fwdDelegate = (singleDelegate.Target == null ? (EventHandler<EventArgs>)singleDelegate : (EventHandler<EventArgs>)GenerateDelegate(singleDelegate.Method, this));
 				this.weakTarget = new WeakReference(singleDelegate.Target);
 			}
@@ -101,7 +100,11 @@ namespace DarkCaster.Events
 			{
 				var result = weakTarget.Target;
 				if(result == null)
-					throw new EventDbgException(string.Format("Invoking callback delegate on dead object of type {0}. Did you remember to save your subscriber reference to field or variable, or call unsubscribe before object disposal ?", method.DeclaringType.ToString()));
+					throw new EventDbgException(
+						string.Format("Invoking callback delegate on dead object of type {0}. Did you remember to save your subscriber reference to field or variable, or call unsubscribe before object disposal ?", method.DeclaringType.ToString()),
+						method.DeclaringType,
+						null
+					);
 				return result;
 			}
 		}
@@ -121,7 +124,7 @@ namespace DarkCaster.Events
 		private readonly object raiseLock = new object();
 		private readonly object manageLock = new object();
 		private bool recursiveRaiseCheck = false;
-		private Type currentSubObjType = null;
+		private Delegate curDelegate = null;
 
 		//remove dublicates from target invocation list
 		private int RemoveDublicates(Delegate[] target)
@@ -268,7 +271,11 @@ namespace DarkCaster.Events
 				if(recursiveRaiseCheck)
 				{
 					recursiveRaiseCheck = false;
-					throw new EventDbgException(string.Format("Recursion detected while processing event callback on object of type {0}", currentSubObjType.FullName));
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
 				}
 				recursiveRaiseCheck = true;
 				if(exceptions != null && exceptions.IsReadOnly)
@@ -277,8 +284,7 @@ namespace DarkCaster.Events
 				var result = true;
 				for(int i = 0; i < len; ++i)
 				{
-					var curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
-					currentSubObjType = invList[i].method.DeclaringType;
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
 					try { invList[i].fwdDelegate(sender, args); }
 					catch(EventDbgException ex)
 					{
@@ -291,7 +297,7 @@ namespace DarkCaster.Events
 						result = false;
 					}
 				}
-				currentSubObjType = null;
+				curDelegate = null;
 				recursiveRaiseCheck = false;
 				return result;
 			}
