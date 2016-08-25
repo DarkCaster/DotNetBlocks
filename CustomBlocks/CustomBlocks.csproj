@@ -62,7 +62,6 @@
     <Compile Include="Events\EventRaiseException.cs" />
     <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
-    <Compile Include="Events\SafeEvent.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Converters" />
