@@ -1,4 +1,4 @@
-﻿// SafeEvent_Big.cs
+﻿// SafeEvent.cs
 //
 // The MIT License (MIT)
 //
@@ -29,9 +29,9 @@ using System.Collections.Generic;
 namespace DarkCaster.Events
 {
 	/// <summary>
-	/// Description of SafeEvent_Big.
+	/// Description of SafeEvent.
 	/// </summary>
-	public sealed class SafeEvent_Big<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs
+	public sealed class SafeEvent<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs
 	{
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
