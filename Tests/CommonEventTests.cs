@@ -208,5 +208,123 @@ namespace Tests
 			GC.KeepAlive(failingSub);
 			GC.KeepAlive(pub);
 		}
+
+		private static class StaticSubscriber1
+		{
+			public static int counter = 0;
+			public static int lastValue = 0;
+			public static void OnEvent(object sender, TestEventArgs args)
+			{
+				++counter;
+				lastValue = args.Val;
+			}
+		}
+
+		private static class StaticSubscriber2
+		{
+			public static int counter = 0;
+			public static int lastValue = 0;
+			public static void OnEvent(object sender, TestEventArgs args)
+			{
+				++counter;
+				lastValue = args.Val;
+			}
+		}
+
+		public static void StaticSubscribeUnsubscribe(IPublisher pub)
+		{
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			//subscribe multiple times
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Subscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(StaticSubscriber1.OnEvent, true));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+
+			//currect subscribe and unsubscribe
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+
+			//unsubscribe 1-st subscriber multiple times
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Unsubscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber1.OnEvent, true));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+
+			var delegateList1 = (EventHandler<TestEventArgs>)Delegate.Combine((EventHandler<TestEventArgs>)StaticSubscriber1.OnEvent, (EventHandler<TestEventArgs>)StaticSubscriber2.OnEvent);
+
+			//try to unsubscribe delegate list containing non subscribed delegate
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Unsubscribe(delegateList1));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			//try to subscribe delegate list with already registered delegate
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Subscribe(delegateList1));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			//try to unsubscribe delegate list containing non subscribed delegate
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Unsubscribe(delegateList1));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			//try to focre unsubscribe delegate list containing non subscribed delegate
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(delegateList1, true));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			//try to subscribe delegate list again
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(delegateList1));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			//try to force subscribe delegate list again
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(delegateList1, true));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			//try to unsubscribe delegate list
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(delegateList1));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			//try to unsubscribe delegate list again
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Unsubscribe(delegateList1));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			//try to force unsubscribe delegate list
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(delegateList1, true));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			//try to subscribe delegate list again
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(delegateList1));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			//unsubscribe single delegate
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			//try to unsubscribe delegate list containing non subscribed delegate
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Unsubscribe(delegateList1));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			//unsubscribe remaining delegate
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+
+			//delegatelist, that contains dublicate
+			var delegateList2 = (EventHandler<TestEventArgs>)Delegate.Combine(delegateList1, (EventHandler<TestEventArgs>)StaticSubscriber2.OnEvent);
+			//try to subscribe delegate list that contains dublicates
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Subscribe(delegateList2));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			//try to force subscribe delegate list that contains dublicates
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(delegateList2, true));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			//try to unsubscribe delegate list that contains dublicates
+			Assert.Throws(typeof(EventSubscriptionException), () => pub.TheEvent.Unsubscribe(delegateList2));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			//try to force unsubscribe delegate list that contains dublicates
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(delegateList2, true));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+
+			//subscribe delegate list and unsubscribe manually
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(delegateList2, true));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+		}
 	}
 }

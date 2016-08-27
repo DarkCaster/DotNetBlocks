@@ -45,6 +45,14 @@ namespace Tests
 		}
 
 		[Test]
+		public void StaticSubscribeUnsubscribe()
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			CommonEventTests.StaticSubscribeUnsubscribe(pub);
+		}
+
+		[Test]
 		public void SubscriberException()
 		{
 			var sub1 = new SimpleSubscriber();
