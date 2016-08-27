@@ -64,12 +64,28 @@ namespace Tests
 		}
 
 		[Test]
+		public void StaticSubscriberException()
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			CommonEventTests.StaticSubscriberException(pub);
+		}
+
+		[Test]
 		public void Raise()
 		{
 			var sub1 = new SimpleSubscriber();
 			var ev = new SafeEvent<TestEventArgs>();
 			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
 			CommonEventTests.Raise(sub1, pub);
+		}
+
+		[Test]
+		public void StaticRaise()
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
+			CommonEventTests.StaticRaise(pub);
 		}
 	}
 }

@@ -231,6 +231,18 @@ namespace Tests
 			}
 		}
 
+		private static class FailingStaticSubscriber
+		{
+			public static int counter = 0;
+			public static int lastValue = 0;
+			public static void OnEvent(object sender, TestEventArgs args)
+			{
+				++counter;
+				lastValue = args.Val;
+				throw new Exception(string.Format("Expected failure. Counter={0}, LastValue={1}", counter, lastValue));
+			}
+		}
+
 		public static void StaticSubscribeUnsubscribe(IPublisher pub)
 		{
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
@@ -321,6 +333,74 @@ namespace Tests
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber2.OnEvent));
 			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
 			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+		}
+
+		public static void StaticRaise(IPublisher pub)
+		{
+			StaticSubscriber2.counter = 0;
+			StaticSubscriber2.lastValue = 0;
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(1, StaticSubscriber2.counter);
+			Assert.AreEqual(1, StaticSubscriber2.lastValue);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(1, StaticSubscriber2.counter);
+			Assert.AreEqual(1, StaticSubscriber2.lastValue);
+
+			//not necessary, just precaution for my solace
+			GC.KeepAlive(pub);
+		}
+
+		public static void StaticSubscriberException( IPublisher pub)
+		{
+			StaticSubscriber1.counter = 0;
+			StaticSubscriber1.lastValue = 0;
+			StaticSubscriber2.counter = 0;
+			StaticSubscriber2.lastValue = 0;
+			FailingStaticSubscriber.counter = 0;
+			FailingStaticSubscriber.lastValue = 0;
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(StaticSubscriber1.OnEvent));
+			Assert.AreEqual(1, pub.TheEventCtrl.SubCount);
+			var exceptions = new List<EventRaiseException>();
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(true, pub.Raise(exceptions));
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(FailingStaticSubscriber.OnEvent));
+			Assert.AreEqual(2, pub.TheEventCtrl.SubCount);
+			Assert.DoesNotThrow(() => pub.TheEvent.Subscribe(StaticSubscriber2.OnEvent));
+			Assert.AreEqual(3, pub.TheEventCtrl.SubCount);
+			Assert.AreEqual(false, pub.Raise(null));
+			Assert.AreEqual(false, pub.Raise(exceptions));
+			Assert.AreEqual(1, exceptions.Count);
+			EventHandler<TestEventArgs> test = FailingStaticSubscriber.OnEvent;
+			Assert.AreEqual(test, exceptions[0].subscriber);
+			Assert.AreEqual(4, StaticSubscriber1.counter);
+			Assert.AreEqual(4, StaticSubscriber1.lastValue);
+			Assert.AreEqual(2, StaticSubscriber2.counter);
+			Assert.AreEqual(4, StaticSubscriber2.lastValue);
+			Assert.AreEqual(2, FailingStaticSubscriber.counter);
+			Assert.AreEqual(4, FailingStaticSubscriber.lastValue);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(FailingStaticSubscriber.OnEvent));
+			Assert.AreEqual(true, pub.Raise(null));
+			Assert.AreEqual(true, pub.Raise(exceptions));
+			Assert.AreEqual(1, exceptions.Count);
+			Assert.AreEqual(test, exceptions[0].subscriber);
+			Assert.AreEqual(2, FailingStaticSubscriber.counter);
+			Assert.AreEqual(4, FailingStaticSubscriber.lastValue);
+			Assert.AreEqual(6, StaticSubscriber1.counter);
+			Assert.AreEqual(6, StaticSubscriber1.lastValue);
+			Assert.AreEqual(4, StaticSubscriber2.counter);
+			Assert.AreEqual(6, StaticSubscriber2.lastValue);
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber1.OnEvent));
+			Assert.DoesNotThrow(() => pub.TheEvent.Unsubscribe(StaticSubscriber2.OnEvent));
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
 
 			//not necessary, just precaution for my solace

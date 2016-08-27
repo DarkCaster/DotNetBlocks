@@ -64,12 +64,28 @@ namespace Tests
 		}
 
 		[Test]
+		public void StaticSubscriberException()
+		{
+			var ev = new SafeEventDbg<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEventDbg<TestEventArgs>, SafeEventDbg<TestEventArgs>>(ev, ev);
+			CommonEventTests.StaticSubscriberException(pub);
+		}
+
+		[Test]
 		public void Raise()
 		{
 			var sub1 = new SimpleSubscriber();
 			var ev = new SafeEventDbg<TestEventArgs>();
 			var pub = new SimplePublisher<SafeEventDbg<TestEventArgs>, SafeEventDbg<TestEventArgs>>(ev, ev);
 			CommonEventTests.Raise(sub1, pub);
+		}
+
+		[Test]
+		public void StaticRaise()
+		{
+			var ev = new SafeEventDbg<TestEventArgs>();
+			var pub = new SimplePublisher<SafeEventDbg<TestEventArgs>, SafeEventDbg<TestEventArgs>>(ev, ev);
+			CommonEventTests.StaticRaise(pub);
 		}
 
 		private class StaleSubscriber
