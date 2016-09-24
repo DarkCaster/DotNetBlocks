@@ -32,9 +32,6 @@ namespace DarkCaster.Events
 {
 	internal static class SafeEventDbg
 	{
-		private static readonly MethodInfo GetStrongTargetMethod = typeof(Forwarder).GetMethod("GetStrongTarget", BindingFlags.NonPublic | BindingFlags.Instance);
-		private static readonly Type[] forwarderParams = new Type[] { typeof(Forwarder), typeof(object), typeof(EventArgs) };
-
 		internal struct DelegateHandle
 		{
 			public readonly MethodInfo method;
@@ -60,14 +57,25 @@ namespace DarkCaster.Events
 			}
 		}
 
-		private static readonly Dictionary<MethodInfo, DynamicMethod> forwardersCache = new Dictionary<MethodInfo, DynamicMethod>();
+		internal static readonly Dictionary<MethodInfo, DynamicMethod> forwardersCache = new Dictionary<MethodInfo, DynamicMethod>();		
+	}
 
-		private static Delegate GenerateDelegate(MethodInfo method, object target)
+	/// <summary>
+	/// Variant of SafeEvent class, used for debug purposes
+	/// </summary>
+	public sealed class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T> where T : EventArgs
+	{
+		private static readonly MethodInfo GetStrongTargetMethod = typeof(Forwarder).GetMethod("GetStrongTarget", BindingFlags.NonPublic | BindingFlags.Instance);
+		private static readonly Type[] forwarderParams = new Type[] { typeof(Forwarder), typeof(object), typeof(EventArgs) };
+
+		private static EventHandler<T> GenerateDelegate(MethodInfo method, object target)
 		{
-			lock(forwardersCache)
+			if(target==null)
+				return (EventHandler<T>)Delegate.CreateDelegate(typeof(EventHandler<T>), method);
+			lock(SafeEventDbg.forwardersCache)
 			{
-				if(forwardersCache.ContainsKey(method))
-					return forwardersCache[method].CreateDelegate(typeof(EventHandler<EventArgs>), target);
+				if(SafeEventDbg.forwardersCache.ContainsKey(method))
+					return (EventHandler<T>)SafeEventDbg.forwardersCache[method].CreateDelegate(typeof(EventHandler<T>), target);
 				var dynMethod = new DynamicMethod("InvokeEventOnObject", typeof(void), forwarderParams, typeof(Forwarder), true);
 				var generator = dynMethod.GetILGenerator();
 				generator.Emit(OpCodes.Ldarg_0); //stack: this
@@ -77,22 +85,22 @@ namespace DarkCaster.Events
 				generator.Emit(OpCodes.Ldarg_2); //stack: (<type of subscriber>)weakRef.Target, sender, args
 				generator.Emit(OpCodes.Call, method); //stack: [empty]
 				generator.Emit(OpCodes.Ret);
-				var result = dynMethod.CreateDelegate(typeof(EventHandler<EventArgs>), target);
-				forwardersCache.Add(method, dynMethod);
+				var result = (EventHandler<T>)dynMethod.CreateDelegate(typeof(EventHandler<T>), target);
+				SafeEventDbg.forwardersCache.Add(method, dynMethod);
 				return result;
 			}
 		}
 
-		internal sealed class Forwarder
+		private sealed class Forwarder
 		{
 			public readonly WeakReference weakTarget;
 			public readonly MethodInfo method;
-			public readonly EventHandler<EventArgs> fwdDelegate;
+			public readonly EventHandler<T> fwdDelegate;
 
 			public Forwarder(Delegate singleDelegate)
 			{
 				this.method = singleDelegate.Method;
-				fwdDelegate = (singleDelegate.Target == null ? (EventHandler<EventArgs>)singleDelegate : (EventHandler<EventArgs>)GenerateDelegate(singleDelegate.Method, this));
+				this.fwdDelegate = singleDelegate.Target == null ? GenerateDelegate(singleDelegate.Method, null) : GenerateDelegate(singleDelegate.Method, this);
 				this.weakTarget = new WeakReference(singleDelegate.Target);
 			}
 
@@ -108,18 +116,12 @@ namespace DarkCaster.Events
 				return result;
 			}
 		}
-	}
-
-	/// <summary>
-	/// Variant of SafeEvent class, used for debug purposes
-	/// </summary>
-	public sealed class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T> where T : EventArgs
-	{
+		
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
 		private bool invListRebuildNeeded = false;
-		private SafeEventDbg.Forwarder[] invList = { null };
-		private readonly Dictionary<SafeEventDbg.DelegateHandle, SafeEventDbg.Forwarder> dynamicSubscribers = new Dictionary<SafeEventDbg.DelegateHandle, SafeEventDbg.Forwarder>();
+		private Forwarder[] invList = { null };
+		private readonly Dictionary<SafeEventDbg.DelegateHandle, Forwarder> dynamicSubscribers = new Dictionary<SafeEventDbg.DelegateHandle, Forwarder>();
 
 		private readonly object raiseLock = new object();
 		private readonly object manageLock = new object();
@@ -150,14 +152,14 @@ namespace DarkCaster.Events
 				invListRebuildNeeded = false;
 				//optionally recreate invocationList array if there is not enough space
 				if(dynamicSubscribers.Count < (invListUsedLen / 3) && invList.Length >= INVLIST_MIN_RESIZE_LIMIT)
-					invList = new SafeEventDbg.Forwarder[invList.Length / 2];
+					invList = new Forwarder[invList.Length / 2];
 				else
 				{
 					var len = invList.Length;
 					while(dynamicSubscribers.Count > len)
 						len *= 2;
 					if(len != invList.Length)
-						invList = new SafeEventDbg.Forwarder[len];
+						invList = new Forwarder[len];
 				}
 				//copy values and set invListUsedLen;
 				dynamicSubscribers.Values.CopyTo(invList, 0);
@@ -191,7 +193,7 @@ namespace DarkCaster.Events
 						var handle = new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target);
 						if(dynamicSubscribers.ContainsKey(handle))
 							continue;
-						dynamicSubscribers.Add(handle, new SafeEventDbg.Forwarder(subList[i]));
+						dynamicSubscribers.Add(handle, new Forwarder(subList[i]));
 						invListRebuildNeeded = true;
 					}
 					return;
@@ -206,7 +208,7 @@ namespace DarkCaster.Events
 
 				for(int i = 0; i < subLen; ++i)
 				{
-					dynamicSubscribers.Add(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target), new SafeEventDbg.Forwarder(subList[i]));
+					dynamicSubscribers.Add(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target), new Forwarder(subList[i]));
 					invListRebuildNeeded = true;
 				}
 			}
