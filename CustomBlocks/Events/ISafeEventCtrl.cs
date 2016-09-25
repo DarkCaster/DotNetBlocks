@@ -36,5 +36,6 @@ namespace DarkCaster.Events
 	{
 		bool Raise(object sender, T args, ICollection<EventRaiseException> exceptions = null);
 		int SubCount { get; }
+		object RaiseLock { get; }
 	}
 }

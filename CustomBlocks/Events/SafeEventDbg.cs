@@ -319,5 +319,13 @@ namespace DarkCaster.Events
 					return dynamicSubscribers.Count;
 			}
 		}
+		
+		public object RaiseLock
+		{
+			get
+			{
+				return raiseLock;
+			}
+		}
 	}
 }
