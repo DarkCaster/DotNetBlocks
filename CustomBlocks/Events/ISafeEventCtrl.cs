@@ -32,7 +32,7 @@ namespace DarkCaster.Events
 	/// Control interface for custom event classes.
 	/// For use by publisher to raise events and gather usage statistics.
 	/// </summary>
-	public interface ISafeEventCtrl<T> where T : EventArgs
+	public interface ISafeEventCtrl<T> : IDisposable where T : EventArgs
 	{
 		/// <summary>
 		/// Raises an event.
@@ -47,10 +47,5 @@ namespace DarkCaster.Events
 		/// Get current active subscriber's count.
 		/// </summary>
 		int SubCount { get; }
-		/// <summary>
-		/// Get object that used as lock in Raise method to provide thread safety.
-		/// You can manually lock on this object if you want to do some things atomically with event raise.
-		/// </summary>
-		object RaiseLock { get; }
 	}
 }

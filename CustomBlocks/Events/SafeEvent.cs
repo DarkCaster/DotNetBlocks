@@ -31,7 +31,7 @@ namespace DarkCaster.Events
 	/// <summary>
 	/// Description of SafeEvent.
 	/// </summary>
-	public sealed class SafeEvent<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs
+	public sealed class SafeEvent<T> : ISafeEventCtrl <T>, ISafeEvent<T>, IDisposable where T : EventArgs
 	{
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
@@ -205,6 +205,16 @@ namespace DarkCaster.Events
 			{
 				return raiseLock;
 			}
+		}
+		
+		public TResult SafeExec<TResult>(Func<TResult> method)
+		{
+			throw new NotImplementedException("TODO");
+		}
+		
+		public void Dispose()
+		{
+			throw new NotImplementedException("TODO");
 		}
 	}
 }

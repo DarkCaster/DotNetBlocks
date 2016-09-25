@@ -63,7 +63,7 @@ namespace DarkCaster.Events
 	/// <summary>
 	/// Variant of SafeEvent class, used for debug purposes
 	/// </summary>
-	public sealed class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T> where T : EventArgs
+	public sealed class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
 	{
 		private static readonly MethodInfo GetStrongTargetMethod = typeof(Forwarder).GetMethod("GetStrongTarget", BindingFlags.NonPublic | BindingFlags.Instance);
 		private static readonly Type[] forwarderParams = new Type[] { typeof(Forwarder), typeof(object), typeof(EventArgs) };
@@ -326,6 +326,16 @@ namespace DarkCaster.Events
 			{
 				return raiseLock;
 			}
+		}
+		
+		public TResult SafeExec<TResult>(Func<TResult> method)
+		{
+			throw new NotImplementedException("TODO");
+		}
+		
+		public void Dispose()
+		{
+			throw new NotImplementedException("TODO");
 		}
 	}
 }

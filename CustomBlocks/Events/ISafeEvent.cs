@@ -56,6 +56,16 @@ namespace DarkCaster.Events
 		/// <param name="waitForRemoval">Wait for removal. if true - it is guaranteed, thar event processing callback will not be triggered after unsubscribe</param>
 		/// <param name="ignoreErrors">Do not throw errors while unsubscribing. Try to unsubscribe any elements from invocation list that have active subscription</param>
 		void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false, bool waitForRemoval = false);
+		
+		/// <summary>
+		/// Wait for event raise process to complete and execte your code.
+		/// This will only ensure that event raise process is NOT running in it's own thread at the same time when executing your code,
+		/// SafeExec method may be run in parallel with other subscribers.
+		/// Recursive execution is allowed.
+		/// </summary>
+		/// <param name="method">Your code goes here</param>
+		/// <returns>Return value from your method</returns>
+		TResult SafeExec<TResult>(Func<TResult> method);
 
 		/// <summary>
 		/// Property for use as drop-in replacement for standard events;
