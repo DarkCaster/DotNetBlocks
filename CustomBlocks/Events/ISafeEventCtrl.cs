@@ -34,8 +34,23 @@ namespace DarkCaster.Events
 	/// </summary>
 	public interface ISafeEventCtrl<T> where T : EventArgs
 	{
+		/// <summary>
+		/// Raises an event.
+		/// </summary>
+		/// <param name="sender">Event sender object</param>
+		/// <param name="args">Event arguments</param>
+		/// <param name="exceptions">Optional storage to register exceptions happened during event raise</param>
+		/// <returns>true - no exceptions was thrown while performing event raise.
+		/// false - some subscriber's callbacks was failed, exceptions happened during raise may be collected to storage passed as "exceptions" param</returns>
 		bool Raise(object sender, T args, ICollection<EventRaiseException> exceptions = null);
+		/// <summary>
+		/// Get current active subscriber's count.
+		/// </summary>
 		int SubCount { get; }
+		/// <summary>
+		/// Get object that used as lock in Raise method to provide thread safety.
+		/// You can manually lock on this object if you want to do some things atomically with event raise.
+		/// </summary>
 		object RaiseLock { get; }
 	}
 }
