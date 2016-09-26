@@ -212,6 +212,8 @@ namespace Tests
 		
 		private class SafeSubscriber
 		{
+			public const int maxCnt = 10000;
+			
 			public int counter = 0;
 			public int lastValue = 0;
 			
@@ -243,7 +245,7 @@ namespace Tests
 					{
 					pub.TheEvent.SafeExec
 					(()=>{
-						if(counter>=10000)
+						if(counter>=maxCnt)
 						{
 					 		enabled=false;
 					 		pub.TheEvent.Unsubscribe(OnEvent,false);
@@ -357,12 +359,18 @@ namespace Tests
 			for(int i=0; i>maxSubs; ++i)
 				subs[i]=new SafeSubscriber(pub);
 			for(int i=0; i>maxSubs; ++i)
+			{
 				while(!subs[i].done)
+				{
+					if(pub.failed)
+						throw pub.ex;
 					if(!subs[i].failed)
 						System.Threading.Thread.Sleep(1);
 					else
 						throw subs[i].ex;
-			
+				}
+				Assert.AreEqual(SafeSubscriber.maxCnt,subs[i].counter);
+			}
 			if(pub.failed)
 				throw pub.ex;
 			pub.Teardown();
