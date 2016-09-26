@@ -42,7 +42,7 @@ namespace DarkCaster.Events
 		private readonly HashSet<EventHandler<T>> dynamicSubscribers=new HashSet<EventHandler<T>>();
 		
 		private readonly object manageLock = new object();
-		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 		
 		//remove dublicates from target invocation list
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -196,14 +196,14 @@ namespace DarkCaster.Events
 		{
 			raiseRwLock.EnterReadLock();
 			try{ return method(); }
-			finally{ raiseRwLock.EnterReadLock(); }
+			finally{ raiseRwLock.ExitReadLock(); }
 		}
 		
 		public void SafeExec(Action method)
 		{
 			raiseRwLock.EnterReadLock();
 			try{ method(); }
-			finally{ raiseRwLock.EnterReadLock(); }
+			finally{ raiseRwLock.ExitReadLock(); }
 		}
 		
 		private bool isDisposed = false;

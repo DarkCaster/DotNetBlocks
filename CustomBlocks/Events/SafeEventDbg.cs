@@ -126,7 +126,7 @@ namespace DarkCaster.Events
 		private readonly Dictionary<SafeEventDbg.DelegateHandle, Forwarder> dynamicSubscribers = new Dictionary<SafeEventDbg.DelegateHandle, Forwarder>();
 
 		private readonly object manageLock = new object();
-		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 		
 		private bool recursiveRaiseCheck = false;
 		private Delegate curDelegate = null;
@@ -325,14 +325,14 @@ namespace DarkCaster.Events
 		{
 			raiseRwLock.EnterReadLock();
 			try{ return method(); }
-			finally{ raiseRwLock.EnterReadLock(); }
+			finally{ raiseRwLock.ExitReadLock(); }
 		}
 		
 		public void SafeExec(Action method)
 		{
 			raiseRwLock.EnterReadLock();
 			try{ method(); }
-			finally{ raiseRwLock.EnterReadLock(); }
+			finally{ raiseRwLock.ExitReadLock(); }
 		}
 		
 		private bool isDisposed = false;
