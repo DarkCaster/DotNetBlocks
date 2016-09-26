@@ -60,7 +60,7 @@ namespace DarkCaster.Events
 		/// Wait for event raise process to complete and execute your code.
 		/// This will only ensure that event raise process is NOT running in it's own thread at the same time when executing your code,
 		/// SafeExec method may be run in parallel with other subscribers.
-		/// Recursive execution is allowed.
+		/// Recursive execution is NOT allowed.
 		/// All other methods from "ISafeEvent" can be also wrapped by "SafeExec".
 		/// </summary>
 		/// <param name="method">Your code goes here</param>
@@ -71,7 +71,7 @@ namespace DarkCaster.Events
 		/// Wait for event raise process to complete and execute your code.
 		/// This will only ensure that event raise process is NOT running in it's own thread at the same time when executing your code,
 		/// SafeExec method may be run in parallel with other subscribers.
-		/// Recursive execution is allowed.
+		/// Recursive execution is NOT allowed.
 		/// All other methods from "ISafeEvent" can be also wrapped by "SafeExec".
 		/// </summary>
 		/// <param name="method">Your code goes here</param>
