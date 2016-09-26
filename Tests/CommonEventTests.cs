@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using DarkCaster.Events;
 using Tests.SafeEventStuff;
@@ -207,6 +208,164 @@ namespace Tests
 			GC.KeepAlive(goodSub2);
 			GC.KeepAlive(failingSub);
 			GC.KeepAlive(pub);
+		}
+		
+		private class SafeSubscriber
+		{
+			public int counter = 0;
+			public int lastValue = 0;
+			
+			public volatile bool enabled=false;
+			public volatile bool done=false;
+			public volatile bool failed=false;
+			public volatile Exception ex;
+			
+			private readonly IPublisher pub;
+			public Task subworker;
+			
+			public SafeSubscriber(IPublisher pub)
+			{
+				this.pub=pub;
+				this.pub.TheEvent.SafeExec
+				(()=>{
+					 pub.TheEvent.Subscribe(OnEvent,false);
+					 enabled=true;
+				});
+				this.subworker=new Task(TheWorker);
+				this.subworker.Start();
+			}
+			
+			private void TheWorker()
+			{
+				while(!done)
+				{
+					try
+					{
+					pub.TheEvent.SafeExec
+					(()=>{
+						if(counter>=10000)
+						{
+					 		enabled=false;
+					 		pub.TheEvent.Unsubscribe(OnEvent,false);
+					 		done=true;
+						}
+					});
+					}
+					catch(Exception ex)
+					{
+						failed=true;
+						this.ex=ex;
+						return;
+					}
+				}
+			}
+						
+			public void OnEvent(object sender, TestEventArgs args)
+			{
+				try
+				{
+				if(!enabled)
+					throw new Exception("OnEvent should not be run in this state!");
+				if(done)
+					throw new Exception("SafeSubscriber is finished it's work, OnEvent should not be triggered!");
+				//this is not essential to wrap this code to SafeExec. used there for additional testing
+				pub.TheEvent.SafeExec
+				(()=>{
+					++counter;
+					lastValue = args.Val;
+				});
+				}
+				catch(Exception ex)
+				{
+					failed=true;
+					this.ex=ex;
+					return;
+				}
+			}
+		}
+		
+		private class TickingPublisher<T, C> : IPublisher
+		where T : ISafeEvent<TestEventArgs>
+		where C : ISafeEventCtrl<TestEventArgs>
+		{
+			private int counter;
+			private readonly C theEventCtrl;
+			private readonly T theEvent;
+			public ISafeEvent<TestEventArgs> TheEvent { get { return theEvent; } }
+			public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEventCtrl; } }
+			
+			public volatile bool done=false;
+			public Task worker;
+			
+			public volatile bool failed=false;
+			public volatile Exception ex;
+			
+			private TickingPublisher()
+			{
+				throw new NotSupportedException();
+			}
+			
+			public TickingPublisher(T iSafeEvent, C iSafeEventCtrl)
+			{
+				counter = 0;
+				theEvent = iSafeEvent;
+				theEventCtrl = iSafeEventCtrl;
+				worker=new Task(TheWorker);
+				worker.Start();
+			}
+			
+			private void TheWorker()
+			{
+				while(!done)
+				{
+					try
+					{
+						Raise();
+						System.Threading.Thread.Sleep(1);
+					}
+					catch(Exception ex)
+					{
+						failed=true;
+						this.ex=ex;
+						return;
+					}
+				}
+			}
+			
+			public bool Raise(ICollection<EventRaiseException> exceptions = null)
+			{
+				++counter;
+				return theEventCtrl.Raise(this, new TestEventArgs() { Val = counter }, exceptions);
+			}
+			
+			public void Teardown()
+			{
+				done=true;
+				while(!worker.IsCompleted)
+					System.Threading.Thread.Sleep(1);
+			}
+		}
+		
+		public static void SafeExec<T, C>(T ev, C evc)
+			where T : ISafeEvent<TestEventArgs>
+			where C : ISafeEventCtrl<TestEventArgs>
+		{
+			var pub=new TickingPublisher<T,C>(ev,evc);
+			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
+			const int maxSubs=50;
+			var subs=new SafeSubscriber[maxSubs];
+			for(int i=0; i>maxSubs; ++i)
+				subs[i]=new SafeSubscriber(pub);
+			for(int i=0; i>maxSubs; ++i)
+				while(!subs[i].done)
+					if(!subs[i].failed)
+						System.Threading.Thread.Sleep(1);
+					else
+						throw subs[i].ex;
+			
+			if(pub.failed)
+				throw pub.ex;
+			pub.Teardown();
 		}
 
 		private static class StaticSubscriber1

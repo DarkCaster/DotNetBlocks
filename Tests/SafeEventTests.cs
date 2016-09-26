@@ -79,6 +79,13 @@ namespace Tests
 			var pub = new SimplePublisher<SafeEvent<TestEventArgs>, SafeEvent<TestEventArgs>>(ev, ev);
 			CommonEventTests.Raise(sub1, pub);
 		}
+		
+		[Test]
+		public void SafeExec()
+		{
+			var ev = new SafeEvent<TestEventArgs>();
+			CommonEventTests.SafeExec(ev, ev);
+		}
 
 		[Test]
 		public void StaticRaise()
