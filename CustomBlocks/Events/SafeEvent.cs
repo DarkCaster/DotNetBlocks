@@ -24,7 +24,9 @@
 //
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace DarkCaster.Events
 {
@@ -39,11 +41,11 @@ namespace DarkCaster.Events
 		private EventHandler<T>[] invList = { null };
 		private readonly HashSet<EventHandler<T>> dynamicSubscribers=new HashSet<EventHandler<T>>();
 		
-		
-		private readonly object raiseLock = new object();
 		private readonly object manageLock = new object();
+		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 		
 		//remove dublicates from target invocation list
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int RemoveDublicates(Delegate[] target)
 		{
 			var curLen = target.Length;
@@ -58,6 +60,7 @@ namespace DarkCaster.Events
 			return curLen;
 		}
 		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int UpdateInvListOnRise_Safe()
 		{
 			lock(manageLock)
@@ -116,8 +119,20 @@ namespace DarkCaster.Events
 			}
 		}
 		
-		private void Unsubscribe_Internal(Delegate[] subList, int subLen, bool ignoreErrors)
+		public void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
 		{
+			if(subscriber == null)
+			{
+				if(ignoreErrors)
+					return;
+				throw new EventSubscriptionException("Subscriber is null", null, null);
+			}
+
+			var subList = subscriber.GetInvocationList();
+			var subLen = RemoveDublicates(subList);
+			if(!ignoreErrors && subLen != subList.Length)
+				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
+			
 			lock(manageLock)
 			{
 				if(dynamicSubscribers.Count == 0)
@@ -141,53 +156,31 @@ namespace DarkCaster.Events
 			}
 		}
 		
-		public void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false, bool waitForRemoval = false)
-		{
-			if(subscriber == null)
-			{
-				if(ignoreErrors)
-					return;
-				throw new EventSubscriptionException("Subscriber is null", null, null);
-			}
-
-			var subList = subscriber.GetInvocationList();
-			var subLen = RemoveDublicates(subList);
-			if(!ignoreErrors && subLen != subList.Length)
-				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
-
-			if(waitForRemoval)
-				lock(raiseLock)
-					Unsubscribe_Internal(subList, subLen, ignoreErrors);
-			else
-				Unsubscribe_Internal(subList, subLen, ignoreErrors);
-		}
-		
 		public bool Raise(object sender, T args, ICollection<EventRaiseException> exceptions = null)
 		{
-			lock(raiseLock)
+			raiseRwLock.EnterWriteLock();
+			if(exceptions != null && exceptions.IsReadOnly)
+				exceptions = null;
+			var len = UpdateInvListOnRise_Safe();
+			var result = true;
+			for(int i = 0; i < len; ++i)
 			{
-				if(exceptions != null && exceptions.IsReadOnly)
-					exceptions = null;
-				var len = UpdateInvListOnRise_Safe();
-				var result = true;
-				for(int i = 0; i < len; ++i)
+				try { invList[i](sender, args); }
+				catch(Exception ex)
 				{
-					try { invList[i](sender, args); }
-					catch(Exception ex)
-					{
-						if(exceptions != null)
-							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
-						result = false;
-					}
+					if(exceptions != null)
+						exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+					result = false;
 				}
-				return result;
 			}
+			raiseRwLock.ExitWriteLock();
+			return result;
 		}
 		
 		public event EventHandler<T> Event
 		{
 			add { Subscribe(value, true); }
-			remove { Unsubscribe(value, true, false); }
+			remove { Unsubscribe(value, true); }
 		}
 
 		public int SubCount
@@ -199,22 +192,33 @@ namespace DarkCaster.Events
 			}
 		}
 		
-		public object RaiseLock
-		{
-			get
-			{
-				return raiseLock;
-			}
-		}
-		
 		public TResult SafeExec<TResult>(Func<TResult> method)
 		{
-			throw new NotImplementedException("TODO");
+			raiseRwLock.EnterReadLock();
+			try{ return method(); }
+			finally{ raiseRwLock.EnterReadLock(); }
 		}
+		
+		public void SafeExec(Action method)
+		{
+			raiseRwLock.EnterReadLock();
+			try{ method(); }
+			finally{ raiseRwLock.EnterReadLock(); }
+		}
+		
+		private bool isDisposed = false;
 		
 		public void Dispose()
 		{
-			throw new NotImplementedException("TODO");
+			if(!isDisposed)
+			{
+				isDisposed=true;
+				//delay dispose in case when other publisher's thread is finishing it's work but still using ISafeEventCtrl methods.
+				//such situation is already an error, so following 2 lines may be removed in future.
+				raiseRwLock.EnterWriteLock();
+				raiseRwLock.ExitWriteLock();
+				raiseRwLock.Dispose();
+			}
 		}
 	}
 }

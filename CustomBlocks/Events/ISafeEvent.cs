@@ -36,6 +36,9 @@ namespace DarkCaster.Events
 		/// Subscribe for event. Method is thread safe.
 		/// Trying to subscribe multicast delegate that contains entries already subscribed earlier or dublicate entries or null delegate
 		/// will throw EventSubscriptionException, unless ignoreErrors is set to true.
+		/// If publisher logic runs in its own thread there is no guarantee that subscribe will be performed not at the same time as event-raise calls,
+		/// so your code should be robust enough.
+		/// If you need that event raise is not performed at the same time with subscribe - wrap this call with "SafeExec".
 		/// </summary>
 		/// <param name="subscriber">Event callback - generic variant of EventHandler, where T is EventArgs</param>
 		/// <param name="ignoreErrors">Do not throw errors while subscribing. Try to subscribe any elements from invocation list that is not already subscribed</param>
@@ -45,32 +48,39 @@ namespace DarkCaster.Events
 		/// Unsubscribe from event.
 		/// Trying to unsubscribe multicast delegate that not contains entries already subscribed earlier or dublicate entries or null delegate
 		/// will throw EventSubscriptionException, unless ignoreErrors is set to true.
-		/// If waitForRemoval flag is set to false - method call will not block,
-		/// but there is no guarantee that event callback will not be triggered again after unsubscribe method call is complete,
-		/// so your event processing code should be robust enough to overcome such situation.  
-		/// If waitForRemoval flag is set to true, event callback will not be triggered again after this method call is complete,
-		/// but Unsubscribe method may temporary lock and wait for current event processing is complete.
-		/// So you should not use locking in event processing and event management thread at the same time to avoid deadlocks.
+		/// If publisher logic runs in its own thread there is no guarantee that unsubscribe will be performed not at the same time as event-raise calls,
+		/// so your code should be robust enough.
+		/// If you need that event raise is not performed at the same time or after unsubscribe - wrap this call with "SafeExec".
 		/// </summary>
 		/// <param name="subscriber">Event callback method used at subscribe - generic variant of EventHandler, where T is EventArgs</param>
-		/// <param name="waitForRemoval">Wait for removal. if true - it is guaranteed, thar event processing callback will not be triggered after unsubscribe</param>
 		/// <param name="ignoreErrors">Do not throw errors while unsubscribing. Try to unsubscribe any elements from invocation list that have active subscription</param>
-		void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false, bool waitForRemoval = false);
+		void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false);
 		
 		/// <summary>
-		/// Wait for event raise process to complete and execte your code.
+		/// Wait for event raise process to complete and execute your code.
 		/// This will only ensure that event raise process is NOT running in it's own thread at the same time when executing your code,
 		/// SafeExec method may be run in parallel with other subscribers.
 		/// Recursive execution is allowed.
+		/// All other methods from "ISafeEvent" can be also wrapped by "SafeExec".
 		/// </summary>
 		/// <param name="method">Your code goes here</param>
 		/// <returns>Return value from your method</returns>
 		TResult SafeExec<TResult>(Func<TResult> method);
+		
+		/// <summary>
+		/// Wait for event raise process to complete and execute your code.
+		/// This will only ensure that event raise process is NOT running in it's own thread at the same time when executing your code,
+		/// SafeExec method may be run in parallel with other subscribers.
+		/// Recursive execution is allowed.
+		/// All other methods from "ISafeEvent" can be also wrapped by "SafeExec".
+		/// </summary>
+		/// <param name="method">Your code goes here</param>
+		void SafeExec(Action method);
 
 		/// <summary>
 		/// Property for use as drop-in replacement for standard events;
 		/// </summary>
-		[Obsolete("There is no fully functionally identical drop-in replacement for standard events, so consider use Subscribe and Unsubscribe methods instead")]
+		[Obsolete("This is not a fully functionally identical drop-in replacement for standard events, so consider use Subscribe and Unsubscribe methods instead")]
 		event EventHandler<T> Event;
 	}
 }

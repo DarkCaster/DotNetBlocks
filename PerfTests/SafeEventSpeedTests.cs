@@ -64,7 +64,7 @@ namespace PerfTests
 			var startCpuTime = process.TotalProcessorTime;
 			sw.Start();
 			for(int i = 0; i < subs.Length; ++i)
-				pub.TheEvent.Unsubscribe(subs[i].OnEvent, false, true);
+				pub.TheEvent.SafeExec(()=>{pub.TheEvent.Unsubscribe(subs[i].OnEvent, false);});
 			sw.Stop();
 			var stopCpuTime = process.TotalProcessorTime;
 
