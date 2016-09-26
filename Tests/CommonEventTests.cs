@@ -324,6 +324,7 @@ namespace Tests
 					{
 						Raise();
 						System.Threading.Thread.Sleep(1);
+						//throw new Exception("EXPECTED !1");
 					}
 					catch(Exception ex)
 					{
@@ -354,11 +355,13 @@ namespace Tests
 		{
 			var pub=new TickingPublisher<T,C>(ev,evc);
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
-			const int maxSubs=50;
+			
+			const int maxSubs=10;
 			var subs=new SafeSubscriber[maxSubs];
-			for(int i=0; i>maxSubs; ++i)
+			for(int i=0; i<maxSubs; ++i)
 				subs[i]=new SafeSubscriber(pub);
-			for(int i=0; i>maxSubs; ++i)
+			
+			for(int i=0; i<maxSubs; ++i)
 			{
 				while(!subs[i].done)
 				{
@@ -371,8 +374,10 @@ namespace Tests
 				}
 				Assert.AreEqual(SafeSubscriber.maxCnt,subs[i].counter);
 			}
+			
 			if(pub.failed)
 				throw pub.ex;
+			
 			pub.Teardown();
 		}
 
