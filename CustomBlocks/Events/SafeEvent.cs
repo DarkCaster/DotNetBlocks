@@ -159,14 +159,14 @@ namespace DarkCaster.Events
 		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
 			raiseRwLock.EnterWriteLock();
-			if(exceptions != null && exceptions.IsReadOnly)
-				exceptions = null;
-			var len = UpdateInvListOnRise_Safe();
 			if(preExec!=null)
 			{
 				try{ preExec(); }
 				finally{ raiseRwLock.ExitWriteLock(); }
 			}
+			if(exceptions != null && exceptions.IsReadOnly)
+				exceptions = null;
+			var len = UpdateInvListOnRise_Safe();
 			var result = true;
 			for(int i = 0; i < len; ++i)
 			{
@@ -192,10 +192,10 @@ namespace DarkCaster.Events
 			raiseRwLock.EnterWriteLock();
 			try
 			{
+			var args=preExec();
 			if(exceptions != null && exceptions.IsReadOnly)
 				exceptions = null;
 			var len = UpdateInvListOnRise_Safe();
-			var args=preExec();
 			var result = true;
 			for(int i = 0; i < len; ++i)
 			{
@@ -220,10 +220,10 @@ namespace DarkCaster.Events
 			raiseRwLock.EnterWriteLock();
 			try
 			{
+			var pair=preExec();
 			if(exceptions != null && exceptions.IsReadOnly)
 				exceptions = null;
 			var len = UpdateInvListOnRise_Safe();
-			var pair=preExec();
 			var result = true;
 			for(int i = 0; i < len; ++i)
 			{

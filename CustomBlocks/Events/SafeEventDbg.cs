@@ -277,11 +277,11 @@ namespace DarkCaster.Events
 					);
 				}
 				recursiveRaiseCheck = true;
+				if(preExec!=null)
+					preExec();
 				if(exceptions != null && exceptions.IsReadOnly)
 					exceptions = null;
 				var len = UpdateInvListOnRise_Safe();
-				if(preExec!=null)
-					preExec();
 				var result = true;
 				for(int i = 0; i < len; ++i)
 				{
@@ -325,10 +325,10 @@ namespace DarkCaster.Events
 					);
 				}
 				recursiveRaiseCheck = true;
+				var args=preExec();
 				if(exceptions != null && exceptions.IsReadOnly)
 					exceptions = null;
 				var len = UpdateInvListOnRise_Safe();
-				var args=preExec();
 				var result = true;
 				for(int i = 0; i < len; ++i)
 				{
@@ -372,10 +372,10 @@ namespace DarkCaster.Events
 					);
 				}
 				recursiveRaiseCheck = true;
+				var pair=preExec();
 				if(exceptions != null && exceptions.IsReadOnly)
 					exceptions = null;
 				var len = UpdateInvListOnRise_Safe();
-				var pair=preExec();
 				var result = true;
 				for(int i = 0; i < len; ++i)
 				{
