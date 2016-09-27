@@ -76,7 +76,7 @@ namespace Tests.SafeEventStuff
 		public bool Raise(ICollection<EventRaiseException> exceptions = null)
 		{
 			++counter;
-			return theEventCtrl.Raise(this, new TestEventArgs() { Val = counter }, exceptions);
+			return theEventCtrl.Raise(this, new TestEventArgs() { Val = counter }, null, null, exceptions);
 		}
 	}
 }

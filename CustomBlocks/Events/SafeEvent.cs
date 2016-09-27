@@ -156,12 +156,17 @@ namespace DarkCaster.Events
 			}
 		}
 		
-		public bool Raise(object sender, T args, ICollection<EventRaiseException> exceptions = null)
+		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
 			raiseRwLock.EnterWriteLock();
 			if(exceptions != null && exceptions.IsReadOnly)
 				exceptions = null;
 			var len = UpdateInvListOnRise_Safe();
+			if(preExec!=null)
+			{
+				try{ preExec(); }
+				finally{ raiseRwLock.ExitWriteLock(); }
+			}
 			var result = true;
 			for(int i = 0; i < len; ++i)
 			{
@@ -173,8 +178,69 @@ namespace DarkCaster.Events
 					result = false;
 				}
 			}
+			if(postExec!=null)
+			{
+				try{ postExec(); }
+				finally{ raiseRwLock.ExitWriteLock(); }
+			}
 			raiseRwLock.ExitWriteLock();
 			return result;
+		}
+		
+		public bool Raise(object sender, Func<T> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+			if(exceptions != null && exceptions.IsReadOnly)
+				exceptions = null;
+			var len = UpdateInvListOnRise_Safe();
+			var args=preExec();
+			var result = true;
+			for(int i = 0; i < len; ++i)
+			{
+				try { invList[i](sender, args); }
+				catch(Exception ex)
+				{
+					if(exceptions != null)
+						exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+					result = false;
+				}
+			}
+			if(postExec!=null)
+				postExec();
+			return result;
+			}
+			finally
+			{raiseRwLock.ExitWriteLock();}
+		}
+		
+		public bool Raise(Func<KeyValuePair<object,T>> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+			if(exceptions != null && exceptions.IsReadOnly)
+				exceptions = null;
+			var len = UpdateInvListOnRise_Safe();
+			var pair=preExec();
+			var result = true;
+			for(int i = 0; i < len; ++i)
+			{
+				try { invList[i](pair.Key, pair.Value); }
+				catch(Exception ex)
+				{
+					if(exceptions != null)
+						exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+					result = false;
+				}
+			}
+			if(postExec!=null)
+				postExec();
+			return result;
+			}
+			finally
+			{raiseRwLock.ExitWriteLock();}
 		}
 		
 		public event EventHandler<T> Event
