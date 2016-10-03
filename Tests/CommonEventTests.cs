@@ -342,6 +342,7 @@ namespace Tests
 				done=true;
 				while(!worker.IsCompleted)
 					System.Threading.Thread.Sleep(10);
+				theEventCtrl.Dispose();
 			}
 		}
 		
