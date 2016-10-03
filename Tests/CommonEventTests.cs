@@ -212,7 +212,7 @@ namespace Tests
 		
 		private class SafeSubscriber
 		{
-			public const int maxCnt = 100;
+			public const int maxCnt = 50;
 			
 			public int counter = 0;
 			public int lastValue = 0;
@@ -353,7 +353,7 @@ namespace Tests
 			var pub=new TickingPublisher<T,C>(ev,evc);
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
 			
-			const int maxSubs=50;
+			const int maxSubs=25;
 			var subs=new SafeSubscriber[maxSubs];
 			for(int i=0; i<maxSubs; ++i)
 				subs[i]=new SafeSubscriber(pub);
