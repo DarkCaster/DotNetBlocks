@@ -54,8 +54,11 @@ namespace DarkCaster.Config
 		/// <summary>
 		/// Perform config read, when State == Online.
 		/// Deserialize and create new config-class object on return.
+		/// If current state is not Init - exception will be thrown, so config read may be performed when provider is offline.
+		/// If current state is Init - config data is still not received, and exception will be thrown on method invocation.
 		/// </summary>
-		/// <returns>Newly created config class instance with current config values.</returns>
+		/// <returns>Newly created config class instance with current config values.
+		/// Must be supported by serialization backend used with config provider, or exception will be thrown.</returns>
 		CFG ReadConfig();
 	}
 }

@@ -32,15 +32,27 @@ namespace DarkCaster.Config
 	/// This system perform storage operations with serialized data coming from config classes.
 	/// Storage methods may vary (on disk files, database, network storage), also provider should perform checks
 	/// for resource conflicts (accesing the same storage location from multiple instances), and it must be thread safe.
+	/// This interface can be used to perform full read-write operation with config.
+	/// It also and may be used to generate interface instance with read-only functionality
+	/// of same provider for use with logic that may only perform config read.
 	/// </summary>
 	public interface IWritableConfigProvider<CFG> : IReadOnlyConfigProvider<CFG> where CFG: class, new()
 	{
 		/// <summary>
-		/// Is config write operation is allowed ?
-		/// Config access may be performed in read-only mode, this can be used as simple security mechanism.
-		/// This value may be changed only on state change, it must be thread safe and interlocked with state changes.
+		/// Is config write operation allowed ?
+		/// Config access may be performed in read-only mode only. ConfigProvider is responsible to select mode when changing to online state.
+		/// This value of this property may be changed only on state change, it must be thread safe and interlocked with state changes.
 		/// False also should is returned in situations when it is not possible to determine access mode - in Init and Offline states.
 		/// </summary>
 		bool IsWriteEnabled { get; }
+		
+		/// <summary>
+		/// Perform config serialization and write to storage media.
+		/// This method will block until config is not commited to media.
+		/// If IsWriteEnabled == false, or if current state is not Online - exception will be thrown. 
+		/// </summary>
+		/// <param name="config">Object of class that used to contain config parameters.
+		/// Must be supported by serialization backend used with config provider, or exception will be thrown</param>
+		void WriteConfig(CFG config);
 	}
 }
