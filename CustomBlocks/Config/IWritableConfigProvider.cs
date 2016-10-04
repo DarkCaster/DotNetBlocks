@@ -22,43 +22,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 using System;
+
 namespace DarkCaster.Config
 {
 	/// <summary>
-	/// Different states of ConfigProvider
-	/// </summary>
-	public enum ConfigProviderState
-	{
-		/// <summary>
-		/// Config provider is down, config cannot be read or written.
-		/// If we try to read or write config, exception will be thrown.
-		/// </summary>
-		Disconnected=0,
-		/// <summary>
-		/// Config provider in readonly state.
-		/// We can only perform config reading.
-		/// </summary>
-		ReadOnly,
-		/// <summary>
-		/// Config provider in read\write state.
-		/// We can read and write config.
-		/// </summary>
-		ReadWrite
-	}
-
-	/// <summary>
-	/// Interface for service class that perform storage operations with serialized data coming from config classes.
+	/// Client side interface for system that perform config management, i.e. config provider.
+	/// This system perform storage operations with serialized data coming from config classes.
 	/// Storage methods may vary (on disk files, database, network storage), also provider should perform checks
 	/// for resource conflicts (accesing the same storage location from multiple instances), and it must be thread safe.
 	/// </summary>
-	public interface IConfigProvider : IDisposable
+	public interface IWritableConfigProvider<CFG> : IReadOnlyConfigProvider<CFG> where CFG: class, new()
 	{
 		/// <summary>
-		/// Gets the current state of ConfigProvider.
-		/// Must be thread safe and volatile, so any thread that want to request current state will get proper value
+		/// Is config write operation is allowed ?
+		/// Config access may be performed in read-only mode, this can be used as simple security mechanism.
+		/// This value may be changed only on state change, it must be thread safe and interlocked with state changes.
+		/// False also should is returned in situations when it is not possible to determine access mode - in Init and Offline states.
 		/// </summary>
-		/// <value>Current state</value>
-		ConfigProviderState State { get; }
+		bool IsWriteEnabled { get; }
 	}
 }
