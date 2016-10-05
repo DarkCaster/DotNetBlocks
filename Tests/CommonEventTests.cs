@@ -25,7 +25,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Threading;
 using NUnit.Framework;
 using DarkCaster.Events;
 using Tests.SafeEventStuff;
@@ -212,7 +212,7 @@ namespace Tests
 		
 		private class SafeSubscriber
 		{
-			public const int maxCnt = 50;
+			public const int maxCnt = 100;
 			
 			public int counter = 0;
 			public int lastValue = 0;
@@ -223,7 +223,7 @@ namespace Tests
 			public volatile Exception ex;
 			
 			private readonly IPublisher pub;
-			public Task subworker;
+			public readonly Thread subworker;
 			
 			public SafeSubscriber(IPublisher pub)
 			{
@@ -233,7 +233,8 @@ namespace Tests
 					 pub.TheEvent.Subscribe(OnEvent,false);
 					 enabled=true;
 				});
-				this.subworker=new Task(TheWorker);
+				this.subworker =new Thread(TheWorker);
+				this.subworker.Priority = ThreadPriority.Normal;
 				this.subworker.Start();
 			}
 			
@@ -293,7 +294,7 @@ namespace Tests
 			public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEventCtrl; } }
 			
 			public volatile bool done=false;
-			public Task worker;
+			public readonly Thread worker;
 			
 			public volatile bool failed=false;
 			public volatile Exception ex;
@@ -308,7 +309,8 @@ namespace Tests
 				counter = 0;
 				theEvent = iSafeEvent;
 				theEventCtrl = iSafeEventCtrl;
-				worker=new Task(TheWorker);
+				worker=new Thread(TheWorker);
+				worker.Priority= ThreadPriority.AboveNormal;
 				worker.Start();
 			}
 			
@@ -319,8 +321,7 @@ namespace Tests
 					try
 					{
 						Raise();
-						System.Threading.Thread.Sleep(10);
-						//throw new Exception("EXPECTED !1");
+						Thread.Sleep(5);
 					}
 					catch(Exception ex)
 					{
@@ -340,8 +341,7 @@ namespace Tests
 			public void Teardown()
 			{
 				done=true;
-				while(!worker.IsCompleted)
-					System.Threading.Thread.Sleep(10);
+				worker.Join();
 				theEventCtrl.Dispose();
 			}
 		}
@@ -353,22 +353,30 @@ namespace Tests
 			var pub=new TickingPublisher<T,C>(ev,evc);
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);
 			
-			const int maxSubs=25;
+			const int maxSubs=8;
 			var subs=new SafeSubscriber[maxSubs];
+			
 			for(int i=0; i<maxSubs; ++i)
 				subs[i]=new SafeSubscriber(pub);
 			
+			//check that all threads is running and not failed yet
 			for(int i=0; i<maxSubs; ++i)
 			{
-				while(!subs[i].done)
-				{
-					if(pub.failed)
-						throw pub.ex;
-					if(!subs[i].failed)
-						System.Threading.Thread.Sleep(10);
-					else
-						throw subs[i].ex;
-				}
+				Assert.True(subs[i].subworker.IsAlive);
+				Assert.False(subs[i].done);
+				Assert.False(subs[i].failed);
+				Assert.True(pub.worker.IsAlive);
+				Assert.False(pub.failed);
+			}
+			
+			for(int i=0; i<maxSubs; ++i)
+			{
+				subs[i].subworker.Join();
+				if(pub.failed)
+					throw pub.ex;
+				if(subs[i].failed)
+					throw subs[i].ex;
+				Assert.True(subs[i].done);
 				Assert.LessOrEqual(SafeSubscriber.maxCnt,subs[i].counter);
 			}
 			
