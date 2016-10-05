@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Threading.Tasks;
 
 namespace DarkCaster.Config
 {
@@ -51,8 +52,20 @@ namespace DarkCaster.Config
 		/// This method will block until config is not commited to media.
 		/// If IsWriteEnabled == false, or if current state is not Online - exception will be thrown. 
 		/// </summary>
-		/// <param name="config">Object of class that used to contain config parameters.
+		/// <param name="config">Object of class that used to manage config parameters.
 		/// Must be supported by serialization backend used with config provider, or exception will be thrown</param>
 		void WriteConfig(CFG config);
+		
+		/// <summary>
+		/// Perform config serialization and data-write to storage media.
+		/// This method using async behavior, and should be used when using async callers.
+		/// Serialization performed as fast as possible,
+		/// await and return to caller is performed on io operations
+		/// or when avoiding race conditions between multiple write operations.
+		/// </summary>
+		/// <param name="config">Object of class that used to manage config parameters.
+		/// Must be supported by serialization backend used with config provider, or exception will be thrown</param>
+		/// <returns>Task for use with async caller</returns>
+		Task WriteConfigAsync(CFG config);
 	}
 }
