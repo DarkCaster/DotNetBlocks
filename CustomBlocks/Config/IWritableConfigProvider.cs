@@ -1,4 +1,4 @@
-﻿// IConfigProvider.cs
+﻿// IWritableConfigProvider.cs
 //
 // The MIT License (MIT)
 //
@@ -58,7 +58,7 @@ namespace DarkCaster.Config
 		
 		/// <summary>
 		/// Perform config serialization and data-write to storage media.
-		/// This method using async behavior, and should be used when using async callers.
+		/// This method is using async behavior, and should be used with async callers.
 		/// Serialization performed as fast as possible,
 		/// await and return to caller is performed on io operations
 		/// or when avoiding race conditions between multiple write operations.
@@ -67,5 +67,14 @@ namespace DarkCaster.Config
 		/// Must be supported by serialization backend used with config provider, or exception will be thrown</param>
 		/// <returns>Task for use with async caller</returns>
 		Task WriteConfigAsync(CFG config);
+		
+		/// <summary>
+		/// Return read only instance of current config provider.
+		/// Technically, it should be a reference to the same object.
+		/// In case it is not - state changes and serialized config data changes should be synchronized.
+		/// May be used to provide config read feature to some user logic and explicitly deny config write operations.
+		/// </summary>
+		/// <returns>Instance of IReadOnlyConfigProvider. Can only perform config read (deserialization)</returns>
+		IReadOnlyConfigProvider<CFG> GetReadOnlyProvider();
 	}
 }
