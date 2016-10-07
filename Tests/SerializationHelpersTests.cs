@@ -73,6 +73,8 @@ namespace Tests
 			where SER1 : ISerializationHelper<TC>
 			where SER2 : ISerializationHelper
 		{
+			Assert.True(expectedException.IsSubclassOf(typeof(SerializationException)));
+			Assert.True((typeof(SerializationException)).IsAssignableFrom(expectedException));			
 			var random=new Random();
 			var data=new byte[random.Next(512,8192)];
 			random.NextBytes(data);
@@ -84,6 +86,8 @@ namespace Tests
 			where SER1 : ISerializationHelper<TC>
 			where SER2 : ISerializationHelper
 		{
+			Assert.True(expectedException.IsSubclassOf(typeof(SerializationException)));
+			Assert.True((typeof(SerializationException)).IsAssignableFrom(expectedException));	
 			var random=new Random();
 			var data=new byte[random.Next(512,8192)];
 			random.NextBytes(data);
@@ -96,6 +100,8 @@ namespace Tests
 		public static void WrongTypeSerialize<SER>(Type expectedException, object wrongObject, SER serializer)
 			where SER : ISerializationHelper
 		{
+			Assert.True(expectedException.IsSubclassOf(typeof(SerializationException)));
+			Assert.True((typeof(SerializationException)).IsAssignableFrom(expectedException));	
 			Assert.Throws(expectedException,()=>serializer.SerializeObj(wrongObject));
 			Assert.Throws(expectedException,()=>serializer.SerializeObjToString(wrongObject));
 		}
@@ -105,6 +111,8 @@ namespace Tests
 		public static void WrongTypeDeserialize<SER>(Type expectedException, object obj, SER correctSerializer, SER wrongSerializer)
 			where SER : ISerializationHelper
 		{
+			Assert.True(expectedException.IsSubclassOf(typeof(SerializationException)));
+			Assert.True((typeof(SerializationException)).IsAssignableFrom(expectedException));	
 			var bytes=correctSerializer.SerializeObj(obj);
 			var str=correctSerializer.SerializeObjToString(obj);
 			Assert.Throws(expectedException,()=>wrongSerializer.DeserializeObj(bytes));
@@ -150,6 +158,8 @@ namespace Tests
 		//other SerializationHelpers for now create it's stuff dynamically, so its will only throw SerializationException on serialization
 		public static void SerializationFactoryExceptionTests(ISerializationHelperFactory factory, Type expectedException)
 		{
+			Assert.True(expectedException.IsSubclassOf(typeof(SerializationFactoryException)));
+			Assert.True((typeof(SerializationFactoryException)).IsAssignableFrom(expectedException));	
 			var random = new Random();
 			var test = new PSFTestClass();
 			test.v = random.Next();
