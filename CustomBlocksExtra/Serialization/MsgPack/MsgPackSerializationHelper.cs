@@ -31,44 +31,8 @@ using DarkCaster.Converters;
 using DarkCaster.Hash;
 using DarkCaster.Serialization.Private;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.MsgPack
 {
-	/// <summary>
-	/// Mode of operation for MsgPackSerializationHelper.
-	/// MsgPack-Cli could not ensure integrity of data and does not throw error when trying to deserialize broken data,
-	/// sometimes producing incorrectly deserialized object instead.
-	/// So, there are 2 modes that use additional checksum protection,
-	/// to deny deserialization of damaged data and throw MsgPackDeserializationException in such cases.
-	/// </summary>
-	public enum MsgPackMode
-	{
-		/// <summary>
-		/// Optimize for on-disk storage.
-		/// Maximize compatibility with past and future MsgPack-Cli library versions, and possible serialized class changes.
-		/// Produced data can be deserialized manually without use of MsgPackSerializationHelper.
-		/// </summary>
-		Storage=0,
-		/// <summary>
-		/// Optimize for on-disk storage. Also add checksum protection to ensure data integrity.
-		/// Maximize compatibility with past and future MsgPack-Cli library versions, and possible serialized class changes.
-		/// Produced data must be deserialized with MsgPackSerializationHelper.
-		/// </summary>
-		StorageCheckSum,
-		/// <summary>
-		/// Optimize for network data transfer. Maximize serialization performance, and minimize data size.
-		/// Compatibility over different versions of MsgPack-Cli library is not guaranteed.
-		/// Produced data can be deserialized manually without use of MsgPackSerializationHelper.
-		/// </summary>
-		Transfer,
-		/// <summary>
-		/// Optimize for network data transfer. Maximize serialization performance, and minimize data size.
-		/// Also add checksum protection to ensure data integrity.
-		/// Compatibility over different versions of MsgPack-Cli library is not guaranteed.
-		/// Produced data must be deserialized with MsgPackSerializationHelper.
-		/// </summary>
-		TransferCheckSum
-	}
-	
 	/// <summary>
 	/// Simple serialization helper class, that performs serializaion to/from MsgPack format.
 	/// Using Base85 converter to deal with serialization to/from string.

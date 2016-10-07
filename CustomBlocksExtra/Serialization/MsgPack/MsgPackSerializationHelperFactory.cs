@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.MsgPack
 {
 	public sealed class MsgPackSerializationHelperFactory : ISerializationHelperFactory
 	{

@@ -1,6 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
-using DarkCaster.Serialization;
+using DarkCaster.Serialization.MsgPack;
 
 namespace Tests
 {

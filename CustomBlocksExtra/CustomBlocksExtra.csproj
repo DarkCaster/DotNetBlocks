@@ -47,6 +47,7 @@
     <Compile Include="Serialization\Json\JsonSerializationException.cs" />
     <Compile Include="Serialization\Json\JsonSerializationHelper.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackDeserializationException.cs" />
+    <Compile Include="Serialization\MsgPack\MsgPackMode.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationException.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationHelper.cs" />
     <Compile Include="Serialization\Json\JsonSerializationFactoryException.cs" />

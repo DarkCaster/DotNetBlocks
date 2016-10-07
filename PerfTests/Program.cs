@@ -32,14 +32,14 @@ namespace PerfTests
 		public static void Main(string[] args)
 		{
 			MMHashSpeedTest.Test();
-			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPackMode.Storage);
-			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPackMode.Storage);
-			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPackMode.StorageCheckSum);
-			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPackMode.StorageCheckSum);
-			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPackMode.Transfer);
-			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPackMode.Transfer);
-			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPackMode.TransferCheckSum);
-			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPackMode.TransferCheckSum);
+			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPack.MsgPackMode.Storage);
+			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPack.MsgPackMode.Storage);
+			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPack.MsgPackMode.StorageCheckSum);
+			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPack.MsgPackMode.StorageCheckSum);
+			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPack.MsgPackMode.Transfer);
+			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPack.MsgPackMode.Transfer);
+			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPack.MsgPackMode.TransferCheckSum);
+			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPack.MsgPackMode.TransferCheckSum);
 			JsonSerHelperSpeedTest.TestSerialize();
 			JsonSerHelperSpeedTest.TestDeserialize();
 			JsonSerHelperSpeedTest.TestSerializeText();
