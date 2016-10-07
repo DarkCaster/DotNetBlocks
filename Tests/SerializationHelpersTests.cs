@@ -2,6 +2,7 @@
 using System.Text;
 using DarkCaster.Serialization;
 using NUnit.Framework;
+using System.Threading;
 
 namespace Tests
 {
@@ -166,6 +167,85 @@ namespace Tests
 			test.str = "test" + random.Next().ToString();
 			Assert.Throws(expectedException, () => factory.GetHelper<PSFTestClass>());
 			Assert.Throws(expectedException, () => factory.GetHelper(typeof(PSFTestClass)));
+		}
+	}
+	
+	public static class SerializationHelpersThreadSafetyTests
+	{
+		public enum TestObjectState
+		{
+			Init=0,
+			Started=1,
+			Complete=2,
+			Failed=-1
+		}
+		
+		public interface ITestRunner<STO, ISH, ISHT>
+			where ISH: ISerializationHelper
+			where ISHT: ISerializationHelper<STO>
+		{
+			int OpCount { get; } /*must be volatile*/
+			TestObjectState State { get; } /*must be volatile*/
+			Exception Ex { get; } /*must be volatile*/
+			void Start(); /*launch test loop, set state to started, when done*/
+			void StartCounter(); /*reset counter*/
+		}
+		
+		public sealed class TestRunner<STO, ISH, ISHT> : ITestRunner<STO, ISH, ISHT>
+			where STO: class, IEquatable<STO> /* test object that will be serialized and deserilized */
+			where ISH: ISerializationHelper
+			where ISHT: ISerializationHelper<STO>
+		{
+			protected volatile bool cntEnabled=false;
+			protected volatile int ops=0;
+			protected volatile int opsLimit=1000;
+			public int OpCount { get {return ops;} }
+			
+			protected volatile TestObjectState state=TestObjectState.Init;
+			public TestObjectState State { get {return state;} }
+			
+			protected Exception ex;
+			public Exception Ex { get {return ex;} }
+			
+			protected readonly ISH objSerializer;
+			protected readonly ISHT genSerializer;
+			protected readonly STO sampleObject;
+			protected readonly byte[] sampleData;
+			protected readonly string sampleString;
+			
+			public TestRunner(ISH nonGenericSerializer, ISHT genericSerializer, STO sampleObject, byte[] sampleData, string sampleString, int opsLimit)
+			{
+				throw new NotImplementedException("TODO");
+				
+				
+			}
+			
+			public void Start()
+			{
+				throw new NotImplementedException("TODO");
+			}
+			
+			public void Worker()
+			{				
+				state=TestObjectState.Started;
+				
+				while(ops<opsLimit)
+				{
+					
+					
+					if(cntEnabled)
+						++ops;
+				}
+				
+				state=TestObjectState.Complete;
+			}
+			
+			public void StartCounter()
+			{
+				cntEnabled=true;
+			}
+			
+			
 		}
 	}
 }
