@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.Json
 {
 	public sealed class JsonSerializationFactoryException : SerializationFactoryException
 	{

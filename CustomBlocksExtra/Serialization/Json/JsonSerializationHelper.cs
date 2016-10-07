@@ -29,7 +29,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using DarkCaster.Serialization.Private;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.Json
 {
 	public sealed class JsonSerializationHelper<T> : ISerializationHelper, ISerializationHelper<T>
 	{
