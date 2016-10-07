@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.Binary
 {
 	public sealed class BinarySerializationFactoryException : SerializationFactoryException
 	{

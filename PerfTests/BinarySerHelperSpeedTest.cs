@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using DarkCaster.Serialization;
+using DarkCaster.Serialization.Binary;
 
 namespace PerfTests
 {

@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.Binary
 {
 	/// <summary>
 	/// Deserialization exception for binary serializer herlper class.

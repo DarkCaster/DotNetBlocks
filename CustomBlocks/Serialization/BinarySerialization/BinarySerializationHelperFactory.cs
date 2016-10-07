@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.Binary
 {
 	/// <summary>
 	/// SerializationHelperFactory example for BinarySerializationHelper

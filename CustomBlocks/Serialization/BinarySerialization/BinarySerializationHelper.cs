@@ -29,7 +29,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using DarkCaster.Converters;
 using DarkCaster.Serialization.Private;
 
-namespace DarkCaster.Serialization
+namespace DarkCaster.Serialization.Binary
 {
 	/// <summary>
 	/// Sample serialization herlper, using binary BinaryFormatter

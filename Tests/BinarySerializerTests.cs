@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using DarkCaster.Serialization;
+using DarkCaster.Serialization.Binary;
 
 namespace Tests
 {
