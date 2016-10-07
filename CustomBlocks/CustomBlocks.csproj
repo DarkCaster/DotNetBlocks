@@ -39,6 +39,8 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config\ConfigProviderException.cs" />
+    <Compile Include="Config\ConfigProviderReadException.cs" />
     <Compile Include="Config\ConfigProviderState.cs" />
     <Compile Include="Config\ConfigProviderStateEventArgs.cs" />
     <Compile Include="Config\IConfigProviderController.cs" />
