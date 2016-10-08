@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using NUnit.Framework;
 using DarkCaster.Serialization;
 using DarkCaster.Serialization.Binary;
@@ -98,6 +99,44 @@ namespace Tests
 		public void FactoryTest()
 		{
 			SerializationHelpersTests.SerializationFactoryTests(new BinarySerializationHelperFactory());
+		}
+		
+		[Serializable]
+		public class ThreadSafetyTestObject : IEquatable<ThreadSafetyTestObject>
+		{
+			public int intValue=0;
+			public long longValue=0;
+			public string strValue="";
+			
+			public bool Equals(ThreadSafetyTestObject obj)
+			{
+				return( intValue==obj.intValue && longValue==obj.longValue && strValue==obj.strValue );
+			}
+		}
+		
+		[Test]
+		public void ThreadSafetyTest()
+		{
+			const int runnersCounts=8;
+			const int iterationsCount=10000;
+			
+			const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+			var random=new Random();
+			
+			//create different test objects
+			var testObjects=new ThreadSafetyTestObject[runnersCounts];
+			for(int i=0; i<runnersCounts; ++i)
+			{
+				testObjects[i]=new ThreadSafetyTestObject();
+				testObjects[i].intValue=random.Next();
+				testObjects[i].longValue=random.Next();
+				testObjects[i].strValue=new string(Enumerable.Repeat(chars, random.Next(2,100)).Select(s => s[random.Next(s.Length)]).ToArray());
+			}
+			
+			//create serializers
+			var genSerializer=(ISerializationHelper<ThreadSafetyTestObject>)(new BinarySerializationHelper<ThreadSafetyTestObject>());
+			var objSerializer=(ISerializationHelper)genSerializer;
+			SerializationHelpersThreadSafetyTests.ThreadSafetyTest(testObjects,objSerializer,genSerializer,iterationsCount);
 		}
 	}
 }
