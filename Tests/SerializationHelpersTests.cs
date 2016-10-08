@@ -213,28 +213,54 @@ namespace Tests
 			protected readonly byte[] sampleData;
 			protected readonly string sampleString;
 			
+			private readonly Thread worker;
+			
 			public TestRunner(ISH nonGenericSerializer, ISHT genericSerializer, STO sampleObject, byte[] sampleData, string sampleString, int opsLimit)
 			{
-				throw new NotImplementedException("TODO");
-				
-				
+				objSerializer=nonGenericSerializer;
+				genSerializer=genericSerializer;
+				this.sampleObject=sampleObject;
+				this.sampleData=sampleData;
+				this.sampleString=sampleString;
+				this.opsLimit=opsLimit;
+				worker=new Thread(Worker);
 			}
 			
 			public void Start()
 			{
-				throw new NotImplementedException("TODO");
+				worker.Priority = ThreadPriority.Normal;
+				worker.Start();
+			}
+			
+			private void VerifyDataArray(byte[] data)
+			{
+				if(data.Length != sampleData.Length)
+					throw new Exception("data.Length != sampleData.Length");
+				for(int i=0;i<data.Length;++i)
+					if(data[i]!=sampleData[i])
+				throw new Exception("data[i]!=sampleData[i]");
 			}
 			
 			public void Worker()
 			{				
 				state=TestObjectState.Started;
 				
-				while(ops<opsLimit)
+				try
 				{
-					
-					
-					if(cntEnabled)
-						++ops;
+					while(ops<opsLimit)
+					{
+						//perform generic serialize
+						VerifyDataArray(genSerializer.Serialize(sampleObject));
+						//perform non generic serialize
+						VerifyDataArray(objSerializer.SerializeObj(sampleObject));
+						if(cntEnabled)
+							++ops;
+					}
+				}
+				catch(Exception ex)
+				{
+					this.ex=ex;
+					state=TestObjectState.Failed;
 				}
 				
 				state=TestObjectState.Complete;
