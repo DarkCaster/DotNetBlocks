@@ -24,7 +24,8 @@
 //
 
 using System;
-using DarkCaster.Config;
+using System.Threading.Tasks;
+using DarkCaster.Events;
 
 namespace DarkCaster.Config.File
 {
@@ -33,8 +34,70 @@ namespace DarkCaster.Config.File
 	/// Data serialization is provided by ISerializationHelper class,
 	/// instance of particular serializer should be provided as parameter at constructor.
 	/// </summary>
-	public sealed class FileConfigProvider
+	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IWritableConfigProvider<CFG> where CFG: class, new()
 	{
+		public void Init()
+		{
+			throw new NotImplementedException("TODO:");
+		}
 		
+		public void Shutdown()
+		{
+			throw new NotImplementedException("TODO:");
+		}
+		
+		public IWritableConfigProvider<CFG> GetProvider()
+		{
+			return (IWritableConfigProvider<CFG>)this;
+		}
+		
+		public void Dispose()
+		{
+			throw new NotImplementedException("TODO:");
+		}
+		
+		public bool IsWriteEnabled
+		{
+			get
+			{
+				throw new NotImplementedException("TODO:");
+			}
+		}
+		
+		public void WriteConfig(CFG config)
+		{
+			throw new NotImplementedException("TODO:");
+		}
+		
+		public async Task WriteConfigAsync(CFG config)
+		{
+			throw new NotImplementedException("TODO:");
+		}
+		
+		public IReadOnlyConfigProvider<CFG> GetReadOnlyProvider()
+		{
+			return (IReadOnlyConfigProvider<CFG>)this;
+		}
+		
+		public ConfigProviderState State 
+		{
+			get
+			{
+				throw new NotImplementedException("TODO:");
+			}
+		}
+		
+		public ISafeEvent<ConfigProviderStateEventArgs> StateChangeEvent
+		{
+			get
+			{
+				throw new NotImplementedException("TODO:");
+			}
+		}
+		
+		public CFG ReadConfig()
+		{
+			throw new NotImplementedException("TODO:");
+		}
 	}
 }
