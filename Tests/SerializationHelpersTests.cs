@@ -249,7 +249,7 @@ namespace Tests
 			private void AssertObjEqial(object obj)
 			{
 				if(!sampleObject.Equals((STO)obj))
-					throw new Exception("!sampleObject.Equals<STO>((STO)obj)");
+					throw new Exception("!sampleObject.Equals((STO)obj)");
 			}
 			
 			public void Worker()
@@ -312,14 +312,16 @@ namespace Tests
 			//start runners
 			for(int i=0;i<runnerCount;++i)
 			{
-				Assert.AreNotEqual(RunnerState.Failed,runners[i].State);
+				if(runners[i].State == RunnerState.Failed)
+					throw runners[i].Ex;
 				Assert.AreEqual(RunnerState.Init,runners[i].State);
 				runners[i].Start();
 			}
 			//check runners is started
 			for(int i=0;i<runnerCount;++i)
 			{
-				Assert.AreNotEqual(RunnerState.Failed,runners[i].State);
+				if(runners[i].State == RunnerState.Failed)
+					throw runners[i].Ex;
 				while(runners[i].State == RunnerState.Init)
 					Thread.Sleep(1);
 				Assert.AreEqual(RunnerState.Started,runners[i].State);
@@ -327,6 +329,8 @@ namespace Tests
 			//enable counters
 			for(int i=0;i<runnerCount;++i)
 			{
+				if(runners[i].State == RunnerState.Failed)
+					throw runners[i].Ex;
 				Assert.AreEqual(RunnerState.Started,runners[i].State);
 				runners[i].StartCounter();
 			}
