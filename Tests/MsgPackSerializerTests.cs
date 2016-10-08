@@ -163,6 +163,9 @@ namespace Tests
 				testObjects[i].strValue=new string(Enumerable.Repeat(chars, random.Next(2,100)).Select(s => s[random.Next(s.Length)]).ToArray());
 			}
 			
+			for(int i=1; i<runnersCounts; ++i)
+				Assert.False(testObjects[i].Equals(testObjects[i-1]));
+			
 			var genSerializer=(ISerializationHelper<ThreadSafetyTestObject>)(new MsgPackSerializationHelper<ThreadSafetyTestObject>(MsgPackMode.Storage));
 			var objSerializer=(ISerializationHelper)genSerializer;
 			SerializationHelpersThreadSafetyTests.ThreadSafetyTest(testObjects,objSerializer,genSerializer,iterationsCount);

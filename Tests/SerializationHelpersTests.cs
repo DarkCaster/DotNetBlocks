@@ -248,6 +248,8 @@ namespace Tests
 			
 			private void AssertObjEqial(object obj)
 			{
+				if(object.ReferenceEquals(sampleObject,obj))
+					throw new Exception("object.ReferenceEquals(sampleObject,obj)");
 				if(!sampleObject.Equals((STO)obj))
 					throw new Exception("!sampleObject.Equals((STO)obj)");
 			}
