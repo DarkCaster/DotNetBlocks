@@ -172,7 +172,7 @@ namespace Tests
 	
 	public static class SerializationHelpersThreadSafetyTests
 	{
-		public enum TestObjectState
+		private enum RunnerState
 		{
 			Init=0,
 			Started=1,
@@ -180,38 +180,37 @@ namespace Tests
 			Failed=-1
 		}
 		
-		public interface ITestRunner<STO, ISH, ISHT>
+		private interface ITestRunner<STO, ISH, ISHT>
 			where ISH: ISerializationHelper
 			where ISHT: ISerializationHelper<STO>
 		{
-			int OpCount { get; } /*must be volatile*/
-			TestObjectState State { get; } /*must be volatile*/
+			RunnerState State { get; } /*must be volatile*/
 			Exception Ex { get; } /*must be volatile*/
 			void Start(); /*launch test loop, set state to started, when done*/
 			void StartCounter(); /*reset counter*/
 		}
 		
-		public sealed class TestRunner<STO, ISH, ISHT> : ITestRunner<STO, ISH, ISHT>
+		private sealed class TestRunner<STO, ISH, ISHT> : ITestRunner<STO, ISH, ISHT>
 			where STO: class, IEquatable<STO> /* test object that will be serialized and deserilized */
 			where ISH: ISerializationHelper
 			where ISHT: ISerializationHelper<STO>
 		{
-			protected volatile bool cntEnabled=false;
-			protected volatile int ops=0;
-			protected volatile int opsLimit=1000;
-			public int OpCount { get {return ops;} }
+			private volatile bool cntEnabled=false;
+			private int ops=0;
+			private readonly int opsLimit=1000;
 			
-			protected volatile TestObjectState state=TestObjectState.Init;
-			public TestObjectState State { get {return state;} }
+			private volatile RunnerState state=RunnerState.Init;
+			public RunnerState State { get {return state;} }
 			
-			protected Exception ex;
+			private Exception ex;
 			public Exception Ex { get {return ex;} }
 			
-			protected readonly ISH objSerializer;
-			protected readonly ISHT genSerializer;
-			protected readonly STO sampleObject;
-			protected readonly byte[] sampleData;
-			protected readonly string sampleString;
+			private readonly ISH objSerializer;
+			private readonly ISHT genSerializer;
+			
+			private readonly STO sampleObject;
+			private readonly byte[] sampleData;
+			private readonly string sampleString;
 			
 			private readonly Thread worker;
 			
@@ -232,27 +231,50 @@ namespace Tests
 				worker.Start();
 			}
 			
-			private void VerifyDataArray(byte[] data)
+			private void AssertArraysEqual(byte[] data)
 			{
 				if(data.Length != sampleData.Length)
 					throw new Exception("data.Length != sampleData.Length");
-				for(int i=0;i<data.Length;++i)
-					if(data[i]!=sampleData[i])
-				throw new Exception("data[i]!=sampleData[i]");
+				for(int i=0; i<data.Length; ++i)
+					if(data[i] != sampleData[i])
+				throw new Exception("data[i] != sampleData[i]");
+			}
+			
+			private void AssertStringsEqual(string str)
+			{
+				if(str != sampleString)
+					throw new Exception("str != sampleString");
+			}
+			
+			private void AssertObjEqial(object obj)
+			{
+				if(!sampleObject.Equals((STO)obj))
+					throw new Exception("!sampleObject.Equals<STO>((STO)obj)");
 			}
 			
 			public void Worker()
 			{				
-				state=TestObjectState.Started;
-				
+				state=RunnerState.Started;
 				try
 				{
 					while(ops<opsLimit)
 					{
 						//perform generic serialize
-						VerifyDataArray(genSerializer.Serialize(sampleObject));
+						AssertArraysEqual(genSerializer.Serialize(sampleObject));
 						//perform non generic serialize
-						VerifyDataArray(objSerializer.SerializeObj(sampleObject));
+						AssertArraysEqual(objSerializer.SerializeObj(sampleObject));
+						//perform generic serialize to string
+						AssertStringsEqual(genSerializer.SerializeToString(sampleObject));
+						//perform non generic serialize to string
+						AssertStringsEqual(objSerializer.SerializeObjToString(sampleObject));
+						//perform generic deserialize
+						AssertObjEqial(genSerializer.Deserialize(sampleData));
+						//perform non generic deserialize
+						AssertObjEqial(objSerializer.DeserializeObj(sampleData));
+						//perform generic deserialize from string
+						AssertObjEqial(genSerializer.Deserialize(sampleString));
+						//perform non generic deserialize from string
+						AssertObjEqial(objSerializer.DeserializeObj(sampleString));
 						if(cntEnabled)
 							++ops;
 					}
@@ -260,18 +282,63 @@ namespace Tests
 				catch(Exception ex)
 				{
 					this.ex=ex;
-					state=TestObjectState.Failed;
+					state=RunnerState.Failed;
+					return;
 				}
-				
-				state=TestObjectState.Complete;
+				state=RunnerState.Complete;
 			}
 			
 			public void StartCounter()
 			{
 				cntEnabled=true;
 			}
-			
-			
+		}
+		
+		public static void ThreadSafetyTest<STO, ISH, ISHT>(STO[] sampleObjects, ISH objSerializer, ISHT genSerializer, int opsLimit)
+			where STO: class, IEquatable<STO>
+			where ISH: ISerializationHelper
+			where ISHT: ISerializationHelper<STO>
+		{
+			var runnerCount=sampleObjects.Length;
+			//create runners
+			var runners=new TestRunner<STO,ISH,ISHT>[runnerCount];
+			for(int i=0;i<runnerCount;++i)
+			{
+				runners[i]=new TestRunner<STO, ISH, ISHT>(objSerializer, genSerializer, sampleObjects[i],
+				                                          genSerializer.Serialize(sampleObjects[i]),
+				                                          genSerializer.SerializeToString(sampleObjects[i]),opsLimit);
+				Assert.AreEqual(RunnerState.Init,runners[i].State);
+			}
+			//start runners
+			for(int i=0;i<runnerCount;++i)
+			{
+				Assert.AreNotEqual(RunnerState.Failed,runners[i].State);
+				Assert.AreEqual(RunnerState.Init,runners[i].State);
+				runners[i].Start();
+			}
+			//check runners is started
+			for(int i=0;i<runnerCount;++i)
+			{
+				Assert.AreNotEqual(RunnerState.Failed,runners[i].State);
+				while(runners[i].State == RunnerState.Init)
+					Thread.Sleep(1);
+				Assert.AreEqual(RunnerState.Started,runners[i].State);
+			}
+			//enable counters
+			for(int i=0;i<runnerCount;++i)
+			{
+				Assert.AreEqual(RunnerState.Started,runners[i].State);
+				runners[i].StartCounter();
+			}
+			//wait for completion
+			for(int i=0;i<runnerCount;++i)
+			{
+				while(runners[i].State == RunnerState.Started)
+					Thread.Sleep(1);
+				if(runners[i].State == RunnerState.Failed)
+					throw runners[i].Ex;
+				Assert.AreEqual(RunnerState.Complete,runners[i].State);
+			}
 		}
 	}
 }
