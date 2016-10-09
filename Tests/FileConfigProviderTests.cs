@@ -26,6 +26,7 @@
 using System;
 using System.Threading;
 using NUnit.Framework;
+using Tests.Mocks;
 using DarkCaster.Serialization;
 using DarkCaster.Config;
 using DarkCaster.Config.File;
@@ -38,13 +39,16 @@ namespace Tests
 	[TestFixture]
 	public class FileConfigProviderTests
 	{
-		
-		
 		[Test]
-		public void InitTest()
+		public void Init()
 		{
 			//create provider
-			//var provider=new FileConfigProvider
+			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), "FileConfigProviderTests", "Test");
+			//check state
+			Assert.AreEqual(ConfigProviderState.Init,providerCtl.State);
+			//creating another provider with same domain and id must throw exception because of resource conflict
+			Assert.Throws(typeof(FileInitConfigProviderException),()=>new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), "FileConfigProviderTests", "Test"));
+			
 		}
 	}
 }

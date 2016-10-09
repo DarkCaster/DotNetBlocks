@@ -26,6 +26,7 @@
 using System;
 using System.Threading.Tasks;
 using DarkCaster.Events;
+using DarkCaster.Serialization;
 
 namespace DarkCaster.Config.File
 {
@@ -36,6 +37,15 @@ namespace DarkCaster.Config.File
 	/// </summary>
 	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IWritableConfigProvider<CFG> where CFG: class, new()
 	{
+		private FileConfigProvider() {} 
+		
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, string domain, string id = null)
+		{
+			if(string.IsNullOrEmpty(id) || string.IsNullOrWhiteSpace(id))
+				id=typeof(CFG).Name.ToLower();
+			throw new NotImplementedException("TODO:");
+		}
+		
 		public void Init()
 		{
 			throw new NotImplementedException("TODO:");
