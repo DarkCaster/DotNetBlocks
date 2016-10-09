@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="Base85Tests.cs" />
     <Compile Include="BinarySerializerTests.cs" />
+    <Compile Include="FileConfigProviderTests.cs" />
     <Compile Include="JsonSerializerTests.cs" />
     <Compile Include="MMHashTests.cs" />
     <Compile Include="Mocks\MockConfig.cs" />
