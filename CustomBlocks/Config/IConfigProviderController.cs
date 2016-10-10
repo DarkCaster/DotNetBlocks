@@ -55,10 +55,21 @@ namespace DarkCaster.Config
 		void Shutdown();
 		
 		/// <summary>
-		/// Get config provider instance managed by this controller. It may be the same instance (or may be not).
+		/// Get config provider instance managed by this controller.
+		/// It may share the same object-reference as controller (or may be not).
 		/// Should be used with IOC\DI scenarios - provide this instance to your logic instead of concrete config provider's object.
 		/// </summary>
 		/// <returns>Config provider instance managed by this controller.</returns>
 		IWritableConfigProvider<CFG> GetProvider();
+		
+		/// <summary>
+		/// Return read only instance for current config provider managed by this controller.
+		/// May be used to provide config read feature and explicitly deny config write operations.
+		/// Should be the same object-reference as returned by GetProvider,
+		/// state change events and stored raw config data must be synchronized
+		/// if it is not.
+		/// </summary>
+		/// <returns>Instance of IReadOnlyConfigProvider. Can only perform config read (deserialization)</returns>
+		IReadOnlyConfigProvider<CFG> GetReadOnlyProvider();
 	}
 }

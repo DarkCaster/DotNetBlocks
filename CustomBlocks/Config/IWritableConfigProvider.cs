@@ -67,14 +67,5 @@ namespace DarkCaster.Config
 		/// Must be supported by serialization backend used with config provider, or exception will be thrown</param>
 		/// <returns>Task for use with async caller</returns>
 		Task WriteConfigAsync(CFG config);
-		
-		/// <summary>
-		/// Return read only instance of current config provider.
-		/// Technically, it should be a reference to the same object.
-		/// In case it is not - state changes and serialized config data changes should be synchronized.
-		/// May be used to provide config read feature to some user logic and explicitly deny config write operations.
-		/// </summary>
-		/// <returns>Instance of IReadOnlyConfigProvider. Can only perform config read (deserialization)</returns>
-		IReadOnlyConfigProvider<CFG> GetReadOnlyProvider();
 	}
 }
