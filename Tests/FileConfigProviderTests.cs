@@ -33,22 +33,34 @@ using DarkCaster.Config.File;
 
 namespace Tests
 {
+	//disable warning about obsolete FileConfigProvider's constructor used for tests. 
+	#pragma warning disable 618
 	/// <summary>
 	/// Test for FileConfigProvider
 	/// </summary>
 	[TestFixture]
 	public class FileConfigProviderTests
 	{
+		
 		[Test]
 		public void Init()
 		{
+			var backendMock=new MockConfigProviderBackend();
 			//create provider
-			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), "FileConfigProviderTests", "Test");
+			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock, "Tests", "Test.cfg");
 			//check state
-			Assert.AreEqual(ConfigProviderState.Init,providerCtl.State);
+			Assert.AreEqual(ConfigProviderState.Init, providerCtl.State);
 			//creating another provider with same domain and id must throw exception because of resource conflict
-			Assert.Throws(typeof(FileInitConfigProviderException),()=>new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), "FileConfigProviderTests", "Test"));
-			
+			Assert.Throws(typeof(FileInitConfigProviderException),()=>new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock, "Tests", "Test.cfg"));
+			//check state
+			Assert.AreEqual(ConfigProviderState.Init, providerCtl.State);
+			//switch to offline
+			providerCtl.Shutdown();
+			//check state
+			Assert.AreEqual(ConfigProviderState.Offline, providerCtl.State);
+			//dispose
+			providerCtl.Dispose();
 		}
 	}
+	#pragma warning restore 618
 }
