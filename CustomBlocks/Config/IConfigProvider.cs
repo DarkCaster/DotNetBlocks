@@ -1,4 +1,4 @@
-﻿// IWritableConfigProvider.cs
+﻿// IConfigProvider.cs
 //
 // The MIT License (MIT)
 //
@@ -37,7 +37,7 @@ namespace DarkCaster.Config
 	/// It also and may be used to generate interface instance with read-only functionality
 	/// of same provider for use with logic that may only perform config read.
 	/// </summary>
-	public interface IWritableConfigProvider<CFG> : IReadOnlyConfigProvider<CFG> where CFG: class, new()
+	public interface IConfigProvider<CFG> : IReadOnlyConfigProvider<CFG> where CFG: class, new()
 	{
 		/// <summary>
 		/// Is config write operation allowed ?

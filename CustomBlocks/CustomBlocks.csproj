@@ -68,7 +68,7 @@
     <Compile Include="Serialization\SerializationFactoryException.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationHelperFactory.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationFactoryException.cs" />
-    <Compile Include="Config\IWritableConfigProvider.cs" />
+    <Compile Include="Config\IConfigProvider.cs" />
     <Compile Include="Events\EventException.cs" />
     <Compile Include="Events\EventSubscriptionException.cs" />
     <Compile Include="Events\EventRaiseException.cs" />

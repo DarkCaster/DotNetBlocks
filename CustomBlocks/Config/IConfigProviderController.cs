@@ -60,7 +60,7 @@ namespace DarkCaster.Config
 		/// Should be used with IOC\DI scenarios - provide this instance to your logic instead of concrete config provider's object.
 		/// </summary>
 		/// <returns>Config provider instance managed by this controller.</returns>
-		IWritableConfigProvider<CFG> GetProvider();
+		IConfigProvider<CFG> GetProvider();
 		
 		/// <summary>
 		/// Return read only instance for current config provider managed by this controller.

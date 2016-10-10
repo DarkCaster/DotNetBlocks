@@ -35,7 +35,7 @@ namespace DarkCaster.Config.File
 	/// Data serialization is provided by ISerializationHelper class,
 	/// instance of particular serializer should be provided as parameter at constructor.
 	/// </summary>
-	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IWritableConfigProvider<CFG> where CFG: class, new()
+	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IConfigProvider<CFG> where CFG: class, new()
 	{
 		private FileConfigProvider() {} 
 		
@@ -56,9 +56,9 @@ namespace DarkCaster.Config.File
 			throw new NotImplementedException("TODO:");
 		}
 		
-		public IWritableConfigProvider<CFG> GetProvider()
+		public IConfigProvider<CFG> GetProvider()
 		{
-			return (IWritableConfigProvider<CFG>)this;
+			return (IConfigProvider<CFG>)this;
 		}
 		
 		public void Dispose()
