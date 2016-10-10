@@ -27,6 +27,7 @@ using System;
 using System.Threading.Tasks;
 using DarkCaster.Events;
 using DarkCaster.Serialization;
+using DarkCaster.Config.Private;
 
 namespace DarkCaster.Config.File
 {
@@ -39,10 +40,19 @@ namespace DarkCaster.Config.File
 	{
 		private FileConfigProvider() {} 
 		
-		public FileConfigProvider(ISerializationHelper<CFG> serializer, string domain, string id = null)
+		[Obsolete("This constructor is not recommended for direct use. For now only used for testing purposes.")]
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend, string domain, string configName)
 		{
-			if(string.IsNullOrEmpty(id) || string.IsNullOrWhiteSpace(id))
-				id=typeof(CFG).Name.ToLower();
+			throw new NotImplementedException("TODO:");
+		}
+		
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, string domain, string configName)
+		{
+			throw new NotImplementedException("TODO:");
+		}
+		
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, string configURI)
+		{
 			throw new NotImplementedException("TODO:");
 		}
 		
