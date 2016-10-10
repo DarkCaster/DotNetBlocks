@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.IO;
 using System.Net;
 
 namespace DarkCaster.Config.File.Private
@@ -37,7 +38,26 @@ namespace DarkCaster.Config.File.Private
 	{
 		private readonly PlatformID platform = Environment.OSVersion.Platform;		
 		
+		public readonly bool error;
+		public readonly Exception exception;
+		
+		public readonly string actualFilename;
+		public readonly string uid;
+		public readonly string[] backupFilenames;
+			
 		private FileHelper() {}
+		
+		private string GenerateUid(string origFilename)
+		{
+			if( platform == PlatformID.Unix || platform == PlatformID.MacOSX )
+				return origFilename;
+			return origFilename.ToLower();
+		}
+		
+		private string GetBaseDir()
+		{
+			return AppDomain.CurrentDomain.BaseDirectory;
+		}
 		
 		public FileHelper(string dirName, string configName)
 		{
@@ -45,15 +65,40 @@ namespace DarkCaster.Config.File.Private
 		
 		public FileHelper(string configURI)
 		{
-			//We assume that prefixes like file://, http://, https://, etc means that URI is urlencoded.
-			if(configURI.StartsWith("file://",StringComparison.OrdinalIgnoreCase))
-				configURI=(WebUtility.UrlDecode(configURI)).Substring(7);
-			else if(configURI.StartsWith("http://",StringComparison.OrdinalIgnoreCase) ||
-			        configURI.StartsWith("https://",StringComparison.OrdinalIgnoreCase) ||
-			        configURI.StartsWith("ftp://",StringComparison.OrdinalIgnoreCase))
-				throw new Exception("Current URI prefix is not supported: "+configURI);
+			string decodedUrl=configURI;
 			
+			//We assume that prefixes like file://, http://, https://, etc means that URI is urlencoded.
+			if(configURI.StartsWith("http://",StringComparison.OrdinalIgnoreCase) ||
+			   configURI.StartsWith("https://",StringComparison.OrdinalIgnoreCase) ||
+			   configURI.StartsWith("ftp://",StringComparison.OrdinalIgnoreCase))
+			{
+				error=true;
+				exception=null;
+			}
+			else 
+			{
+				try
+				{
+					if(configURI.StartsWith("file://",StringComparison.OrdinalIgnoreCase))
+						decodedUrl=Path.GetFullPath((WebUtility.UrlDecode(configURI)).Substring(7));
+					else
+						decodedUrl=Path.GetFullPath(configURI);
+				}
+				catch(Exception ex)
+				{
+					error=true;
+					exception=ex;
+				}
+			}
+			
+			//Set what we got so far.
+			//Even in case of access error or URI format error, we still can get default config (but cannot write to it).
+			actualFilename=decodedUrl;
+			//File URI processed in a such way that it may be used to uniquely identify file requested by URI specified by configURI at input.
+			//So, it may be used as caching entry to reuse already created config provider to avoid access conflicts
+			uid=GenerateUid(decodedUrl);
+			//No backup readonly locations is avilable when we trying config URI directly
+			backupFilenames=new string[0];
 		}
-		
 	}
 }
