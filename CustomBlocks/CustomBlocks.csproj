@@ -47,6 +47,7 @@
     <Compile Include="Config\FileConfigProvider\FileInitConfigProviderException.cs" />
     <Compile Include="Config\FileConfigProvider\FileReadConfigProviderException.cs" />
     <Compile Include="Config\FileConfigProvider\FileWriteConfigProviderException.cs" />
+    <Compile Include="Config\FileConfigProvider\Private\FileHelper.cs" />
     <Compile Include="Config\IConfigProviderController.cs" />
     <Compile Include="Config\IReadOnlyConfigProvider.cs" />
     <Compile Include="Config\Private\IConfigStorageBackend.cs" />
@@ -77,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
+    <Folder Include="Config\FileConfigProvider\Private" />
     <Folder Include="Config\Private" />
     <Folder Include="Converters" />
     <Folder Include="Serialization" />
