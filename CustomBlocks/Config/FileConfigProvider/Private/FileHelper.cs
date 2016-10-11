@@ -59,14 +59,54 @@ namespace DarkCaster.Config.File.Private
 			return AppDomain.CurrentDomain.BaseDirectory;
 		}
 		
+		private string GetConfigBasedir()
+		{
+			if( platform == PlatformID.Unix || platform == PlatformID.MacOSX )
+				return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+			return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToLower();
+		}
+		
+		private string GetAppDir()
+		{
+			return AppDomain.CurrentDomain.BaseDirectory;
+		}
+		
 		public FileHelper(string dirName, string configName)
 		{
+			if(string.IsNullOrEmpty(dirName)||string.IsNullOrWhiteSpace(dirName)||
+			   string.IsNullOrEmpty(configName)||string.IsNullOrEmpty(configName))
+			{
+				error=true;
+				exception=null;
+				actualFilename="";
+				uid="empty";
+				backupFilenames=new string[0];
+				return;
+			}
+			
+			error=false;
+			exception=null;
+			
+			var addon = Path.Combine(dirName,configName);
+			if( platform == PlatformID.Unix || platform == PlatformID.MacOSX )
+				addon = addon.ToLower();
+			
+			actualFilename=Path.Combine(GetConfigBasedir(),addon);
+			if( platform == PlatformID.Unix || platform == PlatformID.MacOSX )
+			{
+				uid=actualFilename;
+				backupFilenames=new string[2] { Path.Combine("/etc",addon), Path.Combine(GetAppDir(),addon) };
+			}
+			else
+			{
+				uid=actualFilename.ToLower();
+				backupFilenames=new string[1] { Path.Combine(GetAppDir(),addon) };
+			}
 		}
 		
 		public FileHelper(string configURI)
 		{
 			string decodedUrl=configURI;
-			
 			//We assume that prefixes like file://, http://, https://, etc means that URI is urlencoded.
 			if(configURI.StartsWith("http://",StringComparison.OrdinalIgnoreCase) ||
 			   configURI.StartsWith("https://",StringComparison.OrdinalIgnoreCase) ||
@@ -74,6 +114,7 @@ namespace DarkCaster.Config.File.Private
 			{
 				error=true;
 				exception=null;
+				actualFilename="";
 			}
 			else 
 			{
@@ -83,17 +124,17 @@ namespace DarkCaster.Config.File.Private
 						decodedUrl=Path.GetFullPath((WebUtility.UrlDecode(configURI)).Substring(7));
 					else
 						decodedUrl=Path.GetFullPath(configURI);
+					actualFilename=decodedUrl;
+					error=false;
+					exception=null;
 				}
 				catch(Exception ex)
 				{
 					error=true;
 					exception=ex;
+					actualFilename="";
 				}
 			}
-			
-			//Set what we got so far.
-			//Even in case of access error or URI format error, we still can get default config (but cannot write to it).
-			actualFilename=decodedUrl;
 			//File URI processed in a such way that it may be used to uniquely identify file requested by URI specified by configURI at input.
 			//So, it may be used as caching entry to reuse already created config provider to avoid access conflicts
 			uid=GenerateUid(decodedUrl);
