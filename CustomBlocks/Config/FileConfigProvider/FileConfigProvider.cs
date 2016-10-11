@@ -38,12 +38,23 @@ namespace DarkCaster.Config.File
 	/// </summary>
 	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IConfigProvider<CFG> where CFG: class, new()
 	{
+		private readonly IConfigStorageBackend backend;
+		private readonly ISerializationHelper<CFG> serializer;
+		
+		private ConfigProviderState state = ConfigProviderState.Offline;
+		
+		
 		private FileConfigProvider() {} 
 		
+		/// <summary>
+		/// This constructor is not recommended for direct use. For now only used for testing purposes.
+		/// </summary>
 		[Obsolete("This constructor is not recommended for direct use. For now only used for testing purposes.")]
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend, string domain, string configName)
 		{
-			throw new NotImplementedException("TODO:");
+			this.backend = backend;
+			this.serializer = serializer;
+			state = ConfigProviderState.Init;
 		}
 		
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, string domain, string configName)
