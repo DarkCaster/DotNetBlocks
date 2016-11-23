@@ -27,7 +27,7 @@ using System;
 using System.IO;
 using System.Net;
 
-namespace DarkCaster.Config.File.Private
+namespace DarkCaster.Config.Files.Private
 {
 	/// <summary>
 	/// Internal helper class for use with FileConfigProvider.

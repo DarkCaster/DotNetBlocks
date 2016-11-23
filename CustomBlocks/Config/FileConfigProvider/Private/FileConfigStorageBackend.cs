@@ -27,7 +27,7 @@ using System;
 using System.Threading.Tasks;
 using DarkCaster.Config.Private;
 
-namespace DarkCaster.Config.File.Private
+namespace DarkCaster.Config.Files.Private
 {
 	/// <summary>
 	/// Storage backend for for FileConfigProvider.

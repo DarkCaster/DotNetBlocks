@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.Config.File
+namespace DarkCaster.Config.Files
 {
 	/// <summary>
 	/// Exception, that may be thrown by FileConfigProvider's controller methods when performing init

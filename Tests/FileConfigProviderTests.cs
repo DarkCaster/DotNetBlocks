@@ -29,7 +29,7 @@ using NUnit.Framework;
 using Tests.Mocks;
 using DarkCaster.Serialization;
 using DarkCaster.Config;
-using DarkCaster.Config.File;
+using DarkCaster.Config.Files;
 
 namespace Tests
 {

@@ -29,7 +29,7 @@ using DarkCaster.Events;
 using DarkCaster.Serialization;
 using DarkCaster.Config.Private;
 
-namespace DarkCaster.Config.File
+namespace DarkCaster.Config.Files
 {
 	/// <summary>
 	/// Config provider, that store config data as files at user's home directory.
