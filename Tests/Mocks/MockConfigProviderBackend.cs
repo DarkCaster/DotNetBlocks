@@ -44,7 +44,7 @@ namespace Tests.Mocks
 			throw new NotImplementedException("TODO");
 		}
 		
-		public Task CommitAsync(byte[] data)
+		public async Task CommitAsync(byte[] data)
 		{
 			throw new NotImplementedException("TODO");
 		}

@@ -50,14 +50,14 @@ namespace DarkCaster.Config.File
 		/// This constructor is not recommended for direct use. For now only used for testing purposes.
 		/// </summary>
 		[Obsolete("This constructor is not recommended for direct use. For now only used for testing purposes.")]
-		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend, string domain, string configName)
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend, string configNameOrUri, string baseDirForConfigName = null)
 		{
 			this.backend = backend;
 			this.serializer = serializer;
 			state = ConfigProviderState.Init;
 		}
 		
-		public FileConfigProvider(ISerializationHelper<CFG> serializer, string domain, string configName)
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, string configName, string baseDir)
 		{
 			throw new NotImplementedException("TODO:");
 		}
@@ -127,6 +127,11 @@ namespace DarkCaster.Config.File
 		}
 		
 		public CFG ReadConfig()
+		{
+			throw new NotImplementedException("TODO:");
+		}
+		
+		public void DeleteConfig()
 		{
 			throw new NotImplementedException("TODO:");
 		}

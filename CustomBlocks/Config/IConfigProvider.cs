@@ -34,7 +34,7 @@ namespace DarkCaster.Config
 	/// Storage methods may vary (on disk files, database, network storage), also provider should perform checks
 	/// for resource conflicts (accesing the same storage location from multiple instances), and it must be thread safe.
 	/// This interface can be used to perform full read-write operation with config.
-	/// It also and may be used to generate interface instance with read-only functionality
+	/// It also may be used to generate interface instance with read-only functionality
 	/// of same provider for use with logic that may only perform config read.
 	/// </summary>
 	public interface IConfigProvider<CFG> : IReadOnlyConfigProvider<CFG> where CFG: class, new()
@@ -59,7 +59,7 @@ namespace DarkCaster.Config
 		/// <summary>
 		/// Perform config serialization and data-write to storage media.
 		/// This method is using async behavior, and should be used with async callers.
-		/// Serialization performed as fast as possible,
+		/// Serialization performed as fast as possible and in sync,
 		/// await and return to caller is performed on io operations
 		/// or when avoiding race conditions between multiple write operations.
 		/// </summary>
@@ -67,5 +67,12 @@ namespace DarkCaster.Config
 		/// Must be supported by serialization backend used with config provider, or exception will be thrown</param>
 		/// <returns>Task for use with async caller</returns>
 		Task WriteConfigAsync(CFG config);
+		
+		/// <summary>
+		/// Perform config data deletion on storage media.
+		/// This method will block until config data is not removed from media.
+		/// IConfigProvider will swith to offline state while executing this method.
+		/// </summary>
+		void DeleteConfig();
 	}
 }
