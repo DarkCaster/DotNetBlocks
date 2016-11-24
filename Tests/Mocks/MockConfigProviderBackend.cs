@@ -53,5 +53,10 @@ namespace Tests.Mocks
 		{
 			throw new NotImplementedException("TODO");
 		}
+		
+		public void Delete()
+		{
+			throw new NotImplementedException("TODO");
+		}
 	}
 }

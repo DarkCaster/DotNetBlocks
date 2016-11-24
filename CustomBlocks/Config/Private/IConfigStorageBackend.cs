@@ -69,5 +69,9 @@ namespace DarkCaster.Config.Private
 		/// <param name="data"></param>
 		/// <returns></returns>
 		Task CommitAsync(byte[] data);
+		/// <summary>
+		/// Delete config data on storage media
+		/// </summary>
+		void Delete();
 	}
 }
