@@ -70,8 +70,17 @@ namespace DarkCaster.Config.Files.Private
 			//if file exist - check file write perms
 			if(rawConfigData!=null)
 			{
-				//TODO
-				//set writeAllowed=false if file is readonly
+				//try to get file perms from cache
+				lock(cacheLocker)
+				{
+					if(cachedPerms.ContainsKey(currentFilename))
+						writeAllowed &= cachedPerms[currentFilename];
+					else
+					{
+						//TODO
+						//set writeAllowed=false if file is readonly
+					}
+				}
 			}
 			
 			string baseDir=null;
@@ -86,8 +95,17 @@ namespace DarkCaster.Config.Files.Private
 			//if dir exist - check file read\write\create\delete perms
 			if(writeAllowed && dirExist)
 			{
-				//TODO
-				//set writeAllowed=false if directory is readonly
+				//try to get directory perms from cache
+				lock(cacheLocker)
+				{
+					if(cachedPerms.ContainsKey(currentFilename))
+						writeAllowed &= cachedPerms[currentFilename];
+					else
+					{
+						//TODO
+						//set writeAllowed=false if directory is readonly
+					}
+				}
 			}
 			
 			//if dir not exist - try to create
