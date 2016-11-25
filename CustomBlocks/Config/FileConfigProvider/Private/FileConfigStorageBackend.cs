@@ -119,16 +119,11 @@ namespace DarkCaster.Config.Files.Private
 			{
 				currentFilename+=".new";
 				rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
-				//try to move this file over default
+				//try to move this file to default
 				if(rawConfigData!=null && writeAllowed)
 				{
-					try { File.Copy(currentFilename,helper.actualFilename,true); }
-					catch(Exception ex) { writeAllowed=false; debug.Add(ex); };
-				}
-				//try to delete temporary file
-				if(rawConfigData!=null && writeAllowed)
-				{
-					try { File.Delete(currentFilename); }
+					//helper.actualFilename should not exist, because we already failed to read it!
+					try { File.Move(currentFilename,helper.actualFilename); }
 					catch(Exception ex) { writeAllowed=false; debug.Add(ex); };
 				}
 			}
