@@ -42,21 +42,11 @@ namespace DarkCaster.Config.Files.Private
 	{
 		private static readonly Dictionary<string, bool> cachedPerms = new Dictionary<string, bool>();
 		private static readonly object cacheLocker = new object();
-				
-		public StorageBackendInitResponse Init(object initData)
+		
+		private byte[] ReadCfgFile(string target, ref bool writeAllowed)
 		{
-			if(!(initData is FileHelper))
-				throw new ArgumentException("initData is not an internal FileHelper type", "initData");
-			var helper=(FileHelper)initData;
-			if(helper.error)
-				throw (helper.exception ?? new Exception("File helper"));
-			
-			bool writeAllowed=true;
-			byte[] rawConfigData=null;
-			var currentFilename=helper.actualFilename;
-			
-			//try to read primary file contents
-			try { rawConfigData=File.ReadAllBytes(currentFilename); }
+			byte[] result=null;
+			try { result=File.ReadAllBytes(target); }
 			//catch cases, when file read error means that write is unavailable
 			catch(DirectoryNotFoundException) { } //do not to catch this by IOException (parent)
 			catch(FileNotFoundException) { } //do not to catch this by IOException (parent)
@@ -66,21 +56,58 @@ namespace DarkCaster.Config.Files.Private
 			catch(IOException) { writeAllowed=false; }
 			catch(ArgumentNullException) { writeAllowed=false; }
 			catch(ArgumentException) { writeAllowed=false; }
-			
-			//if file exist - check file write perms
-			if(rawConfigData!=null)
+			return result;
+		}
+		
+		//TODO: check and create separate method for mono\linux
+		//Based on http://stackoverflow.com/a/16032192
+		public static bool CheckDirAccessRights(string dir, FileSystemRights accessRights)
+		{
+			bool isInRoleWithAccess = false;
+			try 
 			{
-				//try to get file perms from cache
-				lock(cacheLocker)
+				var rules = Directory.GetAccessControl(dir).GetAccessRules(true, true, typeof(NTAccount));
+				var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+				foreach(AuthorizationRule rule in rules)
 				{
-					if(cachedPerms.ContainsKey(currentFilename))
-						writeAllowed &= cachedPerms[currentFilename];
-					else
+					var fsRule = rule as FileSystemAccessRule;
+					if(fsRule == null)
+						continue;
+					if((fsRule.FileSystemRights & accessRights) > 0)
 					{
-						//TODO
-						//set writeAllowed=false if file is readonly
+						var ntAccount = rule.IdentityReference as NTAccount;
+						if(ntAccount == null)
+							continue;
+						if(principal.IsInRole(ntAccount.Value))
+						{
+							if (fsRule.AccessControlType == AccessControlType.Deny)
+								return false;
+							isInRoleWithAccess = true;
+						}
 					}
 				}
+			}
+			catch {	return false; }
+			return isInRoleWithAccess;
+		}
+		
+		public StorageBackendInitResponse Init(object initData)
+		{
+			if(!(initData is FileHelper))
+				throw new ArgumentException("initData is not an internal FileHelper type", "initData");
+			var helper=(FileHelper)initData;
+			if(helper.error)
+				throw (helper.exception ?? new Exception("File helper"));
+			
+			bool writeAllowed=true;
+			var currentFilename=helper.actualFilename;
+			//try to read primary file contents
+			byte[] rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed);
+			//try to read temporary file contents
+			if(rawConfigData==null)
+			{
+				currentFilename+=".new";
+				rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed);
 			}
 			
 			string baseDir=null;
@@ -92,27 +119,39 @@ namespace DarkCaster.Config.Files.Private
 			if(writeAllowed && !string.IsNullOrEmpty(baseDir))
 				dirExist=Directory.Exists(baseDir);
 			
-			//if dir exist - check file read\write\create\delete perms
-			if(writeAllowed && dirExist)
+			//if dir exist, check file read\write\create\delete perms
+			if (writeAllowed && dirExist)
 			{
 				//try to get directory perms from cache
-				lock(cacheLocker)
+				lock (cacheLocker)
 				{
-					if(cachedPerms.ContainsKey(currentFilename))
+					if (cachedPerms.ContainsKey(currentFilename))
 						writeAllowed &= cachedPerms[currentFilename];
 					else
 					{
-						//TODO
-						//set writeAllowed=false if directory is readonly
+						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
+						cachedPerms.Add(baseDir, writeAllowed);
 					}
 				}
 			}
 			
-			//if dir not exist - try to create
+			//if dir not exist, try to create
 			if(writeAllowed && !dirExist)
 			{
-				//TODO: recursive create directory
-				//set writeAllowed=false on failure
+				try { Directory.CreateDirectory(baseDir); }
+				catch { writeAllowed=false; }
+				if(writeAllowed)
+					lock (cacheLocker)
+					{
+						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
+						cachedPerms[baseDir] = writeAllowed;
+					}
 			}
 						
 			//if primary file cannot be read, try read backup location[s], ignore any errors
@@ -125,7 +164,7 @@ namespace DarkCaster.Config.Files.Private
 				break;
 			}
 			
-			//construct init responce
+			//return init response
 			return new StorageBackendInitResponse( rawConfigData, writeAllowed, currentFilename );
 		}
 		
