@@ -188,54 +188,5 @@ namespace DarkCaster.Config.Files.Private
 			throw new NotImplementedException("TODO");
 			//also delete cached file perms record
 		}
-		
-		/*private bool CheckDirPerms(string path)
-		{
-			return false;
-		}
-		
-		private bool CheckFilePerms(string path)
-		{
-			return false;
-		}
-		
-		
-		public bool Prepare(string path)
-		{
-			if(error)
-				return false;
-			try
-			{
-				//filename is directory
-				if(Directory.Exists(path))
-					return false;
-				//check base directory
-				var basePath=Path.GetDirectoryName(path);
-				if(!Directory.Exists(basePath))
-					return false;
-				
-				//TODO: test and fix on mono\linux ?
-				var acl=Directory.GetAccessControl(basePath);
-				if(acl==null)
-					return false;
-				var rules=acl.GetAccessRules(true, true, typeof(SecurityIdentifier));
-            	var curUser = WindowsIdentity.GetCurrent();
-            	foreach(FileSystemAccessRule rule in rules)
-            	{
-                	if (curUser.Groups.Contains(rule.IdentityReference) &&
-            		   (FileSystemRights.CreateFiles & rule.FileSystemRights) == FileSystemRights.CreateFiles &&
-            		   rule.AccessControlType == AccessControlType.Allow)
-                    		return true;
-                }
-                
-				if(File.Exists(path))
-					return true;
-				//check, that we have 
-			}
-			catch
-			{
-				return false;
-			}
-		}*/
 	}
 }
