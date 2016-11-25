@@ -62,14 +62,9 @@ namespace DarkCaster.Config.Files.Private
 			byte[] result=null;
 			try { result=File.ReadAllBytes(target); }
 			//catch cases, when file read error means that write is unavailable
-			catch(DirectoryNotFoundException) { } //do not to catch this by IOException (parent)
-			catch(FileNotFoundException) { } //do not to catch this by IOException (parent)
-			catch(SecurityException ex) { writeAllowed=false; debug.Add(ex); }
-			catch(NotSupportedException ex) { writeAllowed=false; debug.Add(ex); }
-			catch(UnauthorizedAccessException ex) { writeAllowed=false; debug.Add(ex); }
-			catch(IOException ex) { writeAllowed=false; debug.Add(ex); }
-			catch(ArgumentNullException ex) { writeAllowed=false; debug.Add(ex); }
-			catch(ArgumentException ex) { writeAllowed=false; debug.Add(ex); }
+			catch(DirectoryNotFoundException) { } //this is ok
+			catch(FileNotFoundException) { } //this is ok
+			catch(Exception ex) { writeAllowed=false; debug.Add(ex); } //any other exception is an error
 			return result;
 		}
 		
@@ -124,16 +119,36 @@ namespace DarkCaster.Config.Files.Private
 			{
 				currentFilename+=".new";
 				rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
+				//try to move this file over default
+				if(rawConfigData!=null && writeAllowed)
+				{
+					try { File.Copy(currentFilename,helper.actualFilename,true); }
+					catch(Exception ex) { writeAllowed=false; debug.Add(ex); };
+				}
+				//try to delete temporary file
+				if(rawConfigData!=null && writeAllowed)
+				{
+					try { File.Delete(currentFilename); }
+					catch(Exception ex) { writeAllowed=false; debug.Add(ex); };
+				}
 			}
 			
 			string baseDir=null;
 			bool dirExist=false;
-			try { baseDir=Path.GetDirectoryName(helper.actualFilename); }
-			catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
+			
+			if(writeAllowed)
+			{
+				try { baseDir=Path.GetDirectoryName(helper.actualFilename); }
+				catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
+			}
 			
 			//check primary location file's base dir exist
 			if(writeAllowed && !string.IsNullOrEmpty(baseDir))
-				dirExist=Directory.Exists(baseDir);
+			{
+				//shoud not throw any exceptions according to docs
+				try { dirExist=Directory.Exists(baseDir); }
+				catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
+			}
 			
 			//if dir exist, check file read\write\create\delete perms
 			if (writeAllowed && dirExist)
@@ -153,9 +168,8 @@ namespace DarkCaster.Config.Files.Private
 					}
 				}
 			}
-			
 			//if dir not exist, try to create
-			if(writeAllowed && !dirExist)
+			else if(writeAllowed && !dirExist)
 			{
 				try { Directory.CreateDirectory(baseDir); }
 				catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
@@ -178,12 +192,12 @@ namespace DarkCaster.Config.Files.Private
 				try { rawConfigData=File.ReadAllBytes(currentFilename); }
 				catch(DirectoryNotFoundException) { currentFilename=null; continue; } //do not to log this exception as error
 				catch(FileNotFoundException) { currentFilename=null; continue; } //do not to log this exception as error
-				//log all other possible exceptions, while reading backup config file
+				//log all other exceptions, while reading backup config file
 				catch(Exception ex) { debug.Add(ex); continue; }
 				break;
 			}
 			
-			var debugData=new InitDebug(debug.ToArray(),currentFilename);
+			var debugData=new InitDebug(debug.ToArray(), currentFilename);
 			if(writeAllowed)
 				filename=helper.actualFilename;
 			
