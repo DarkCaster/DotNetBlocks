@@ -26,12 +26,12 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using DarkCaster.Config.Private;
-
-using System.Security.Principal;
-using System.Security.AccessControl;
 using System.Collections.Generic;
 using System.Security;
+using System.Security.Principal;
+using System.Security.AccessControl;
+
+using DarkCaster.Config.Private;
 
 namespace DarkCaster.Config.Files.Private
 {
@@ -40,28 +40,42 @@ namespace DarkCaster.Config.Files.Private
 	/// </summary>
 	public class FileConfigStorageBackend : IConfigStorageBackend
 	{
+		[Serializable]
+		public struct InitDebug
+		{
+			public Exception[] Ex;
+			public string Filename;
+			public InitDebug(Exception[] exList, string filename)
+			{
+				this.Ex = exList;
+				this.Filename = filename;
+			}
+		}
+		
+		private volatile string filename=null;
+		
 		private static readonly Dictionary<string, bool> cachedPerms = new Dictionary<string, bool>();
 		private static readonly object cacheLocker = new object();
 		
-		private byte[] ReadCfgFile(string target, ref bool writeAllowed)
+		private static byte[] ReadCfgFile(string target, ref bool writeAllowed, ICollection<Exception> debug)
 		{
 			byte[] result=null;
 			try { result=File.ReadAllBytes(target); }
 			//catch cases, when file read error means that write is unavailable
 			catch(DirectoryNotFoundException) { } //do not to catch this by IOException (parent)
 			catch(FileNotFoundException) { } //do not to catch this by IOException (parent)
-			catch(SecurityException) { writeAllowed=false; }
-			catch(NotSupportedException) { writeAllowed=false; }
-			catch(UnauthorizedAccessException) { writeAllowed=false; }
-			catch(IOException) { writeAllowed=false; }
-			catch(ArgumentNullException) { writeAllowed=false; }
-			catch(ArgumentException) { writeAllowed=false; }
+			catch(SecurityException ex) { writeAllowed=false; debug.Add(ex); }
+			catch(NotSupportedException ex) { writeAllowed=false; debug.Add(ex); }
+			catch(UnauthorizedAccessException ex) { writeAllowed=false; debug.Add(ex); }
+			catch(IOException ex) { writeAllowed=false; debug.Add(ex); }
+			catch(ArgumentNullException ex) { writeAllowed=false; debug.Add(ex); }
+			catch(ArgumentException ex) { writeAllowed=false; debug.Add(ex); }
 			return result;
 		}
 		
 		//TODO: check and create separate method for mono\linux
 		//Based on http://stackoverflow.com/a/16032192
-		public static bool CheckDirAccessRights(string dir, FileSystemRights accessRights)
+		public static bool CheckDirAccessRights(string dir, FileSystemRights accessRights, ICollection<Exception> debug)
 		{
 			bool isInRoleWithAccess = false;
 			try 
@@ -87,7 +101,7 @@ namespace DarkCaster.Config.Files.Private
 					}
 				}
 			}
-			catch {	return false; }
+			catch(Exception ex) { debug.Add(ex); return false; }
 			return isInRoleWithAccess;
 		}
 		
@@ -99,21 +113,23 @@ namespace DarkCaster.Config.Files.Private
 			if(helper.error)
 				throw (helper.exception ?? new Exception("File helper"));
 			
+			var debug=new List<Exception>();
 			bool writeAllowed=true;
 			var currentFilename=helper.actualFilename;
+			
 			//try to read primary file contents
-			byte[] rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed);
+			byte[] rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
 			//try to read temporary file contents
 			if(rawConfigData==null)
 			{
 				currentFilename+=".new";
-				rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed);
+				rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
 			}
 			
 			string baseDir=null;
 			bool dirExist=false;
 			try { baseDir=Path.GetDirectoryName(helper.actualFilename); }
-			catch { writeAllowed=false; }
+			catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
 			
 			//check primary location file's base dir exist
 			if(writeAllowed && !string.IsNullOrEmpty(baseDir))
@@ -129,10 +145,10 @@ namespace DarkCaster.Config.Files.Private
 						writeAllowed &= cachedPerms[currentFilename];
 					else
 					{
-						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
+						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles, debug) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete, debug) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Read, debug) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Write, debug));
 						cachedPerms.Add(baseDir, writeAllowed);
 					}
 				}
@@ -142,14 +158,14 @@ namespace DarkCaster.Config.Files.Private
 			if(writeAllowed && !dirExist)
 			{
 				try { Directory.CreateDirectory(baseDir); }
-				catch { writeAllowed=false; }
+				catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
 				if(writeAllowed)
 					lock (cacheLocker)
 					{
-						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
+						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles, debug) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete, debug) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Read, debug) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Write, debug));
 						cachedPerms[baseDir] = writeAllowed;
 					}
 			}
@@ -160,12 +176,19 @@ namespace DarkCaster.Config.Files.Private
 			{
 				currentFilename=backupFilename;
 				try { rawConfigData=File.ReadAllBytes(currentFilename); }
-				catch { currentFilename=null; continue; }
+				catch(DirectoryNotFoundException) { currentFilename=null; continue; } //do not to log this exception as error
+				catch(FileNotFoundException) { currentFilename=null; continue; } //do not to log this exception as error
+				//log all other possible exceptions, while reading backup config file
+				catch(Exception ex) { debug.Add(ex); continue; }
 				break;
 			}
 			
+			var debugData=new InitDebug(debug.ToArray(),currentFilename);
+			if(writeAllowed)
+				filename=helper.actualFilename;
+			
 			//return init response
-			return new StorageBackendInitResponse( rawConfigData, writeAllowed, currentFilename );
+			return new StorageBackendInitResponse( rawConfigData, writeAllowed, debugData );
 		}
 		
 		public void Commit(byte[] data)
