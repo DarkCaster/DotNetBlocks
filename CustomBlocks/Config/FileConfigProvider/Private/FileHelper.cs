@@ -31,28 +31,36 @@ namespace DarkCaster.Config.Files.Private
 {
 	/// <summary>
 	/// Internal helper class for use with FileConfigProvider.
-	/// It performs platform dependent service operations with config files such as ACL management,
-	/// path management, transform path to uri and vice versa, path locking, provide alternative config paths (depends on platform).
+	/// It's main purpose is to generate config file path (platform dependent) and backup paths.
+	/// Equals and GetHashCode methods may be used to pick and reuse same instance of FileConfigProvider class for the same config file.
 	/// </summary>
-	internal class FileHelper
+	internal sealed class FileHelper: IEquatable<FileHelper>
 	{
-		private readonly PlatformID platform = Environment.OSVersion.Platform;		
-		
-		public readonly bool error;
-		public readonly Exception exception;
-		
 		public readonly string actualFilename;
-		public readonly string uid;
 		public readonly string[] backupFilenames;
-			
-		private FileHelper() {}
 		
-		private string GenerateUid(string origFilename)
+		private readonly PlatformID platform = Environment.OSVersion.Platform;
+		private readonly string uid;
+		
+		public override bool Equals(object obj)
 		{
-			if( platform == PlatformID.Unix || platform == PlatformID.MacOSX )
-				return origFilename;
-			return origFilename.ToLower();
+			var other = obj as FileHelper;
+			if (other == null)
+				return false;
+			return Equals(other);
 		}
+		
+		public bool Equals(FileHelper other)
+		{
+			return uid == other.uid;
+		}
+
+		public override int GetHashCode()
+		{
+			return uid.GetHashCode();
+		}
+		
+		private FileHelper() {}
 		
 		private string GetBaseDir()
 		{
@@ -73,19 +81,13 @@ namespace DarkCaster.Config.Files.Private
 		
 		public FileHelper(string dirName, string configName)
 		{
-			if(string.IsNullOrEmpty(dirName)||string.IsNullOrWhiteSpace(dirName)||
-			   string.IsNullOrEmpty(configName)||string.IsNullOrEmpty(configName))
-			{
-				error=true;
-				exception=null;
-				actualFilename="";
-				uid="empty";
-				backupFilenames=new string[0];
-				return;
-			}
+			if( string.IsNullOrEmpty(dirName) || string.IsNullOrWhiteSpace(dirName) ||
+			   dirName.IndexOfAny(Path.GetInvalidPathChars())>=0 || dirName.IndexOfAny(Path.GetInvalidFileNameChars())>=0 )
+				throw new ArgumentException("dirName is null or contains invalid chars", "dirName");
 			
-			error=false;
-			exception=null;
+			if( string.IsNullOrEmpty(configName) || string.IsNullOrWhiteSpace(configName) ||
+			   configName.IndexOfAny(Path.GetInvalidPathChars())>=0 ||  configName.IndexOfAny(Path.GetInvalidFileNameChars())>=0 )
+				throw new ArgumentException("configName is null or contains invalid chars", "configName");
 			
 			var addon = Path.Combine(dirName,configName);
 			if( platform == PlatformID.Unix || platform == PlatformID.MacOSX )
@@ -104,40 +106,35 @@ namespace DarkCaster.Config.Files.Private
 			}
 		}
 		
+		private string GenerateUid(string origFilename)
+		{
+			if( platform == PlatformID.Unix || platform == PlatformID.MacOSX )
+				return origFilename;
+			return origFilename.ToLower();
+		}
+		
 		public FileHelper(string configURI)
 		{
-			string decodedUrl=configURI;
+			if(string.IsNullOrEmpty(configURI) || string.IsNullOrWhiteSpace(configURI))
+				throw new ArgumentException("configURI is null, empty or whitespace","configURI");
 			//We assume that prefixes like file://, http://, https://, etc means that URI is urlencoded.
 			if(configURI.StartsWith("http://",StringComparison.OrdinalIgnoreCase) ||
 			   configURI.StartsWith("https://",StringComparison.OrdinalIgnoreCase) ||
 			   configURI.StartsWith("ftp://",StringComparison.OrdinalIgnoreCase))
+				throw new ArgumentException("configURI format is not supported","configURI");
+			if(configURI.StartsWith("file://",StringComparison.OrdinalIgnoreCase))
+				configURI=(WebUtility.UrlDecode(configURI)).Substring(7);
+			if(configURI.IndexOfAny(Path.GetInvalidPathChars())>=0 || configURI.IndexOfAny(Path.GetInvalidFileNameChars())>=0 )
+				throw new ArgumentException("configURI contains invalid chars", "configURI");
+			try
 			{
-				error=true;
-				exception=null;
-				actualFilename="";
+				configURI=Path.GetFullPath(configURI);
+				actualFilename=configURI;
 			}
-			else 
-			{
-				try
-				{
-					if(configURI.StartsWith("file://",StringComparison.OrdinalIgnoreCase))
-						decodedUrl=Path.GetFullPath((WebUtility.UrlDecode(configURI)).Substring(7));
-					else
-						decodedUrl=Path.GetFullPath(configURI);
-					actualFilename=decodedUrl;
-					error=false;
-					exception=null;
-				}
-				catch(Exception ex)
-				{
-					error=true;
-					exception=ex;
-					actualFilename="";
-				}
-			}
+			catch(Exception) { actualFilename=""; }
 			//File URI processed in a such way that it may be used to uniquely identify file requested by URI specified by configURI at input.
 			//So, it may be used as caching entry to reuse already created config provider to avoid access conflicts
-			uid=GenerateUid(decodedUrl);
+			uid=GenerateUid(configURI);
 			//No backup readonly locations is avilable when we trying config URI directly
 			backupFilenames=new string[0];
 		}

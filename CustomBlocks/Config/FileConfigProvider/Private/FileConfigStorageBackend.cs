@@ -106,26 +106,35 @@ namespace DarkCaster.Config.Files.Private
 			if(!(initData is FileHelper))
 				throw new ArgumentException("initData is not an internal FileHelper type", "initData");
 			var helper=(FileHelper)initData;
-			if(helper.error)
-				throw (helper.exception ?? new Exception("File helper"));
 			
 			var debug=new List<Exception>();
-			bool writeAllowed=true;
 			var currentFilename=helper.actualFilename;
+			bool writeAllowed=true;
+			byte[] rawConfigData=null;
 			
-			//try to read primary file contents
-			byte[] rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
-			//try to read temporary file contents
-			if(rawConfigData==null)
+			if(string.IsNullOrEmpty(currentFilename) || string.IsNullOrWhiteSpace(currentFilename))
 			{
-				currentFilename+=".new";
+				debug.Add(new Exception("Main config filename is empty, will not attempt to read or write it"));
+				writeAllowed=false;
+			}
+			
+			//only proceed to read primary config if config filename is not empty
+			if(writeAllowed)
+			{
+				//try to read primary file contents
 				rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
-				//try to move this file to default
-				if(rawConfigData!=null && writeAllowed)
+				//try to read temporary file contents
+				if(rawConfigData==null)
 				{
-					//helper.actualFilename should not exist, because we already failed to read it!
-					try { File.Move(currentFilename,helper.actualFilename); }
-					catch(Exception ex) { writeAllowed=false; debug.Add(ex); };
+					currentFilename+=".new";
+					rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
+					//try to move this file to default
+					if(rawConfigData!=null && writeAllowed)
+					{
+						//helper.actualFilename should not exist, because we already failed to read it!
+						try { File.Move(currentFilename,helper.actualFilename); }
+						catch(Exception ex) { writeAllowed=false; debug.Add(ex); };
+					}
 				}
 			}
 			
@@ -193,12 +202,11 @@ namespace DarkCaster.Config.Files.Private
 				break;
 			}
 			
-			var debugData=new InitDebug(debug.ToArray(), currentFilename);
 			if(writeAllowed)
 				filename=helper.actualFilename;
 			
 			//return init response
-			return new StorageBackendInitResponse( rawConfigData, writeAllowed, debugData );
+			return new StorageBackendInitResponse( rawConfigData, writeAllowed, new InitDebug(debug.ToArray(), currentFilename) );
 		}
 		
 		public void Commit(byte[] data)
