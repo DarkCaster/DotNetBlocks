@@ -1,4 +1,4 @@
-﻿// FileHelper.cs
+﻿// ConfigFileId.cs
 //
 // The MIT License (MIT)
 //
