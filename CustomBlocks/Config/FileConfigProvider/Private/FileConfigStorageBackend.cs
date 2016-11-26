@@ -71,7 +71,7 @@ namespace DarkCaster.Config.Files.Private
 		
 		//TODO: check and create separate method for mono\linux
 		//Based on http://stackoverflow.com/a/16032192
-		public static bool CheckDirAccessRights(string dir, FileSystemRights accessRights, ICollection<Exception> debug)
+		private static bool CheckDirAccessRights(string dir, FileSystemRights accessRights, ICollection<Exception> debug)
 		{
 			bool isInRoleWithAccess = false;
 			try 
@@ -203,16 +203,16 @@ namespace DarkCaster.Config.Files.Private
 		
 		public void Commit(byte[] data)
 		{
-			var target=filename;
-			if(target==null)
-				throw new Exception("Target filename is not defined, because config write is not allowed!");
+			if(data == null)
+				throw new ArgumentNullException("data","Cannot write null data!");
 			writeLock.Wait();
 			try
 			{
-				if (target.Length == 0)
+				var target=filename;
+				if(target==null)
+					throw new Exception("Target filename is not defined, because config write is not allowed!");
+				if(target.Length == 0)
 					throw new Exception("Target filename has zero length!");
-				if (data == null)
-					throw new ArgumentNullException("data","Cannot write null data!");
 				//write to new location
 				var newTarget=target+".new";
 				using(var stream = new FileStream(newTarget, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.None))
@@ -233,18 +233,62 @@ namespace DarkCaster.Config.Files.Private
 		
 		public async Task CommitAsync(byte[] data)
 		{
-			throw new NotImplementedException("TODO");
+			if(data == null)
+				throw new ArgumentNullException("data","Cannot write null data!");
+			await writeLock.WaitAsync();
+			try
+			{
+				var target=filename;
+				if(target==null)
+					throw new Exception("Target filename is not defined, because config write is not allowed!");
+				if(target.Length == 0)
+					throw new Exception("Target filename has zero length!");
+				//write to new location
+				var newTarget=target+".new";
+				//there is no async flush to disk, so, we will use WriteThrough mode, also set buffer size to 64KiB
+				using(var stream = new FileStream(newTarget, FileMode.Create, FileAccess.Write, FileShare.Read, 65536, FileOptions.WriteThrough))
+				{
+					await stream.WriteAsync(data, 0, data.Length);
+					await stream.FlushAsync();
+				}
+				//because metadata operations on journalled filesystems are atomic, and file data already flushed to disk
+				//following steps should ensure that we will get at least one file with undamaged data in case of power failure
+				//1. delete old file
+				await Task.Run(()=>File.Delete(target));
+				//2. move new file in place of old one
+				await Task.Run(()=>File.Move(newTarget,target));
+			}
+			finally { writeLock.Release(); }
 		}
 		
 		public void Dispose()
 		{
-			throw new NotImplementedException("TODO");
+			filename = null;
+			//additional protection for semaphore usage during dispose (not 100% reliable)
+			writeLock.Wait();
+			writeLock.Release();
+			//dispose writelock
+			writeLock.Dispose();
 		}
 		
 		public void Delete()
 		{
-			throw new NotImplementedException("TODO");
-			//also delete cached file perms record
+			writeLock.Wait();
+			try
+			{
+				var target = filename;
+				if(target == null)
+					throw new Exception("Target filename is not defined, maybe config write is not allowed, or file already deleted");
+				if(target.Length == 0)
+					throw new Exception("Target filename has zero length!");
+				var newTarget = target + ".new";
+				//delete new file, if exist
+				File.Delete(newTarget);
+				//delete old file, if exist
+				File.Delete(target);
+				filename = null;
+			}
+			finally { writeLock.Release(); }
 		}
 	}
 }
