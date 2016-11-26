@@ -34,7 +34,7 @@ namespace DarkCaster.Config.Files.Private
 	/// It's main purpose is to generate config file path (platform dependent) and backup paths.
 	/// Equals and GetHashCode methods may be used to pick and reuse same instance of FileConfigProvider class for the same config file.
 	/// </summary>
-	internal sealed class FileHelper: IEquatable<FileHelper>
+	internal sealed class ConfigFileId: IEquatable<ConfigFileId>
 	{
 		public readonly string actualFilename;
 		public readonly string[] backupFilenames;
@@ -44,13 +44,13 @@ namespace DarkCaster.Config.Files.Private
 		
 		public override bool Equals(object obj)
 		{
-			var other = obj as FileHelper;
+			var other = obj as ConfigFileId;
 			if (other == null)
 				return false;
 			return Equals(other);
 		}
 		
-		public bool Equals(FileHelper other)
+		public bool Equals(ConfigFileId other)
 		{
 			return uid == other.uid;
 		}
@@ -60,7 +60,7 @@ namespace DarkCaster.Config.Files.Private
 			return uid.GetHashCode();
 		}
 		
-		private FileHelper() {}
+		private ConfigFileId() {}
 		
 		private string GetBaseDir()
 		{
@@ -79,7 +79,7 @@ namespace DarkCaster.Config.Files.Private
 			return AppDomain.CurrentDomain.BaseDirectory;
 		}
 		
-		public FileHelper(string dirName, string configName)
+		public ConfigFileId(string dirName, string configName)
 		{
 			if( string.IsNullOrEmpty(dirName) || string.IsNullOrWhiteSpace(dirName) ||
 			   dirName.IndexOfAny(Path.GetInvalidPathChars())>=0 || dirName.IndexOfAny(Path.GetInvalidFileNameChars())>=0 )
@@ -113,7 +113,7 @@ namespace DarkCaster.Config.Files.Private
 			return origFilename.ToLower();
 		}
 		
-		public FileHelper(string configURI)
+		public ConfigFileId(string configURI)
 		{
 			if(string.IsNullOrEmpty(configURI) || string.IsNullOrWhiteSpace(configURI))
 				throw new ArgumentException("configURI is null, empty or whitespace","configURI");

@@ -103,9 +103,9 @@ namespace DarkCaster.Config.Files.Private
 		
 		public StorageBackendInitResponse Init(object initData)
 		{
-			if(!(initData is FileHelper))
-				throw new ArgumentException("initData is not an internal FileHelper type", "initData");
-			var helper=(FileHelper)initData;
+			if(!(initData is ConfigFileId))
+				throw new ArgumentException("initData is not an internal ConfigFileId type", "initData");
+			var helper=(ConfigFileId)initData;
 			
 			var debug=new List<Exception>();
 			var currentFilename=helper.actualFilename;
