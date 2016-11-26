@@ -25,9 +25,9 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Security;
 using System.Security.Principal;
 using System.Security.AccessControl;
 
@@ -52,7 +52,8 @@ namespace DarkCaster.Config.Files.Private
 			}
 		}
 		
-		private volatile string filename=null;
+		private volatile string filename = null;
+		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
 		
 		private static readonly Dictionary<string, bool> cachedPerms = new Dictionary<string, bool>();
 		private static readonly object cacheLocker = new object();
@@ -202,7 +203,32 @@ namespace DarkCaster.Config.Files.Private
 		
 		public void Commit(byte[] data)
 		{
-			throw new NotImplementedException("TODO");
+			var target=filename;
+			if(target==null)
+				throw new Exception("Target filename is not defined, because config write is not allowed!");
+			writeLock.Wait();
+			try
+			{
+				if (target.Length == 0)
+					throw new Exception("Target filename has zero length!");
+				if (data == null)
+					throw new ArgumentNullException("data","Cannot write null data!");
+				//write to new location
+				var newTarget=target+".new";
+				using(var stream = new FileStream(newTarget, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.None))
+				{
+					stream.Write(data, 0, data.Length);
+					//flush to disk, to ensure data safety during next steps
+					stream.Flush(true);
+				}
+				//because metadata operations on journalled filesystems are atomic, and file data already flushed to disk
+				//following steps should ensure that we will get at least one file with undamaged data in case of power failure
+				//1. delete old file
+				File.Delete(target);
+				//2. move new file in place of old one
+				File.Move(newTarget,target);
+			}
+			finally { writeLock.Release(); }
 		}
 		
 		public async Task CommitAsync(byte[] data)
