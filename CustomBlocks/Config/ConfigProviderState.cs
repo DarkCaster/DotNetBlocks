@@ -35,7 +35,7 @@ namespace DarkCaster.Config
 	public enum ConfigProviderState
 	{
 		/// <summary>
-		/// Config provider currently performing it's initialization.
+		/// Config provider just created, or currently performing it's initialization.
 		/// Eventually it will switch to Online, or Offline state in case of error.
 		/// If we try to read or write config in this state, exception will be thrown.
 		/// </summary>
