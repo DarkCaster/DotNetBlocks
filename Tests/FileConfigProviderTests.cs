@@ -51,7 +51,7 @@ namespace Tests
 			//check state
 			Assert.AreEqual(ConfigProviderState.Init, providerCtl.State);
 			//creating another provider with same domain and id must throw exception because of resource conflict
-			Assert.Throws(typeof(FileInitConfigProviderException),()=>new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock, "Tests", "Test.cfg"));
+			Assert.Throws(typeof(FileConfigProviderInitException),()=>new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock, "Tests", "Test.cfg"));
 			//check state
 			Assert.AreEqual(ConfigProviderState.Init, providerCtl.State);
 			//switch to offline

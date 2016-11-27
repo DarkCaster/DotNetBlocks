@@ -1,4 +1,4 @@
-﻿// FileReadConfigProviderException.cs
+﻿// FileConfigProviderInitException.cs
 //
 // The MIT License (MIT)
 //
@@ -28,11 +28,11 @@ using System;
 namespace DarkCaster.Config.Files
 {
 	/// <summary>
-	/// Exception, that may be thrown by FileConfigProvider when performing config write operation
+	/// Exception, that may be thrown by FileConfigProvider's controller methods when performing init
 	/// </summary>
-	public sealed class FileReadConfigProviderException : ConfigProviderException
+	public sealed class FileConfigProviderInitException : ConfigProviderException
 	{
-		public FileReadConfigProviderException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
+		public FileConfigProviderInitException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
 			: base (domain, id, state, isWriteEnabled, message, inner) {}
 	}
 }

@@ -1,4 +1,4 @@
-﻿// FileDeinitConfigProviderException.cs
+﻿// FileConfigProviderDeinitException.cs
 //
 // The MIT License (MIT)
 //
@@ -30,9 +30,9 @@ namespace DarkCaster.Config.Files
 	/// <summary>
 	/// Exception, that may be thrown by FileConfigProvider's controller methods when performing shutdown.
 	/// </summary>
-	public sealed class FileDeinitConfigProviderException : ConfigProviderException
+	public sealed class FileConfigProviderDeinitException : ConfigProviderException
 	{
-		public FileDeinitConfigProviderException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
+		public FileConfigProviderDeinitException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
 			: base (domain, id, state, isWriteEnabled, message, inner) {}
 	}
 }

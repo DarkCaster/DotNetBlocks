@@ -43,10 +43,10 @@
     <Compile Include="Config\ConfigProviderState.cs" />
     <Compile Include="Config\ConfigProviderStateEventArgs.cs" />
     <Compile Include="Config\FileConfigProvider\FileConfigProvider.cs" />
-    <Compile Include="Config\FileConfigProvider\FileDeinitConfigProviderException.cs" />
-    <Compile Include="Config\FileConfigProvider\FileInitConfigProviderException.cs" />
-    <Compile Include="Config\FileConfigProvider\FileReadConfigProviderException.cs" />
-    <Compile Include="Config\FileConfigProvider\FileWriteConfigProviderException.cs" />
+    <Compile Include="Config\FileConfigProvider\FileConfigProviderDeinitException.cs" />
+    <Compile Include="Config\FileConfigProvider\FileConfigProviderInitException.cs" />
+    <Compile Include="Config\FileConfigProvider\FileConfigProviderReadException.cs" />
+    <Compile Include="Config\FileConfigProvider\FileConfigProviderWriteException.cs" />
     <Compile Include="Config\FileConfigProvider\Private\FileConfigStorageBackend.cs" />
     <Compile Include="Config\FileConfigProvider\Private\ConfigFileId.cs" />
     <Compile Include="Config\IConfigProviderController.cs" />

@@ -1,4 +1,4 @@
-﻿// FileInitConfigProviderException.cs
+﻿// FileConfigProviderWriteException.cs
 //
 // The MIT License (MIT)
 //
@@ -28,11 +28,11 @@ using System;
 namespace DarkCaster.Config.Files
 {
 	/// <summary>
-	/// Exception, that may be thrown by FileConfigProvider's controller methods when performing init
+	/// Exception, that may be thrown by FileConfigProvider when performing config write operation
 	/// </summary>
-	public sealed class FileInitConfigProviderException : ConfigProviderException
+	public sealed class FileConfigProviderWriteException : ConfigProviderException
 	{
-		public FileInitConfigProviderException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
+		public FileConfigProviderWriteException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
 			: base (domain, id, state, isWriteEnabled, message, inner) {}
 	}
 }
