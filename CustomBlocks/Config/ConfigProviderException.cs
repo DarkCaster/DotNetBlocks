@@ -34,18 +34,14 @@ namespace DarkCaster.Config
 	/// </summary>
 	public abstract class ConfigProviderException : Exception
 	{
-		public readonly string domain;
 		public readonly string id;		
 		public readonly ConfigProviderState state;
-		public readonly bool isWriteEnabled;
 		
-		protected ConfigProviderException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
+		protected ConfigProviderException(string id, ConfigProviderState state, string message, Exception inner)
 			: base (message, inner)
 		{
-			this.domain = domain;
 			this.id = id;
 			this.state = state;
-			this.isWriteEnabled = isWriteEnabled;
 		}
 	}
 }

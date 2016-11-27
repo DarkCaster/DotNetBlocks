@@ -32,7 +32,7 @@ namespace DarkCaster.Config.Files
 	/// </summary>
 	public sealed class FileConfigProviderInitException : ConfigProviderException
 	{
-		public FileConfigProviderInitException(string domain, string id, ConfigProviderState state, bool isWriteEnabled, string message, Exception inner)
-			: base (domain, id, state, isWriteEnabled, message, inner) {}
+		public FileConfigProviderInitException(string id, ConfigProviderState state, string message, Exception inner)
+			: base (id, state, message, inner) {}
 	}
 }
