@@ -70,14 +70,7 @@ namespace DarkCaster.Config.Files
 		/// <param name="id">Initialized ConfigFileId object</param>
 		internal FileConfigProvider(ISerializationHelper<CFG> serializer, ConfigFileId id)
 		{
-			this.serializer = serializer;
-			this.backend=new FileConfigStorageBackend();
-			this.writeLock=new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-			writeLock.EnterWriteLock();
-			state = ConfigProviderState.Init;
-			writeEnabled=false;
-			rawData=null;
-			writeLock.ExitWriteLock();
+			
 		}
 		
 		public void Init()

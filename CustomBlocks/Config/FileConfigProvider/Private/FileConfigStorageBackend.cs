@@ -40,22 +40,16 @@ namespace DarkCaster.Config.Files.Private
 	/// </summary>
 	public class FileConfigStorageBackend : IConfigStorageBackend
 	{
-		private readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
-		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
-		private readonly ConfigFileId id;
+		private readonly string filename;
+		private readonly bool writeAllowed;
+		private volatile bool deleteOnExit;
+		private byte[] cachedData;
 		
-		private string filename = null;
-		private byte[] cachedData = null;
-		private bool deleteOnExit = false;
+		private readonly ReaderWriterLockSlim readLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
 		
 		private static readonly Dictionary<string, bool> cachedPerms = new Dictionary<string, bool>();
 		private static readonly object cacheLocker = new object();
-		
-		private FileConfigStorageBackend() {}
-		internal FileConfigStorageBackend(ConfigFileId id)
-		{
-			this.id = id;
-		}
 		
 		private static byte[] ReadCfgFile(string target, ref bool writeAllowed)
 		{
@@ -64,7 +58,7 @@ namespace DarkCaster.Config.Files.Private
 			catch(DirectoryNotFoundException) { } //this is ok
 			catch(FileNotFoundException) { } //this is ok
 			//any other exception is an error and write is unavailable
-			catch(Exception ex) { writeAllowed=false; }
+			catch(Exception) { writeAllowed=false; }
 			return result;
 		}
 		
@@ -96,59 +90,41 @@ namespace DarkCaster.Config.Files.Private
 					}
 				}
 			}
-			catch(Exception ex) { return false; }
+			catch(Exception) { return false; }
 			return isInRoleWithAccess;
 		}
 		
-		public async void InitAsync()
-		{
-			await readLock.WaitAsync();
-			try
-			{
-			}
-			finally { readLock.Release(); }
-		}
+		private FileConfigStorageBackend() {}
 		
-		public void Init()
-		{
-			readLock.Wait();
-			try
-			{
-			}
-			finally { readLock.Release(); }
-		}
+		[Obsolete("This constructor is not for direct use. Use only for test purposes.")]
+		public FileConfigStorageBackend(string testFileName) : this (new ConfigFileId(testFileName)) {}
 		
-		
-		//TODO: rework
-		/*public void OldInit()
+		internal FileConfigStorageBackend(ConfigFileId id)
 		{
+			filename = id.actualFilename;
+			writeAllowed = true;
+			deleteOnExit = false;
+			cachedData = null;
 			
-			var currentFilename=helper.actualFilename;
-			bool writeAllowed=true;
-			byte[] rawConfigData=null;
-			
-			if(string.IsNullOrEmpty(currentFilename) || string.IsNullOrWhiteSpace(currentFilename))
-			{
-				debug.Add(new Exception("Main config filename is empty, will not attempt to read or write it"));
+			if(string.IsNullOrEmpty(filename) || string.IsNullOrWhiteSpace(filename))
 				writeAllowed=false;
-			}
 			
 			//only proceed to read primary config if config filename is not empty
 			if(writeAllowed)
 			{
 				//try to read primary file contents
-				rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
+				cachedData=ReadCfgFile(filename, ref writeAllowed);
 				//try to read temporary file contents
-				if(rawConfigData==null)
+				if(cachedData==null)
 				{
-					currentFilename+=".new";
-					rawConfigData=ReadCfgFile(currentFilename, ref writeAllowed, debug);
+					var newFilename=filename+".new";
+					cachedData=ReadCfgFile(newFilename, ref writeAllowed);
 					//try to move this file to default
-					if(rawConfigData!=null && writeAllowed)
+					if(cachedData!=null && writeAllowed)
 					{
-						//helper.actualFilename should not exist, because we already failed to read it!
-						try { File.Move(currentFilename,helper.actualFilename); }
-						catch(Exception ex) { writeAllowed=false; debug.Add(ex); };
+						//id.actualFilename should not exist, because we already failed to read it!
+						try { File.Move(newFilename,filename); }
+						catch(Exception) { writeAllowed=false; }
 					}
 				}
 			}
@@ -158,8 +134,8 @@ namespace DarkCaster.Config.Files.Private
 			
 			if(writeAllowed)
 			{
-				try { baseDir=Path.GetDirectoryName(helper.actualFilename); }
-				catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
+				try { baseDir=Path.GetDirectoryName(filename); }
+				catch(Exception) { writeAllowed=false; }
 			}
 			
 			//check primary location file's base dir exist
@@ -167,7 +143,7 @@ namespace DarkCaster.Config.Files.Private
 			{
 				//shoud not throw any exceptions according to docs
 				try { dirExist=Directory.Exists(baseDir); }
-				catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
+				catch(Exception) { writeAllowed=false; }
 			}
 			
 			//if dir exist, check file read\write\create\delete perms
@@ -176,14 +152,14 @@ namespace DarkCaster.Config.Files.Private
 				//try to get directory perms from cache
 				lock (cacheLocker)
 				{
-					if (cachedPerms.ContainsKey(currentFilename))
-						writeAllowed &= cachedPerms[currentFilename];
+					if (cachedPerms.ContainsKey(baseDir))
+						writeAllowed &= cachedPerms[baseDir];
 					else
 					{
-						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles, debug) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete, debug) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Read, debug) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Write, debug));
+						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
 						cachedPerms.Add(baseDir, writeAllowed);
 					}
 				}
@@ -192,37 +168,46 @@ namespace DarkCaster.Config.Files.Private
 			else if(writeAllowed && !dirExist)
 			{
 				try { Directory.CreateDirectory(baseDir); }
-				catch(Exception ex) { debug.Add(ex); writeAllowed=false; }
+				catch(Exception) { writeAllowed=false; }
 				if(writeAllowed)
 					lock (cacheLocker)
 					{
-						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles, debug) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete, debug) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Read, debug) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Write, debug));
+						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
+						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
 						cachedPerms[baseDir] = writeAllowed;
 					}
 			}
 						
-			//if primary file cannot be read, try read backup location[s], ignore any errors
-			if(rawConfigData == null)
-			foreach(var backupFilename in helper.backupFilenames)
+			//if primary file still cannot be read, try read backup location[s], ignore any errors
+			if(cachedData == null)
+			foreach(var backupFilename in id.backupFilenames)
 			{
-				currentFilename=backupFilename;
-				try { rawConfigData=File.ReadAllBytes(currentFilename); }
-				catch(DirectoryNotFoundException) { currentFilename=null; continue; } //do not to log this exception as error
-				catch(FileNotFoundException) { currentFilename=null; continue; } //do not to log this exception as error
-				//log all other exceptions, while reading backup config file
-				catch(Exception ex) { debug.Add(ex); continue; }
-				break;
+				bool tmpWriteAllowed=true;
+				cachedData=ReadCfgFile(backupFilename, ref tmpWriteAllowed);
+				if(cachedData!=null)
+					break;
 			}
-			
-			if(writeAllowed)
-				filename=helper.actualFilename;
-			
-			//return init response
-			return new StorageBackendInitResponse( rawConfigData, writeAllowed, new InitDebug(debug.ToArray(), currentFilename) );
-		}*/
+		}
+		
+		public bool IsWriteAllowed { get { return writeAllowed; } }
+		
+		public byte[] Fetch()
+		{
+			readLock.EnterReadLock();
+			try
+			{
+				if(cachedData!=null)
+				{
+					var result=new byte[cachedData.Length];
+					Buffer.BlockCopy(cachedData,0,result,0,cachedData.Length);
+					return result;
+				}
+				return null;
+			}
+			finally{ readLock.ExitReadLock(); }
+		}
 		
 		public void Commit(byte[] data)
 		{
@@ -231,13 +216,10 @@ namespace DarkCaster.Config.Files.Private
 			writeLock.Wait();
 			try
 			{
-				var target=filename;
-				if(target==null)
-					throw new Exception("Target filename is not defined, because config write is not allowed!");
-				if(target.Length == 0)
-					throw new Exception("Target filename has zero length!");
+				if(!writeAllowed)
+					throw new Exception("Write is not allowed!");
 				//write to new location
-				var newTarget=target+".new";
+				var newTarget=filename+".new";
 				using(var stream = new FileStream(newTarget, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.None))
 				{
 					stream.Write(data, 0, data.Length);
@@ -247,9 +229,13 @@ namespace DarkCaster.Config.Files.Private
 				//because metadata operations on journalled filesystems are atomic, and file data already flushed to disk
 				//following steps should ensure that we will get at least one file with undamaged data in case of power failure
 				//1. delete old file
-				File.Delete(target);
+				File.Delete(filename);
 				//2. move new file in place of old one
-				File.Move(newTarget,target);
+				File.Move(newTarget,filename);
+				//populate data cache
+				readLock.EnterWriteLock();
+				cachedData=data;
+				readLock.ExitWriteLock();
 			}
 			finally { writeLock.Release(); }
 		}
@@ -261,13 +247,10 @@ namespace DarkCaster.Config.Files.Private
 			await writeLock.WaitAsync();
 			try
 			{
-				var target=filename;
-				if(target==null)
-					throw new Exception("Target filename is not defined, because config write is not allowed!");
-				if(target.Length == 0)
-					throw new Exception("Target filename has zero length!");
+				if(!writeAllowed)
+					throw new Exception("Write is not allowed!");
 				//write to new location
-				var newTarget=target+".new";
+				var newTarget=filename+".new";
 				//there is no async flush to disk, so, we will use WriteThrough mode, also set buffer size to 64KiB
 				using(var stream = new FileStream(newTarget, FileMode.Create, FileAccess.Write, FileShare.Read, 65536, FileOptions.WriteThrough))
 				{
@@ -277,16 +260,20 @@ namespace DarkCaster.Config.Files.Private
 				//because metadata operations on journalled filesystems are atomic, and file data already flushed to disk
 				//following steps should ensure that we will get at least one file with undamaged data in case of power failure
 				//1. delete old file
-				await Task.Run(()=>File.Delete(target));
+				await Task.Run(()=>File.Delete(filename));
 				//2. move new file in place of old one
-				await Task.Run(()=>File.Move(newTarget,target));
+				await Task.Run(()=>File.Move(newTarget,filename));
+				//populate data cache
+				readLock.EnterWriteLock();
+				cachedData=data;
+				readLock.ExitWriteLock();
 			}
 			finally { writeLock.Release(); }
 		}
 		
+		//TODO
 		public void Dispose()
 		{
-			filename = null;
 			//additional protection for semaphore usage during dispose (not 100% reliable)
 			writeLock.Wait();
 			writeLock.Release();
@@ -294,22 +281,23 @@ namespace DarkCaster.Config.Files.Private
 			writeLock.Dispose();
 		}
 		
-		public void Delete()
+		public void MarkForDelete()
+		{
+			deleteOnExit=true;
+		}
+		
+		private void Delete()
 		{
 			writeLock.Wait();
 			try
 			{
-				var target = filename;
-				if(target == null)
-					throw new Exception("Target filename is not defined, maybe config write is not allowed, or file already deleted");
-				if(target.Length == 0)
-					throw new Exception("Target filename has zero length!");
-				var newTarget = target + ".new";
+				if(!writeAllowed)
+					return;
+				var newTarget = filename + ".new";
 				//delete new file, if exist
 				File.Delete(newTarget);
 				//delete old file, if exist
-				File.Delete(target);
-				filename = null;
+				File.Delete(filename);
 			}
 			finally { writeLock.Release(); }
 		}

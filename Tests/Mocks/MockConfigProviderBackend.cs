@@ -34,9 +34,19 @@ namespace Tests.Mocks
 	/// </summary>
 	public class MockConfigProviderBackend : IConfigStorageBackend
 	{
-		public StorageBackendInitResponse Init(object initData)
+		public byte[] Fetch()
 		{
 			throw new NotImplementedException("TODO");
+		}
+		
+		public void MarkForDelete()
+		{
+			throw new NotImplementedException("TODO");
+		}
+		
+		public bool IsWriteAllowed
+		{
+			get { throw new NotImplementedException("TODO"); }
 		}
 		
 		public void Commit(byte[] data)
