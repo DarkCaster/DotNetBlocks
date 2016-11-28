@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Threading.Tasks;
 
 namespace DarkCaster.Config
 {
@@ -45,6 +46,11 @@ namespace DarkCaster.Config
 		/// also config provider must switch to Online state before return from this method.
 		/// </summary>
 		void Init();
+		
+		/// <summary>
+		/// Async variant of init.
+		/// </summary>
+		Task InitAsync();
 		
 		/// <summary>
 		/// Perform config provider shutdown, releasing all connections to storage backend\media.

@@ -41,14 +41,13 @@ namespace DarkCaster.Config.Files
 	/// </summary>
 	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IConfigProvider<CFG> where CFG: class, new()
 	{
+		private readonly ReaderWriterLockSlim opLock=new ReaderWriterLockSlim();
 		private readonly ISerializationHelper<CFG> serializer;
-		private readonly IConfigStorageBackend backend;
-		private readonly ConfigFileId id;
-		private readonly ReaderWriterLockSlim writeLock;
-		
-		private readonly bool writeEnabled;
-		private byte[] rawData;
+		private readonly ConfigFileId fileId;
+		private readonly bool bkIsExt;
+		private IConfigStorageBackend backend;
 		private ConfigProviderState state = ConfigProviderState.Offline;
+		private volatile bool writeEnabled;
 		
 		private FileConfigProvider() {} 
 		
@@ -58,39 +57,55 @@ namespace DarkCaster.Config.Files
 		[Obsolete("This constructor is not recommended for direct use. For now only used for testing purposes.")]
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend)
 		{
-			this.backend = backend;
-			this.serializer = serializer;
-			state = ConfigProviderState.Init;
+			this.serializer=serializer;
+			this.fileId=null;
+			this.bkIsExt=true;
+			this.backend=backend;
+			this.writeEnabled=backend.IsWriteAllowed;
+			this.state=ConfigProviderState.Init;
 		}
 		
 		/// <summary>
-		/// For use with FileConfigProviderFactory
+		/// Create new FileConfigProvider instance.
 		/// </summary>
-		/// <param name="serializer">Properly initialized serializer object</param>
-		/// <param name="id">Initialized ConfigFileId object</param>
-		internal FileConfigProvider(ISerializationHelper<CFG> serializer, ConfigFileId id)
-		{
-			
+		/// <param name="serializer">Serializer that will encode and decode config data into classes</param>
+		/// <param name="dirName">Directory name for config files storage. Directory location is platform dependend.</param>
+		/// <param name="id"></param>
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, string dirName, string id) : this(serializer, new ConfigFileId(dirName,id)) {}
+		
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, string filename) : this(serializer, new ConfigFileId(filename)) {}
+		
+		internal FileConfigProvider(ISerializationHelper<CFG> serializer, ConfigFileId fileId) 
+		{			
+			this.serializer=serializer;
+			this.fileId=fileId;
+			this.bkIsExt=false;
+			this.backend=null;
+			this.writeEnabled=false;
+			this.state=ConfigProviderState.Init;
 		}
 		
 		public void Init()
 		{
-			writeLock.EnterWriteLock();
+			opLock.EnterWriteLock();
 			try
 			{
 				if( state == ConfigProviderState.Online )
 					return;
 				if( state == ConfigProviderState.Offline )
-					throw new FileConfigProviderInitException(id.actualFilename, state, "This FileConfigProvider is offline, create new object", null);
+					throw new FileConfigProviderInitException(fileId.actualFilename, state, "This FileConfigProvider is offline, create new object", null);
+				if(bkIsExt)
+					state = ConfigProviderState.Online;
+				else
+					backend=FileConfigStorageBackendManager.GetBackend(fileId);
+				//TODO: rise event
 			}
-			finally { writeLock.ExitWriteLock(); }
-			
-			/*var response=backend.Init(id);
-			writeEnabled=response.writeAllowed;
-			//TODO: collect errors from response.additionalInfo
-			//TODO: make following stuff threadsafe and synchronized:
-			rawData = response.rawConfigData;
-			state = ConfigProviderState.Init;*/
+			finally { opLock.ExitWriteLock(); }
+		}
+		
+		public async Task InitAsync()
+		{
+			await Task.Run((Action)Init);
 		}
 		
 		public void Shutdown()
