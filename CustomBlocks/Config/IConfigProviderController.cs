@@ -31,7 +31,7 @@ namespace DarkCaster.Config
 	/// Controller instance for config provider.
 	/// May be used with IOC\DI scenarios, at such point in your code that control application
 	/// init, shutdown, and lifetime of it's main logical blocks.
-	/// Must be used to manually perform startup after other dependend logic initialization is complete and all references is set.
+	/// Must be used to manually perform config provider startup after other dependend logic initialization is complete and all references is set.
 	/// Should be used to shutdown config provider and release all handles or other resources on media where config is stored.
 	/// Dispose should be used after all config provider's users was stop using config provider instance.
 	/// </summary>

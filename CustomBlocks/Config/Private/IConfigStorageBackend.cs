@@ -30,31 +30,46 @@ namespace DarkCaster.Config.Private
 {
 	/// <summary>
 	/// Internal interface, for use with config provider class.
-	/// Storage backend that perform read and write of raw config data to storage media.
-	/// May be used (but not required) to simplify and unify internal design of config provider class.
-	/// (may be also used to simplify unit testing of config provider class).
-	/// Dispose method may be used to drop resource handles, close network connections (for network stprage).
+	/// Perform direct access to shared storage media: read and write of raw config data.
+	/// Object of this interface should resolve access conflicts and may be shared across different instances of config providers
+	/// May be used (but it is not required) to simplify and unify internal design of config provider class.
+	/// May be also used to simplify unit testing of config provider class.
 	/// </summary>
-	public interface IConfigStorageBackend : IDisposable
+	public interface IConfigStorageBackend
 	{
 		/// <summary>
-		/// Call this when performing config provider's init from controller interface.
+		/// Call this, to perform sorage media init.
+		/// You must call this method before any other read or write operation with ConfigStorageBackend.
 		/// This method may block while performing access to media.
-		/// If init process is failed (resource is unavailable, or read error happened),
-		/// exception from failed routine will be thrown,
-		/// it may be wrapped within ConfigProviderException by caller if needed.
+		/// If init process is failed (some serious error happened), exception from failed routine will be thrown.
+		/// When sharing one instance of IConfigStorageBackend across multiple instances of config provider,
+		/// this method should be threadsafe, and should not fail when running from different config providers.
 		/// </summary>
-		/// <param name="initData">Object with info needed to perform read or write config file.
-		/// Type of data-object depends on particular implementation of storage backend.
-		/// May contain single or multiple paths, uri, or other stuff needed to find or access config file.</param>
-		/// <returns>Container with information about init.
-		/// If response is received and no exception is thrown,
-		/// this means that backend init process is complete even if rawConfigData field is null</returns>
-		StorageBackendInitResponse Init(object initData);
+		void Init();
+		/// <summary>
+		/// Async implementation of Init.
+		/// </summary>
+		void InitAsync();
+		/// <summary>
+		/// Perform deinit. IConfigStorageBackend must not be used anymore after calling this method.
+		/// </summary>
+		void Deinit();
+		/// <summary>
+		/// Is write of config data allowed by storage media ? This is an informational property:
+		/// It will try to detect on start, if all nessecary conditions are met to perform data write.
+		/// However, even if it is true on start, it may switch back to false after write error. 
+		/// </summary>
+		bool IsWriteAllowed { get; }
+		/// <summary>
+		/// Fetch latest snapshot of raw config data. Initial data snapshot must be read and cached from storage media,
+		/// when performing Init, and it must be updated on Commit. This method must be thread safe, and also it should not block
+		/// while performing commit operations.
+		/// </summary>
+		/// <returns>Copy of current in-memory raw config data snapshot</returns>
+		byte[] Fetch();		
 		/// <summary>
 		/// Commit raw config data to storage media. May fail if write is not allowed, or error happened.
-		/// Only minimal checks performed here. Write access control, race conditions, and such stuff
-		/// should be controlled from caller (config provider).
+		/// This method must be thread safe, and also resolve all conflicts to storage media.
 		/// </summary>
 		/// <param name="data">Serialized raw config data that will replace original config file</param>
 		void Commit(byte[] data);
@@ -62,15 +77,16 @@ namespace DarkCaster.Config.Private
 		/// Commit raw config data to storage media.
 		/// Async implementation, that will not block on IO operations.
 		/// May fail if write is not allowed, or error happened.
-		/// Only minimal checks performed here. Write access control, race conditions, and such stuff
-		/// should be controlled from caller (config provider).
+		/// This method must be thread safe, and also resolve all conflicts to storage media.
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
 		Task CommitAsync(byte[] data);
 		/// <summary>
-		/// Delete config data on storage media
+		/// Mark config data to be deleted on storage media resource close.
+		/// If sharing the same instance of ConfigStorageBackend between multiple providers, this flag will be reset,
+		/// if some other provider call Init method.
 		/// </summary>
-		void Delete();
+		void MarkForDelete();
 	}
 }

@@ -27,13 +27,15 @@ using System;
 
 namespace DarkCaster.Config.Private
 {
+	//TODO: remove this class
+	
 	/// <summary>
 	/// Container for response from Init method of IConfigStorageBackend.
 	/// Response struct and all of it's data should be discarded as fast as possible after all checks is done,
 	/// because raw config data read from media may leak some vital info,
 	/// or it's size may be not optimal (comments?).
 	/// </summary>
-	public struct StorageBackendInitResponse
+	/*public struct StorageBackendInitResponse
 	{
 		/// <summary>
 		/// Raw data from config file (or other media), read by init routine.
@@ -59,5 +61,5 @@ namespace DarkCaster.Config.Private
 			this.writeAllowed=writeAllowed;
 			this.additionalInfo=additionalInfo;
 		}
-	}
+	}*/
 }

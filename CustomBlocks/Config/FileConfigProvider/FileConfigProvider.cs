@@ -24,9 +24,12 @@
 //
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DarkCaster.Events;
 using DarkCaster.Serialization;
+
+using DarkCaster.Config.Files.Private;
 using DarkCaster.Config.Private;
 
 namespace DarkCaster.Config.Files
@@ -38,11 +41,14 @@ namespace DarkCaster.Config.Files
 	/// </summary>
 	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IConfigProvider<CFG> where CFG: class, new()
 	{
-		private readonly IConfigStorageBackend backend;
 		private readonly ISerializationHelper<CFG> serializer;
+		private readonly IConfigStorageBackend backend;
+		private readonly ConfigFileId id;
+		private readonly ReaderWriterLockSlim writeLock;
 		
+		private readonly bool writeEnabled;
+		private byte[] rawData;
 		private ConfigProviderState state = ConfigProviderState.Offline;
-		
 		
 		private FileConfigProvider() {} 
 		
@@ -50,26 +56,48 @@ namespace DarkCaster.Config.Files
 		/// This constructor is not recommended for direct use. For now only used for testing purposes.
 		/// </summary>
 		[Obsolete("This constructor is not recommended for direct use. For now only used for testing purposes.")]
-		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend, string configNameOrUri, string baseDirForConfigName = null)
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend)
 		{
 			this.backend = backend;
 			this.serializer = serializer;
 			state = ConfigProviderState.Init;
 		}
 		
-		public FileConfigProvider(ISerializationHelper<CFG> serializer, string configName, string baseDir)
+		/// <summary>
+		/// For use with FileConfigProviderFactory
+		/// </summary>
+		/// <param name="serializer">Properly initialized serializer object</param>
+		/// <param name="id">Initialized ConfigFileId object</param>
+		internal FileConfigProvider(ISerializationHelper<CFG> serializer, ConfigFileId id)
 		{
-			throw new NotImplementedException("TODO:");
-		}
-		
-		public FileConfigProvider(ISerializationHelper<CFG> serializer, string configURI)
-		{
-			throw new NotImplementedException("TODO:");
+			this.serializer = serializer;
+			this.backend=new FileConfigStorageBackend();
+			this.writeLock=new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+			writeLock.EnterWriteLock();
+			state = ConfigProviderState.Init;
+			writeEnabled=false;
+			rawData=null;
+			writeLock.ExitWriteLock();
 		}
 		
 		public void Init()
 		{
-			throw new NotImplementedException("TODO:");
+			writeLock.EnterWriteLock();
+			try
+			{
+				if( state == ConfigProviderState.Online )
+					return;
+				if( state == ConfigProviderState.Offline )
+					throw new FileConfigProviderInitException(id.actualFilename, state, "This FileConfigProvider is offline, create new object", null);
+			}
+			finally { writeLock.ExitWriteLock(); }
+			
+			/*var response=backend.Init(id);
+			writeEnabled=response.writeAllowed;
+			//TODO: collect errors from response.additionalInfo
+			//TODO: make following stuff threadsafe and synchronized:
+			rawData = response.rawConfigData;
+			state = ConfigProviderState.Init;*/
 		}
 		
 		public void Shutdown()

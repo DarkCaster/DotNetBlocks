@@ -40,38 +40,37 @@ namespace DarkCaster.Config.Files.Private
 	/// </summary>
 	public class FileConfigStorageBackend : IConfigStorageBackend
 	{
-		[Serializable]
-		public struct InitDebug
-		{
-			public Exception[] Ex;
-			public string Filename;
-			public InitDebug(Exception[] exList, string filename)
-			{
-				this.Ex = exList;
-				this.Filename = filename;
-			}
-		}
-		
-		private volatile string filename = null;
+		private readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
 		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
+		private readonly ConfigFileId id;
+		
+		private string filename = null;
+		private byte[] cachedData = null;
+		private bool deleteOnExit = false;
 		
 		private static readonly Dictionary<string, bool> cachedPerms = new Dictionary<string, bool>();
 		private static readonly object cacheLocker = new object();
 		
-		private static byte[] ReadCfgFile(string target, ref bool writeAllowed, ICollection<Exception> debug)
+		private FileConfigStorageBackend() {}
+		internal FileConfigStorageBackend(ConfigFileId id)
+		{
+			this.id = id;
+		}
+		
+		private static byte[] ReadCfgFile(string target, ref bool writeAllowed)
 		{
 			byte[] result=null;
 			try { result=File.ReadAllBytes(target); }
-			//catch cases, when file read error means that write is unavailable
 			catch(DirectoryNotFoundException) { } //this is ok
 			catch(FileNotFoundException) { } //this is ok
-			catch(Exception ex) { writeAllowed=false; debug.Add(ex); } //any other exception is an error
+			//any other exception is an error and write is unavailable
+			catch(Exception ex) { writeAllowed=false; }
 			return result;
 		}
 		
 		//TODO: check and create separate method for mono\linux
 		//Based on http://stackoverflow.com/a/16032192
-		private static bool CheckDirAccessRights(string dir, FileSystemRights accessRights, ICollection<Exception> debug)
+		private static bool CheckDirAccessRights(string dir, FileSystemRights accessRights)
 		{
 			bool isInRoleWithAccess = false;
 			try 
@@ -97,17 +96,33 @@ namespace DarkCaster.Config.Files.Private
 					}
 				}
 			}
-			catch(Exception ex) { debug.Add(ex); return false; }
+			catch(Exception ex) { return false; }
 			return isInRoleWithAccess;
 		}
 		
-		public StorageBackendInitResponse Init(object initData)
+		public async void InitAsync()
 		{
-			if(!(initData is ConfigFileId))
-				throw new ArgumentException("initData is not an internal ConfigFileId type", "initData");
-			var helper=(ConfigFileId)initData;
+			await readLock.WaitAsync();
+			try
+			{
+			}
+			finally { readLock.Release(); }
+		}
+		
+		public void Init()
+		{
+			readLock.Wait();
+			try
+			{
+			}
+			finally { readLock.Release(); }
+		}
+		
+		
+		//TODO: rework
+		/*public void OldInit()
+		{
 			
-			var debug=new List<Exception>();
 			var currentFilename=helper.actualFilename;
 			bool writeAllowed=true;
 			byte[] rawConfigData=null;
@@ -207,7 +222,7 @@ namespace DarkCaster.Config.Files.Private
 			
 			//return init response
 			return new StorageBackendInitResponse( rawConfigData, writeAllowed, new InitDebug(debug.ToArray(), currentFilename) );
-		}
+		}*/
 		
 		public void Commit(byte[] data)
 		{
