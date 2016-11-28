@@ -38,7 +38,7 @@ namespace DarkCaster.Config.Files.Private
 	/// <summary>
 	/// Storage backend for for FileConfigProvider.
 	/// </summary>
-	public class FileConfigStorageBackend : IConfigStorageBackend
+	public class FileConfigStorageBackend : IConfigStorageBackend, IDisposable
 	{
 		private readonly string filename;
 		private readonly bool writeAllowed;
@@ -271,14 +271,12 @@ namespace DarkCaster.Config.Files.Private
 			finally { writeLock.Release(); }
 		}
 		
-		//TODO
 		public void Dispose()
 		{
-			//additional protection for semaphore usage during dispose (not 100% reliable)
-			writeLock.Wait();
-			writeLock.Release();
-			//dispose writelock
+			if(deleteOnExit)
+				Delete();
 			writeLock.Dispose();
+			readLock.Dispose();
 		}
 		
 		public void MarkForDelete()
@@ -295,9 +293,11 @@ namespace DarkCaster.Config.Files.Private
 					return;
 				var newTarget = filename + ".new";
 				//delete new file, if exist
-				File.Delete(newTarget);
+				try { File.Delete(newTarget); }
+				catch(Exception) {}
 				//delete old file, if exist
-				File.Delete(filename);
+				try { File.Delete(filename); }
+				catch(Exception) {}
 			}
 			finally { writeLock.Release(); }
 		}
