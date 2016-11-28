@@ -41,13 +41,15 @@ namespace DarkCaster.Config.Files
 	/// </summary>
 	public sealed class FileConfigProvider<CFG> : IConfigProviderController<CFG>, IConfigProvider<CFG> where CFG: class, new()
 	{
-		private readonly ReaderWriterLockSlim opLock=new ReaderWriterLockSlim();
+		//private readonly ReaderWriterLockSlim opLock=new ReaderWriterLockSlim();
 		private readonly ISerializationHelper<CFG> serializer;
 		private readonly ConfigFileId fileId;
 		private readonly bool bkIsExt;
+		private readonly ISafeEventCtrl<ConfigProviderStateEventArgs> stateEventCtl;
+		private readonly ISafeEvent<ConfigProviderStateEventArgs> stateEvent;
+		
 		private IConfigStorageBackend backend;
 		private ConfigProviderState state = ConfigProviderState.Offline;
-		private volatile bool writeEnabled;
 		
 		private FileConfigProvider() {} 
 		
@@ -61,8 +63,14 @@ namespace DarkCaster.Config.Files
 			this.fileId=null;
 			this.bkIsExt=true;
 			this.backend=backend;
-			this.writeEnabled=backend.IsWriteAllowed;
 			this.state=ConfigProviderState.Init;
+			#if DEBUG
+			var ev=new SafeEventDbg<ConfigProviderStateEventArgs>();
+			#else
+			var ev=new SafeEvent<ConfigProviderStateEventArgs>();
+			#endif
+			stateEventCtl=ev;
+			stateEvent=ev;
 		}
 		
 		/// <summary>
@@ -81,36 +89,82 @@ namespace DarkCaster.Config.Files
 			this.fileId=fileId;
 			this.bkIsExt=false;
 			this.backend=null;
-			this.writeEnabled=false;
 			this.state=ConfigProviderState.Init;
+			#if DEBUG
+			var ev=new SafeEventDbg<ConfigProviderStateEventArgs>();
+			#else
+			var ev=new SafeEvent<ConfigProviderStateEventArgs>();
+			#endif
+			stateEventCtl=ev;
+			stateEvent=ev;
 		}
 		
+		#region IConfigProviderController
+		
+		private class InitCancelledException : Exception {}
+		
+		//TODO: extra lock for fields shared with IConfigProvider region
 		public void Init()
 		{
-			opLock.EnterWriteLock();
 			try
 			{
-				if( state == ConfigProviderState.Online )
-					return;
-				if( state == ConfigProviderState.Offline )
-					throw new FileConfigProviderInitException(fileId.actualFilename, state, "This FileConfigProvider is offline, create new object", null);
-				if(bkIsExt)
-					state = ConfigProviderState.Online;
-				else
-					backend=FileConfigStorageBackendManager.GetBackend(fileId);
-				//TODO: rise event
+				Exception backendEx=null;
+				stateEventCtl.Raise
+					(this,()=>{
+						if( state == ConfigProviderState.Online )
+							throw new InitCancelledException();
+						if( state == ConfigProviderState.Offline )
+							throw new FileConfigProviderInitException(fileId.actualFilename, state, "This FileConfigProvider is offline, create new object", null);
+					 	try
+						{
+							if(!bkIsExt)
+								backend=FileConfigStorageBackendManager.GetBackend(fileId);
+						}
+						catch(Exception ex)
+						{
+							backendEx=ex;
+							state = ConfigProviderState.Offline;
+							return new ConfigProviderStateEventArgs(ConfigProviderState.Offline,backend.IsWriteAllowed);
+						}
+						state = ConfigProviderState.Online;
+						return new ConfigProviderStateEventArgs(ConfigProviderState.Online,backend.IsWriteAllowed);
+					 });
+				if(backendEx!=null)
+					throw new FileConfigProviderInitException(fileId.actualFilename, state, "Backend failed to initialise", backendEx);
 			}
-			finally { opLock.ExitWriteLock(); }
+			catch(InitCancelledException) {}
 		}
 		
 		public async Task InitAsync()
 		{
-			await Task.Run((Action)Init);
+			throw new NotImplementedException("TODO");
 		}
 		
+		//TODO: extra lock for fields shared with IConfigProvider region
 		public void Shutdown()
 		{
-			throw new NotImplementedException("TODO:");
+			Exception backendEx=null;
+			stateEventCtl.Raise
+			(this,()=>{
+				if( state == ConfigProviderState.Offline )
+					throw new FileConfigProviderDeinitException(fileId.actualFilename, state, "This FileConfigProvider is already offline, create new object", null);
+				state = ConfigProviderState.Offline;
+				try
+				{
+					if(!bkIsExt && backend != null)
+						FileConfigStorageBackendManager.FlushBackend(backend);
+				}
+				catch(Exception ex) { backendEx=ex; }
+				backend = null;
+				return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, backend.IsWriteAllowed);
+			});
+			if(backendEx!=null)
+				throw new FileConfigProviderInitException(fileId.actualFilename, state, "Backend failed to deinitialize", backendEx);
+		}
+		
+		public async Task ShutdownAsync()
+		{
+			throw new NotImplementedException("TODO");
 		}
 		
 		public IConfigProvider<CFG> GetProvider()
@@ -118,18 +172,25 @@ namespace DarkCaster.Config.Files
 			return (IConfigProvider<CFG>)this;
 		}
 		
-		public void Dispose()
+		public IReadOnlyConfigProvider<CFG> GetReadOnlyProvider()
 		{
-			throw new NotImplementedException("TODO:");
+			return (IReadOnlyConfigProvider<CFG>)this;
 		}
 		
-		public bool IsWriteEnabled
+		public void Dispose()
 		{
-			get
-			{
-				throw new NotImplementedException("TODO:");
-			}
+			//TODO: lockning
+			if(state != ConfigProviderState.Offline)
+				Shutdown();
+			stateEventCtl.Dispose();
 		}
+		
+		#endregion
+		
+		#region IConfigProvider
+		
+		//TODO: locking
+		public bool IsWriteEnabled { get { return backend.IsWriteAllowed; } }
 		
 		public void WriteConfig(CFG config)
 		{
@@ -141,11 +202,6 @@ namespace DarkCaster.Config.Files
 			throw new NotImplementedException("TODO:");
 		}
 		
-		public IReadOnlyConfigProvider<CFG> GetReadOnlyProvider()
-		{
-			return (IReadOnlyConfigProvider<CFG>)this;
-		}
-		
 		public ConfigProviderState State 
 		{
 			get
@@ -154,13 +210,7 @@ namespace DarkCaster.Config.Files
 			}
 		}
 		
-		public ISafeEvent<ConfigProviderStateEventArgs> StateChangeEvent
-		{
-			get
-			{
-				throw new NotImplementedException("TODO:");
-			}
-		}
+		public ISafeEvent<ConfigProviderStateEventArgs> StateChangeEvent { get { return stateEvent; } }
 		
 		public CFG ReadConfig()
 		{
@@ -171,5 +221,7 @@ namespace DarkCaster.Config.Files
 		{
 			throw new NotImplementedException("TODO:");
 		}
+		
+		#endregion
 	}
 }

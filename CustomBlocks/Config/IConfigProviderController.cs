@@ -61,6 +61,11 @@ namespace DarkCaster.Config
 		void Shutdown();
 		
 		/// <summary>
+		/// Async variant of shutdown.
+		/// </summary>
+		Task ShutdownAsync();
+		
+		/// <summary>
 		/// Get config provider instance managed by this controller.
 		/// It may share the same object-reference as controller (or may be not).
 		/// Should be used with IOC\DI scenarios - provide this instance to your logic instead of concrete config provider's object.
