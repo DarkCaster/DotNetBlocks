@@ -31,29 +31,13 @@ namespace DarkCaster.Config.Private
 	/// <summary>
 	/// Internal interface, for use with config provider class.
 	/// Perform direct access to shared storage media: read and write of raw config data.
-	/// Object of this interface should resolve access conflicts and may be shared across different instances of config providers
+	/// Object of this interface should resolve access conflicts and may be shared across different instances of config providers.
 	/// May be used (but it is not required) to simplify and unify internal design of config provider class.
 	/// May be also used to simplify unit testing of config provider class.
+	/// Not for general and direct use: initialization, deinitialization, usage pattern and realization may differ with various config providers types.
 	/// </summary>
 	public interface IConfigStorageBackend
 	{
-		/// <summary>
-		/// Call this, to perform sorage media init.
-		/// You must call this method before any other read or write operation with ConfigStorageBackend.
-		/// This method may block while performing access to media.
-		/// If init process is failed (some serious error happened), exception from failed routine will be thrown.
-		/// When sharing one instance of IConfigStorageBackend across multiple instances of config provider,
-		/// this method should be threadsafe, and should not fail when running from different config providers.
-		/// </summary>
-		void Init();
-		/// <summary>
-		/// Async implementation of Init.
-		/// </summary>
-		void InitAsync();
-		/// <summary>
-		/// Perform deinit. IConfigStorageBackend must not be used anymore after calling this method.
-		/// </summary>
-		void Deinit();
 		/// <summary>
 		/// Is write of config data allowed by storage media ? This is an informational property:
 		/// It will try to detect on start, if all nessecary conditions are met to perform data write.
@@ -62,7 +46,7 @@ namespace DarkCaster.Config.Private
 		bool IsWriteAllowed { get; }
 		/// <summary>
 		/// Fetch latest snapshot of raw config data. Initial data snapshot must be read and cached from storage media,
-		/// when performing Init, and it must be updated on Commit. This method must be thread safe, and also it should not block
+		/// when creating object, and it must be updated on Commit. This method must be thread safe, and also it should not block
 		/// while performing commit operations.
 		/// </summary>
 		/// <returns>Copy of current in-memory raw config data snapshot</returns>
@@ -84,8 +68,8 @@ namespace DarkCaster.Config.Private
 		Task CommitAsync(byte[] data);
 		/// <summary>
 		/// Mark config data to be deleted on storage media resource close.
-		/// If sharing the same instance of ConfigStorageBackend between multiple providers, this flag will be reset,
-		/// if some other provider call Init method.
+		/// When sharing the same instance of ConfigStorageBackend between multiple providers to avoid resource access conflicts,
+		/// data deletion will be performed only after last client release this instance.
 		/// </summary>
 		void MarkForDelete();
 	}
