@@ -39,17 +39,7 @@ namespace DarkCaster.Config.Files.Private
 			throw new NotImplementedException("TODO");
 		}
 		
-		public static async Task<IConfigStorageBackend> GetBackendAsync(ConfigFileId id)
-		{
-			throw new NotImplementedException("TODO");
-		}
-		
 		public static void FlushBackend(IConfigStorageBackend target)
-		{
-			throw new NotImplementedException("TODO");
-		}
-		
-		public static async Task FlushBackendAsync(IConfigStorageBackend target)
 		{
 			throw new NotImplementedException("TODO");
 		}
