@@ -163,7 +163,7 @@ namespace DarkCaster.Config.Files
 				}
 			}, opLock.ExitWriteLock);
 			if(backendEx!=null)
-				throw new FileConfigProviderInitException(fileId.actualFilename, state, "Backend failed to deinitialize", backendEx);
+				throw new FileConfigProviderDeinitException(fileId.actualFilename, state, "Backend failed to deinitialize", backendEx);
 		}
 		
 		public IConfigProvider<CFG> GetProvider()
@@ -255,12 +255,12 @@ namespace DarkCaster.Config.Files
 			try
 			{
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
+					throw new FileConfigProviderReadException(fileId.actualFilename,state,"Config provider is not online",null);
 				byte[] data=null;
 				try{ data=backend.Fetch(); }
 				catch(Exception ex)
 				{
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to read raw config data from backend",ex);
+					throw new FileConfigProviderReadException(fileId.actualFilename,state,"Failed to read raw config data from backend",ex);
 				}
 				//create new CFG instance
 				if(data == null || data.Length == 0)
