@@ -206,10 +206,14 @@ namespace DarkCaster.Config.Files
 			opLock.EnterReadLock();
 			try
 			{
-				//TODO: exceptions
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
 					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
-				backend.Commit(serializer.Serialize(config));
+				var data=serializer.Serialize(config);
+				try { backend.Commit(data); }
+				catch(Exception ex)
+				{
+					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to write config data",ex);
+				}
 			}
 			finally { opLock.ExitReadLock(); }
 		}
@@ -221,10 +225,14 @@ namespace DarkCaster.Config.Files
 			opLock.EnterReadLock();
 			try
 			{
-				//TODO: exceptions
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
 					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
-				await backend.CommitAsync(serializer.Serialize(config));
+				var data=serializer.Serialize(config);
+				try { await backend.CommitAsync(data); }
+				catch(Exception ex)
+				{
+					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to write config data",ex);
+				}
 			}
 			finally { opLock.ExitReadLock(); }
 		}
@@ -248,15 +256,34 @@ namespace DarkCaster.Config.Files
 			{
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
 					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
-				//TODO:
-				return null;
+				byte[] data=null;
+				try{ data=backend.Fetch(); }
+				catch(Exception ex)
+				{
+					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to read raw config data from backend",ex);
+				}
+				//create new CFG instance
+				if(data == null || data.Length == 0)
+					return new CFG();
+				return serializer.Deserialize(data,0,data.Length);
 			}
 			finally { opLock.ExitReadLock(); }
 		}
 		
 		public void DeleteConfig()
 		{
-			throw new NotImplementedException("TODO:");
+			opLock.EnterReadLock();
+			try
+			{
+				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
+					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
+				try{ backend.MarkForDelete(); }
+				catch(Exception ex)
+				{
+					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to mark config to delete",ex);
+				}
+			}
+			finally { opLock.ExitReadLock(); }
 		}
 		
 		#endregion
