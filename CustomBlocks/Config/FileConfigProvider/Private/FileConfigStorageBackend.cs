@@ -260,7 +260,7 @@ namespace DarkCaster.Config.Files.Private
 				//because metadata operations on journalled filesystems are atomic, and file data already flushed to disk
 				//following steps should ensure that we will get at least one file with undamaged data in case of power failure
 				//1. delete old file
-				await Task.Run(()=>File.Delete(filename));
+				await Task.Run(()=>File.Delete(filename)); //TODO: recheck.
 				//2. move new file in place of old one
 				await Task.Run(()=>File.Move(newTarget,filename));
 				//populate data cache
