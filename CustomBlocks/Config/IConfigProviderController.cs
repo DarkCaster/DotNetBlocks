@@ -48,22 +48,12 @@ namespace DarkCaster.Config
 		void Init();
 		
 		/// <summary>
-		/// Async variant of init.
-		/// </summary>
-		Task InitAsync();
-		
-		/// <summary>
 		/// Perform config provider shutdown, releasing all connections to storage backend\media.
 		/// Operation may block while waiting for pending config-write tasks to complete.
 		/// In case of error - exception will be thrown.
 		/// Config provider must switch to Offline state before return from this method, even in case of error.
 		/// </summary>
 		void Shutdown();
-		
-		/// <summary>
-		/// Async variant of shutdown.
-		/// </summary>
-		Task ShutdownAsync();
 		
 		/// <summary>
 		/// Get config provider instance managed by this controller.

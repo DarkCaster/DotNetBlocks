@@ -43,7 +43,7 @@ namespace DarkCaster.Config
 		/// Is config write operation allowed ?
 		/// Config access may be performed in read-only mode only. ConfigProvider is responsible to select mode when changing to online state.
 		/// This value of this property may be changed only on state change, it must be thread safe and interlocked with state changes.
-		/// False also should is returned in situations when it is not possible to determine access mode - in Init and Offline states.
+		/// False also should be returned in situations when it is not possible to determine access mode - in Init and Offline states.
 		/// </summary>
 		bool IsWriteEnabled { get; }
 		
