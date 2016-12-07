@@ -270,7 +270,7 @@ namespace DarkCaster.Config.Files
 			finally { opLock.ExitReadLock(); }
 		}
 		
-		public void DeleteConfig()
+		public void MarkConfigForDelete()
 		{
 			opLock.EnterReadLock();
 			try

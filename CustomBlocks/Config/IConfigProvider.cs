@@ -69,10 +69,10 @@ namespace DarkCaster.Config
 		Task WriteConfigAsync(CFG config);
 		
 		/// <summary>
-		/// Perform config data deletion on storage media.
-		/// This method will block until config data is not removed from media.
-		/// IConfigProvider will swith to offline state while executing this method.
+		/// Mark config data on media to be deleted on shutdown.
+		/// May be useful to perform "reset" for stored userdata.
+		/// Do not affect config read or write operations for current session.
 		/// </summary>
-		void DeleteConfig();
+		void MarkConfigForDelete();
 	}
 }
