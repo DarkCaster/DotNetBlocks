@@ -39,8 +39,8 @@ namespace Tests.Mocks
 	public class MockSerializationHelper<CFG> : ISerializationHelper<CFG>
 			where CFG : IEquatable<CFG>, ICloneable
 	{
-		private static object dataLocker=new object();
-		private static List<CFG> dataStorage=new List<CFG>();
+		private object dataLocker=new object();
+		private List<CFG> dataStorage=new List<CFG>();
 		
 		private int ReadFromByteArray(byte[] data)
 		{

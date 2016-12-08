@@ -35,6 +35,7 @@ namespace Tests
 {
 	//disable warning about obsolete FileConfigProvider's constructor used for tests. 
 	#pragma warning disable 618
+	
 	/// <summary>
 	/// Test for FileConfigProvider
 	/// </summary>
@@ -49,7 +50,22 @@ namespace Tests
 			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock);
 			ConfigProviderTests.Init(providerCtl);
 			providerCtl.Dispose();
+			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
+			backendMock.Dispose();
 		}
+		
+		[Test]
+		public void ReadNull()
+		{
+			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
+			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock);
+			ConfigProviderTests.Read(providerCtl, typeof(FileConfigProviderReadException));
+			providerCtl.Dispose();
+			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
+			Assert.LessOrEqual(2,backendMock.FetchCount);
+			backendMock.Dispose();
+		}
+		
 	}
 	#pragma warning restore 618
 }
