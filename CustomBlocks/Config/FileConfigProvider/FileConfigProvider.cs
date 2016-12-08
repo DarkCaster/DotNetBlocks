@@ -113,18 +113,22 @@ namespace DarkCaster.Config.Files
 				stateEventCtl.Raise
 					(this, () => {
 					opLock.EnterWriteLock();
-					try {
+					try
+					{
 						if (state == ConfigProviderState.Online)
 							throw new InitCancelledException();
 						if (state == ConfigProviderState.Offline)
 							throw new FileConfigProviderInitException(fileId.actualFilename, state, "This FileConfigProvider is offline, create new object", null);
-						try {
+						try
+						{
 							if (!bkIsExt)
 								backend = FileConfigStorageBackendManager.GetBackend(fileId);
-						} catch (Exception ex) {
+						}
+						catch (Exception ex)
+						{
 							backendEx = ex;
 							state = ConfigProviderState.Offline;
-							return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, backend.IsWriteAllowed);
+							return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, false);
 						}
 						state = ConfigProviderState.Online;
 						return new ConfigProviderStateEventArgs(ConfigProviderState.Online, backend.IsWriteAllowed);
@@ -145,19 +149,25 @@ namespace DarkCaster.Config.Files
 			stateEventCtl.Raise
 				(this, () => {
 				opLock.EnterWriteLock();
-				try {
+				try 
+				{
 					if (state == ConfigProviderState.Offline)
 						throw new FileConfigProviderDeinitException(fileId.actualFilename, state, "This FileConfigProvider is already offline, create new object", null);
 					state = ConfigProviderState.Offline;
-					try {
+					try
+					{
 						if (!bkIsExt && backend != null)
 							FileConfigStorageBackendManager.FlushBackend(backend);
-					} catch (Exception ex) {
+					}
+					catch (Exception ex)
+					{
 						backendEx = ex;
 					}
 					backend = null;
-					return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, backend.IsWriteAllowed);
-				} catch (Exception ex) {
+					return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, false);
+				}
+				catch (Exception ex)
+				{
 					opLock.ExitWriteLock();
 					throw ex;
 				}
