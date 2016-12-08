@@ -51,6 +51,12 @@ namespace DarkCaster.Config.Files
 		private IConfigStorageBackend backend;
 		private ConfigProviderState state = ConfigProviderState.Offline;
 		
+		// IConfigProviderController's owner may use it in multithreaded scenarios, and share same instance between multiple threads 
+		// so, add some protection for simultaneous and multiple dispose call, because dispose should be robust.
+		// see https://msdn.microsoft.com/en-us/library/ms182334.aspx for more details (information about CA2202 warning)
+		private readonly object disposeLock;
+		private bool isDisposed;
+		
 		private FileConfigProvider() {} 
 		
 		/// <summary>
@@ -60,7 +66,7 @@ namespace DarkCaster.Config.Files
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackend backend)
 		{
 			this.serializer=serializer;
-			this.fileId=null;
+			this.fileId=new ConfigFileId("test","test");
 			this.bkIsExt=true;
 			this.backend=backend;
 			this.state=ConfigProviderState.Init;
@@ -70,8 +76,10 @@ namespace DarkCaster.Config.Files
 			#else
 			var ev=new SafeEvent<ConfigProviderStateEventArgs>();
 			#endif
-			stateEventCtl=ev;
-			stateEvent=ev;
+			this.stateEventCtl=ev;
+			this.stateEvent=ev;
+			this.disposeLock=new object();
+			this.isDisposed=false;
 		}
 		
 		/// <summary>
@@ -97,8 +105,10 @@ namespace DarkCaster.Config.Files
 			#else
 			var ev=new SafeEvent<ConfigProviderStateEventArgs>();
 			#endif
-			stateEventCtl=ev;
-			stateEvent=ev;
+			this.stateEventCtl=ev;
+			this.stateEvent=ev;
+			this.disposeLock=new object();
+			this.isDisposed=false;
 		}
 		
 		#region IConfigProviderController
@@ -132,7 +142,9 @@ namespace DarkCaster.Config.Files
 						}
 						state = ConfigProviderState.Online;
 						return new ConfigProviderStateEventArgs(ConfigProviderState.Online, backend.IsWriteAllowed);
-					} catch (Exception ex) {
+					}
+					catch (Exception ex)
+					{
 						opLock.ExitWriteLock();
 						throw ex;
 					}
@@ -145,35 +157,39 @@ namespace DarkCaster.Config.Files
 		
 		public void Shutdown()
 		{
-			Exception backendEx=null;
-			stateEventCtl.Raise
+			try
+			{
+				Exception backendEx=null;
+				stateEventCtl.Raise
 				(this, () => {
-				opLock.EnterWriteLock();
-				try 
-				{
-					if (state == ConfigProviderState.Offline)
-						throw new FileConfigProviderDeinitException(fileId.actualFilename, state, "This FileConfigProvider is already offline, create new object", null);
-					state = ConfigProviderState.Offline;
-					try
+					opLock.EnterWriteLock();
+					try 
 					{
-						if (!bkIsExt && backend != null)
-							FileConfigStorageBackendManager.FlushBackend(backend);
+						if (state == ConfigProviderState.Offline)
+							throw new InitCancelledException();
+						state = ConfigProviderState.Offline;
+						try
+						{
+							if (!bkIsExt && backend != null)
+								FileConfigStorageBackendManager.FlushBackend(backend);
+						}
+						catch (Exception ex)
+						{
+							backendEx = ex;
+						}
+						backend = null;
+						return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, false);
 					}
 					catch (Exception ex)
 					{
-						backendEx = ex;
+						opLock.ExitWriteLock();
+						throw ex;
 					}
-					backend = null;
-					return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, false);
-				}
-				catch (Exception ex)
-				{
-					opLock.ExitWriteLock();
-					throw ex;
-				}
-			}, opLock.ExitWriteLock);
-			if(backendEx!=null)
-				throw new FileConfigProviderDeinitException(fileId.actualFilename, state, "Backend failed to deinitialize", backendEx);
+				}, opLock.ExitWriteLock);
+				if(backendEx!=null)
+					throw new FileConfigProviderDeinitException(fileId.actualFilename, state, "Backend failed to deinitialize", backendEx);
+			}
+			catch(InitCancelledException) {}
 		}
 		
 		public IConfigProvider<CFG> GetProvider()
@@ -188,8 +204,14 @@ namespace DarkCaster.Config.Files
 		
 		public void Dispose()
 		{
-			Shutdown();
-			stateEventCtl.Dispose();
+			lock(disposeLock)
+			{
+				if(isDisposed)
+					return;
+				isDisposed=true;
+				Shutdown();
+				stateEventCtl.Dispose();
+			}
 		}
 		
 		#endregion
