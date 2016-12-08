@@ -46,10 +46,8 @@ namespace Tests
 		public void Init()
 		{
 			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
-			//create provider
 			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock);
-			
-			//dispose
+			ConfigProviderTests.Init(providerCtl);
 			providerCtl.Dispose();
 		}
 	}
