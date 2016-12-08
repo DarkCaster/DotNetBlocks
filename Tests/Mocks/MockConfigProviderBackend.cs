@@ -61,7 +61,7 @@ namespace Tests.Mocks
 		public int DeleteCount { get { return deleteCount; }}
 		public int WriteAllowedCount { get { return writeAllowedCount; }}
 		
-		MockConfigProviderBackend(bool writeAllowed, byte[] data=null, float failProb=0.0f)
+		public MockConfigProviderBackend(bool writeAllowed, byte[] data=null, float failProb=0.0f)
 		{
 			this.writeAllowed=writeAllowed;
 			this.cachedData=data;

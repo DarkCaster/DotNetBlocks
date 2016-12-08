@@ -45,21 +45,12 @@ namespace Tests
 		[Test]
 		public void Init()
 		{
-			/*var backendMock=new MockConfigProviderBackend();
+			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
 			//create provider
-			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock, "Tests", "Test.cfg");
-			//check state
-			Assert.AreEqual(ConfigProviderState.Init, providerCtl.State);
-			//creating another provider with same domain and id must throw exception because of resource conflict
-			Assert.Throws(typeof(FileConfigProviderInitException),()=>new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock, "Tests", "Test.cfg"));
-			//check state
-			Assert.AreEqual(ConfigProviderState.Init, providerCtl.State);
-			//switch to offline
-			providerCtl.Shutdown();
-			//check state
-			Assert.AreEqual(ConfigProviderState.Offline, providerCtl.State);
+			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock);
+			
 			//dispose
-			providerCtl.Dispose();*/
+			providerCtl.Dispose();
 		}
 	}
 	#pragma warning restore 618
