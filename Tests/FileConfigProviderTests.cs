@@ -140,6 +140,27 @@ namespace Tests
 			Assert.AreEqual(1,serializer.dataStorage.Count);
 		}
 		
+		[Test]
+		public void MultiRead()
+		{
+			const int workerCount=8;
+			const int iterations=25000;
+			var check=new MockConfig();
+			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var data=serializer.Serialize(check);
+			var backendMock=new MockConfigProviderBackend(false, data, 0.0f);
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			ConfigProviderTests.MultiThreadRead(providerCtl,check,workerCount,iterations);
+			providerCtl.Dispose();
+			Assert.AreEqual(1,backendMock.WriteAllowedCount);
+			Assert.AreEqual(workerCount*iterations,backendMock.FetchCount);
+			backendMock.Dispose();
+			Assert.AreEqual(1,serializer.dataStorage.Count);
+		}
+		
 	}
 	#pragma warning restore 618
 }
