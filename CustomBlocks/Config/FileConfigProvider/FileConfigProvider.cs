@@ -297,7 +297,7 @@ namespace DarkCaster.Config.Files
 				//create new CFG instance
 				if(data == null || data.Length == 0)
 					return new CFG();
-				return serializer.Deserialize(data,0,data.Length);
+				return serializer.Deserialize(data);
 			}
 			finally { opLock.ExitReadLock(); }
 		}
