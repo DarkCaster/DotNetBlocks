@@ -59,11 +59,13 @@ namespace Tests
 		{
 			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
 			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock);
-			ConfigProviderTests.Read(providerCtl, typeof(FileConfigProviderReadException));
+			var check=ConfigProviderTests.Read(providerCtl, typeof(FileConfigProviderReadException));
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
 			Assert.LessOrEqual(2,backendMock.FetchCount);
 			backendMock.Dispose();
+			Assert.AreEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreEqual(check.randomString,MockConfig.stringDefault);
 		}
 		
 		[Test]
@@ -71,6 +73,8 @@ namespace Tests
 		{
 			var check=new MockConfig();
 			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
 			var data=serializer.Serialize(check);
 			var backendMock=new MockConfigProviderBackend(true, data, 0.0f);
@@ -81,6 +85,8 @@ namespace Tests
 			Assert.LessOrEqual(2,backendMock.FetchCount);
 			backendMock.Dispose();
 			Assert.AreNotSame(check,verify);
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			Assert.AreEqual(check,verify);
 		}
 		
