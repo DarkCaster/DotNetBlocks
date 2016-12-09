@@ -37,10 +37,10 @@ namespace Tests.Mocks
 		[NonSerialized]
 		private const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 		[NonSerialized]
-		private static readonly int intDefault=
+		public static readonly int intDefault=
 			(new Random()).Next(int.MinValue, int.MaxValue);
 		[NonSerialized]
-		private static readonly string stringDefault=
+		public static readonly string stringDefault=
 			new string(Enumerable.Repeat(chars, (new Random()).Next(2,100)).Select(s => s[(new Random()).Next(s.Length)]).ToArray());
 		
 		public int randomInt;
@@ -67,8 +67,15 @@ namespace Tests.Mocks
 		public void Randomize()
 		{
 			var random = new Random();
-			randomInt = random.Next(int.MinValue, int.MaxValue);
-			randomString=new string(Enumerable.Repeat(chars, random.Next(2,100)).Select(s => s[random.Next(s.Length)]).ToArray());
+			
+			//mitigate bad random init: on some platforms (windows .net 4.5) when performing "new Random()" calls
+			//in short time intervals it produce same seed and leads us to identical random sequences.
+			int oldValue=randomInt;
+			while(oldValue==randomInt)
+				randomInt = random.Next(int.MinValue, int.MaxValue);	
+			string oldString=randomString;
+			while(oldString==randomString)
+				randomString=new string(Enumerable.Repeat(chars, random.Next(2,100)).Select(s => s[random.Next(s.Length)]).ToArray());
 		}
 	}
 }
