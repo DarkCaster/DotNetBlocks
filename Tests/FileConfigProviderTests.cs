@@ -66,6 +66,24 @@ namespace Tests
 			backendMock.Dispose();
 		}
 		
+		[Test]
+		public void Read()
+		{
+			var check=new MockConfig();
+			check.Randomize();
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var data=serializer.Serialize(check);
+			var backendMock=new MockConfigProviderBackend(true, data, 0.0f);
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var verify=ConfigProviderTests.Read(providerCtl, typeof(FileConfigProviderReadException));
+			providerCtl.Dispose();
+			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
+			Assert.LessOrEqual(2,backendMock.FetchCount);
+			backendMock.Dispose();
+			Assert.AreNotSame(check,verify);
+			Assert.AreEqual(check,verify);
+		}
+		
 	}
 	#pragma warning restore 618
 }

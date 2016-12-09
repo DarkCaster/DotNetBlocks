@@ -22,7 +22,7 @@ namespace Tests
 			Assert.AreEqual(false, provider.IsWriteEnabled);
 		}
 		
-		public static void Read<CFG>(IConfigProviderController<CFG> providerCtl, Type ReadExceptionType) where CFG: class, new()
+		public static CFG Read<CFG>(IConfigProviderController<CFG> providerCtl, Type ReadExceptionType) where CFG: class, new()
 		{
 			var provider=providerCtl.GetProvider();
 			Assert.AreEqual(ConfigProviderState.Init, provider.State);
@@ -37,6 +37,7 @@ namespace Tests
 			providerCtl.Shutdown();
 			Assert.AreEqual(ConfigProviderState.Offline, provider.State);
 			Assert.AreEqual(false, provider.IsWriteEnabled);
+			return config;
 		}
 		
 	}
