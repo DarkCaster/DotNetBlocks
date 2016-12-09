@@ -24,7 +24,7 @@
 //
 
 using System;
-using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Tests.Mocks;
 using DarkCaster.Serialization;
@@ -58,7 +58,8 @@ namespace Tests
 		public void ReadNull()
 		{
 			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
 			var check=ConfigProviderTests.Read(providerCtl, typeof(FileConfigProviderReadException));
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
@@ -66,6 +67,7 @@ namespace Tests
 			backendMock.Dispose();
 			Assert.AreEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreEqual(check.randomString,MockConfig.stringDefault);
+			Assert.AreEqual(0,serializer.dataStorage.Count);
 		}
 		
 		[Test]
@@ -88,6 +90,54 @@ namespace Tests
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			Assert.AreEqual(check,verify);
+			Assert.AreEqual(1,serializer.dataStorage.Count);
+		}
+		
+		[Test]
+		public void Write()
+		{
+			var check=new MockConfig();
+			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var verify=ConfigProviderTests.WriteRead(providerCtl, typeof(FileConfigProviderReadException), check);
+			providerCtl.Dispose();
+			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
+			Assert.LessOrEqual(1,backendMock.FetchCount);
+			Assert.LessOrEqual(1,backendMock.WriteCount);
+			backendMock.Dispose();
+			Assert.AreNotSame(check,verify);
+			Assert.AreEqual(check,verify);
+			Assert.AreNotEqual(verify.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(verify.randomString,MockConfig.stringDefault);
+			Assert.AreEqual(1,serializer.dataStorage.Count);
+		}
+		
+		[Test]
+		public void WriteAsync()
+		{
+			var check=new MockConfig();
+			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var task=Task<MockConfig>.Run(()=>ConfigProviderTests.WriteRead(providerCtl, typeof(FileConfigProviderReadException), check));
+			var verify=task.Result;
+			providerCtl.Dispose();
+			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
+			Assert.LessOrEqual(1,backendMock.FetchCount);
+			Assert.LessOrEqual(1,backendMock.WriteCount);
+			backendMock.Dispose();
+			Assert.AreNotSame(check,verify);
+			Assert.AreEqual(check,verify);
+			Assert.AreNotEqual(verify.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(verify.randomString,MockConfig.stringDefault);
+			Assert.AreEqual(1,serializer.dataStorage.Count);
 		}
 		
 	}
