@@ -56,8 +56,6 @@ namespace DarkCaster.Config
 		private readonly object disposeLock;
 		private bool isDisposed;
 		
-		private BasicConfigProvider() {} 
-		
 		protected BasicConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackendFactory backendFactory)
 		{
 			this.serializer=serializer;

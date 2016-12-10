@@ -34,8 +34,19 @@ namespace DarkCaster.Config.Files.Private
 	/// </summary>
 	public class FileConfigStorageBackendFactory : IConfigStorageBackendFactory
 	{
-		public FileConfigStorageBackendFactory()
+		private readonly ConfigFileId fileId;
+		
+		private FileConfigStorageBackendFactory() {}
+		
+		public FileConfigStorageBackendFactory(string dirName, string id)
+			: this(new ConfigFileId(dirName,id)) {}
+		
+		public FileConfigStorageBackendFactory(string filename)
+			: this(new ConfigFileId(filename)) {}
+		
+		internal FileConfigStorageBackendFactory(ConfigFileId fileId) 
 		{
+			this.fileId = fileId;
 		}
 		
 		public string GetId()
