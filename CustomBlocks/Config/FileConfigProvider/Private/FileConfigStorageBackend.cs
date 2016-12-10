@@ -38,7 +38,7 @@ namespace DarkCaster.Config.Files.Private
 	/// <summary>
 	/// Storage backend for for FileConfigProvider.
 	/// </summary>
-	public class FileConfigStorageBackend : IConfigStorageBackend, IDisposable
+	public class FileConfigStorageBackend : IConfigBackend, IDisposable
 	{
 		private readonly string filename;
 		private readonly bool writeAllowed;

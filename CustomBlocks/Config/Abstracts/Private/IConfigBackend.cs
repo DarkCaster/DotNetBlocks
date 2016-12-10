@@ -1,4 +1,4 @@
-﻿// IConfigStorageBackend.cs
+﻿// IConfigBackend.cs
 //
 // The MIT License (MIT)
 //
@@ -36,7 +36,7 @@ namespace DarkCaster.Config.Private
 	/// May be also used to simplify unit testing of config provider class.
 	/// Not for general and direct use: initialization, deinitialization, usage pattern and realization may differ with various config providers types.
 	/// </summary>
-	public interface IConfigStorageBackend
+	public interface IConfigBackend
 	{
 		/// <summary>
 		/// Is write of config data allowed by storage media ? This is an informational property:

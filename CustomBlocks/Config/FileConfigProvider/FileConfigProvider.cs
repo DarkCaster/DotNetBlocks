@@ -51,7 +51,7 @@ namespace DarkCaster.Config.Files
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, string filename)
 			: this(serializer, new FileConfigStorageBackendFactory(filename)) {}
 		
-		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackendFactory backendFactory)
+		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigBackendFactory backendFactory)
 			: base(serializer,backendFactory) {}
 		
 		public override void Init()

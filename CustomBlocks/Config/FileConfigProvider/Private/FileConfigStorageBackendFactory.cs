@@ -32,7 +32,7 @@ namespace DarkCaster.Config.Files.Private
 	/// <summary>
 	/// Factory for FileConfigStorageBackend
 	/// </summary>
-	public class FileConfigStorageBackendFactory : IConfigStorageBackendFactory
+	public class FileConfigStorageBackendFactory : IConfigBackendFactory
 	{
 		private readonly ConfigFileId fileId;
 		
@@ -54,12 +54,12 @@ namespace DarkCaster.Config.Files.Private
 			throw new NotImplementedException("TODO");
 		}
 		
-		public IConfigStorageBackend Create()
+		public IConfigBackend Create()
 		{
 			throw new NotImplementedException("TODO");
 		}
 		
-		public void Destroy(IConfigStorageBackend target)
+		public void Destroy(IConfigBackend target)
 		{
 			throw new NotImplementedException("TODO");
 		}

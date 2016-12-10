@@ -43,11 +43,11 @@ namespace DarkCaster.Config
 	{
 		private readonly ReaderWriterLockSlim opLock;
 		private readonly ISerializationHelper<CFG> serializer;
-		private readonly IConfigStorageBackendFactory backendFactory;
+		private readonly IConfigBackendFactory backendFactory;
 		private readonly ISafeEventCtrl<ConfigProviderStateEventArgs> stateEventCtl;
 		private readonly ISafeEvent<ConfigProviderStateEventArgs> stateEvent;
 		
-		private IConfigStorageBackend backend;
+		private IConfigBackend backend;
 		private ConfigProviderState state = ConfigProviderState.Offline;
 		
 		// IConfigProviderController's owner may use it in multithreaded scenarios, and share same instance between multiple threads 
@@ -56,7 +56,7 @@ namespace DarkCaster.Config
 		private readonly object disposeLock;
 		private bool isDisposed;
 		
-		protected BasicConfigProvider(ISerializationHelper<CFG> serializer, IConfigStorageBackendFactory backendFactory)
+		protected BasicConfigProvider(ISerializationHelper<CFG> serializer, IConfigBackendFactory backendFactory)
 		{
 			this.serializer=serializer;
 			this.backendFactory=backendFactory;

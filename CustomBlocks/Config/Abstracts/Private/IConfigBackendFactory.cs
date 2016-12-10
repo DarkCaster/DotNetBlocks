@@ -1,4 +1,4 @@
-﻿// IConfigStorageBackendFactory.cs
+﻿// IConfigBackendFactory.cs
 //
 // The MIT License (MIT)
 //
@@ -28,16 +28,16 @@ using System;
 namespace DarkCaster.Config.Private
 {
 	/// <summary>
-	/// Interface for "factory" class, that can create and dispose IConfigStorageBackend on demand.
+	/// Interface for "factory" class, that can create and dispose IConfigBackend on demand.
 	/// This is an internal interface, for use with config provider classes.
 	/// You should not use this interface directly in most cases.
 	/// Mainly used in unit tests to create "mock" backend classes tuned for various test scenarios.
 	/// Class of this interface must be fully threadsafe, and may generate
-	/// same shared instance of IConfigStorageBackend on each invocation
-	/// (IConfigStorageBackend instances may be shared by design for some config provider tests).
-	/// Configuration for backend to be created by factory should be stored inside IConfigStorageBackendFactory.
+	/// same shared instance of IConfigBackend on each invocation
+	/// (IConfigBackend instances may be shared by design for some config provider tests).
+	/// Configuration for backend to be created by factory should be stored inside IConfigBackendFactory.
 	/// </summary>
-	public interface IConfigStorageBackendFactory
+	public interface IConfigBackendFactory
 	{
 		/// <summary>
 		/// Get some string resource id, which is uniquely describe resource address for witch created backend will operate
@@ -45,14 +45,14 @@ namespace DarkCaster.Config.Private
 		/// <returns></returns>
 		string GetId();
 		/// <summary>
-		/// Create new IConfigStorageBackend, with params preconfigured in factory code
+		/// Create new IConfigBackend, with params preconfigured in factory code
 		/// </summary>
-		/// <returns>Initialized IConfigStorageBackend object ready for work. May be a single instance.</returns>
-		IConfigStorageBackend Create();
+		/// <returns>Initialized IConfigBackend object ready for work. May be a single instance.</returns>
+		IConfigBackend Create();
 		/// <summary>
-		/// Perform deinitialize of IConfigStorageBackend, previously created by Create method.
+		/// Perform deinitialize of IConfigBackend, previously created by Create method.
 		/// </summary>
-		/// <param name="target">IConfigStorageBackend object to be disposed</param>
-		void Destroy(IConfigStorageBackend target);
+		/// <param name="target">IConfigBackend object to be disposed</param>
+		void Destroy(IConfigBackend target);
 	}
 }

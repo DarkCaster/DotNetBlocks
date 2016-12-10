@@ -33,7 +33,7 @@ namespace Tests.Mocks
 	/// <summary>
 	///  Storage backend mock for use with tests of FileConfigProvider
 	/// </summary>
-	public class MockConfigProviderBackend : IConfigStorageBackend, IDisposable
+	public class MockConfigProviderBackend : IConfigBackend, IDisposable
 	{
 		private readonly bool writeAllowed;
 		private readonly ReaderWriterLockSlim readLock;

@@ -33,12 +33,12 @@ namespace DarkCaster.Config.Files.Private
 	/// </summary>
 	internal static class FileConfigStorageBackendManager
 	{
-		public static IConfigStorageBackend GetBackend(ConfigFileId id)
+		public static IConfigBackend GetBackend(ConfigFileId id)
 		{
 			throw new NotImplementedException("TODO");
 		}
 		
-		public static void FlushBackend(IConfigStorageBackend target)
+		public static void FlushBackend(IConfigBackend target)
 		{
 			throw new NotImplementedException("TODO");
 		}
