@@ -51,7 +51,7 @@
     <Compile Include="Config\FileConfigProvider\FileConfigProviderInitException.cs" />
     <Compile Include="Config\FileConfigProvider\FileConfigProviderReadException.cs" />
     <Compile Include="Config\FileConfigProvider\FileConfigProviderWriteException.cs" />
-    <Compile Include="Config\FileConfigProvider\Private\FileConfigStorageBackend.cs" />
+    <Compile Include="Config\FileConfigProvider\Private\FileConfigBackend.cs" />
     <Compile Include="Config\FileConfigProvider\Private\ConfigFileId.cs" />
     <Compile Include="Config\FileConfigProvider\Private\FileConfigStorageBackendFactory.cs" />
     <Compile Include="Config\Abstracts\Private\IConfigBackend.cs" />

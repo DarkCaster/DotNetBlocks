@@ -1,4 +1,4 @@
-﻿// FileConfigStorageBackend.cs
+﻿// FileConfigBackend.cs
 //
 // The MIT License (MIT)
 //
@@ -38,7 +38,7 @@ namespace DarkCaster.Config.Files.Private
 	/// <summary>
 	/// Storage backend for for FileConfigProvider.
 	/// </summary>
-	public class FileConfigStorageBackend : IConfigBackend, IDisposable
+	public class FileConfigBackend : IConfigBackend, IDisposable
 	{
 		private readonly string filename;
 		private readonly bool writeAllowed;
@@ -94,12 +94,12 @@ namespace DarkCaster.Config.Files.Private
 			return isInRoleWithAccess;
 		}
 		
-		private FileConfigStorageBackend() {}
+		private FileConfigBackend() {}
 		
 		[Obsolete("This constructor is not for direct use. Use only for test purposes.")]
-		public FileConfigStorageBackend(string testFileName) : this (new ConfigFileId(testFileName)) {}
+		public FileConfigBackend(string testFileName) : this (new ConfigFileId(testFileName)) {}
 		
-		internal FileConfigStorageBackend(ConfigFileId id)
+		internal FileConfigBackend(ConfigFileId id)
 		{
 			filename = id.actualFilename;
 			writeAllowed = true;
