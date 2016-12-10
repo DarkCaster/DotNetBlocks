@@ -80,7 +80,7 @@ namespace DarkCaster.Config
 		
 		private class InitCancelledException : Exception {}
 		
-		public void Init()
+		public virtual void Init()
 		{
 			try
 			{
@@ -116,7 +116,7 @@ namespace DarkCaster.Config
 			catch(InitCancelledException) {}
 		}
 		
-		public void Shutdown()
+		public virtual void Shutdown()
 		{
 			try
 			{
@@ -146,17 +146,17 @@ namespace DarkCaster.Config
 			catch(InitCancelledException) {}
 		}
 		
-		public IConfigProvider<CFG> GetProvider()
+		public virtual IConfigProvider<CFG> GetProvider()
 		{
 			return (IConfigProvider<CFG>)this;
 		}
 		
-		public IReadOnlyConfigProvider<CFG> GetReadOnlyProvider()
+		public virtual IReadOnlyConfigProvider<CFG> GetReadOnlyProvider()
 		{
 			return (IReadOnlyConfigProvider<CFG>)this;
 		}
 		
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			lock(disposeLock)
 			{
@@ -172,7 +172,7 @@ namespace DarkCaster.Config
 		
 		#region IConfigProvider
 		
-		public bool IsWriteEnabled
+		public virtual bool IsWriteEnabled
 		{
 			get
 			{
@@ -187,7 +187,7 @@ namespace DarkCaster.Config
 			}
 		}
 		
-		public void WriteConfig(CFG config)
+		public virtual void WriteConfig(CFG config)
 		{
 			opLock.EnterReadLock();
 			try
@@ -201,7 +201,7 @@ namespace DarkCaster.Config
 			finally { opLock.ExitReadLock(); }
 		}
 		
-		public async Task WriteConfigAsync(CFG config)
+		public virtual async Task WriteConfigAsync(CFG config)
 		{
 			//should not lock for long, except when performing init\deinit (but write should not occur in such situations).
 			//TODO: check, maybe it is ok to wrap this in separate Task()
@@ -217,7 +217,7 @@ namespace DarkCaster.Config
 			finally { opLock.ExitReadLock(); }
 		}
 		
-		public ConfigProviderState State 
+		public virtual ConfigProviderState State 
 		{
 			get
 			{
@@ -227,9 +227,9 @@ namespace DarkCaster.Config
 			}
 		}
 		
-		public ISafeEvent<ConfigProviderStateEventArgs> StateChangeEvent { get { return stateEvent; } }
+		public virtual ISafeEvent<ConfigProviderStateEventArgs> StateChangeEvent { get { return stateEvent; } }
 		
-		public CFG ReadConfig()
+		public virtual CFG ReadConfig()
 		{
 			opLock.EnterReadLock();
 			try
@@ -247,7 +247,7 @@ namespace DarkCaster.Config
 			finally { opLock.ExitReadLock(); }
 		}
 		
-		public void MarkConfigForDelete()
+		public virtual void MarkConfigForDelete()
 		{
 			opLock.EnterReadLock();
 			try
