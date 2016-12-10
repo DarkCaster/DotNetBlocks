@@ -24,7 +24,6 @@
 //
 
 using System;
-using System.Threading.Tasks;
 using DarkCaster.Config.Private;
 	
 namespace DarkCaster.Config.Files.Private
