@@ -53,6 +53,7 @@
     <Compile Include="Config\IConfigProviderController.cs" />
     <Compile Include="Config\IReadOnlyConfigProvider.cs" />
     <Compile Include="Config\Private\IConfigStorageBackend.cs" />
+    <Compile Include="Config\Private\IConfigStorageBackendFactory.cs" />
     <Compile Include="Converters\Base85.cs" />
     <Compile Include="Events\EventDbgException.cs" />
     <Compile Include="Events\SafeEvent.cs" />
