@@ -33,6 +33,7 @@ using DarkCaster.Config.Files;
 
 namespace Tests
 {
+	/*
 	//disable warning about obsolete FileConfigProvider's constructor used for tests. 
 	#pragma warning disable 618
 	
@@ -203,4 +204,5 @@ namespace Tests
 		
 	}
 	#pragma warning restore 618
+	*/
 }
