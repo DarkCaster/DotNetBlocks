@@ -67,7 +67,7 @@ namespace Tests
 			backendMock.Dispose();
 			Assert.AreEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreEqual(check.randomString,MockConfig.stringDefault);
-			Assert.AreEqual(0,serializer.dataStorage.Count);
+			Assert.AreEqual(0,serializer.DataStorageCount);
 		}
 		
 		[Test]
@@ -90,7 +90,7 @@ namespace Tests
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			Assert.AreEqual(check,verify);
-			Assert.AreEqual(1,serializer.dataStorage.Count);
+			Assert.AreEqual(1,serializer.DataStorageCount);
 		}
 		
 		[Test]
@@ -113,7 +113,7 @@ namespace Tests
 			Assert.AreEqual(check,verify);
 			Assert.AreNotEqual(verify.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(verify.randomString,MockConfig.stringDefault);
-			Assert.AreEqual(1,serializer.dataStorage.Count);
+			Assert.AreEqual(1,serializer.DataStorageCount);
 		}
 		
 		[Test]
@@ -137,7 +137,7 @@ namespace Tests
 			Assert.AreEqual(check,verify);
 			Assert.AreNotEqual(verify.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(verify.randomString,MockConfig.stringDefault);
-			Assert.AreEqual(1,serializer.dataStorage.Count);
+			Assert.AreEqual(1,serializer.DataStorageCount);
 		}
 		
 		[Test]
@@ -158,7 +158,28 @@ namespace Tests
 			Assert.AreEqual(1,backendMock.WriteAllowedCount);
 			Assert.AreEqual(workerCount*iterations,backendMock.FetchCount);
 			backendMock.Dispose();
-			Assert.AreEqual(1,serializer.dataStorage.Count);
+			Assert.AreEqual(1,serializer.DataStorageCount);
+		}
+		
+		[Test]
+		public void MultiReadWrite()
+		{
+			const int workerCount=8;
+			const int iterations=25000;
+			var check=new MockConfig();
+			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			ConfigProviderTests.MultiThreadReadWrite(providerCtl,check,workerCount,iterations);
+			providerCtl.Dispose();
+			Assert.AreEqual(2,backendMock.WriteAllowedCount);
+			Assert.AreEqual(workerCount*iterations,backendMock.FetchCount);
+			Assert.AreEqual(workerCount*iterations,backendMock.WriteCount);
+			backendMock.Dispose();
+			Assert.AreEqual(workerCount*iterations,serializer.DataStorageCount);
 		}
 		
 	}

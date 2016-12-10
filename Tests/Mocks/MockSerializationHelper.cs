@@ -40,7 +40,16 @@ namespace Tests.Mocks
 			where CFG : IEquatable<CFG>, ICloneable
 	{
 		private object dataLocker=new object();
-		public List<CFG> dataStorage=new List<CFG>();
+		private List<CFG> dataStorage=new List<CFG>();
+		
+		public int DataStorageCount
+		{
+			get
+			{
+				lock(dataLocker)
+					return dataStorage.Count;
+			}
+		}
 		
 		private int ReadFromByteArray(byte[] data)
 		{

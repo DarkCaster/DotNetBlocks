@@ -78,7 +78,7 @@ namespace Tests
 			return config2;
 		}
 		
-		public static class TestReader
+		public static class TestReaderWriter
 		{
 			public volatile static bool trigger=false;
 		}
@@ -120,9 +120,10 @@ namespace Tests
 			private void Worker()
 			{
 				ready=true;
-				while(!TestReader.trigger) {}
+				while(!TestReaderWriter.trigger) {}
 				try
 				{
+					//throw new Exception("test fail");
 					for(int i=0; i<maxCount; ++i)
 					{
 						var config=provider.ReadConfig();
@@ -142,6 +143,8 @@ namespace Tests
 		public static void MultiThreadRead<CFG>(IConfigProviderController<CFG> providerCtl, CFG sample, int workersCount, int iterations)
 			where CFG: class, IEquatable<CFG>, new() 
 		{
+			TestReaderWriter.trigger=false;
+			
 			var provider=providerCtl.GetProvider();
 			Assert.AreEqual(ConfigProviderState.Init, provider.State);
 			Assert.AreEqual(false, provider.IsWriteEnabled);
@@ -160,7 +163,104 @@ namespace Tests
 				return true;
 			}))()) {}
 			
-			TestReader.trigger=true;
+			TestReaderWriter.trigger=true;
+			for(int i=0; i<workersCount; ++i)
+			{
+				workers[i].WaitForExit();
+				if(workers[i].result!=null)
+					throw workers[i].result;
+			}
+			
+			providerCtl.Shutdown();
+			Assert.AreEqual(ConfigProviderState.Offline, provider.State);
+			Assert.AreEqual(false, provider.IsWriteEnabled);
+		}
+		
+		public class TestWriter<CFG>
+			where CFG: class, IEquatable<CFG>, new()
+		{
+			private readonly IConfigProvider<CFG> provider;
+			private readonly Thread worker; 
+			private readonly int maxCount;
+			private readonly CFG sample;
+			
+			public volatile bool ready;
+			public volatile Exception result;
+			
+			public TestWriter(IConfigProviderController<CFG> providerCtl, int iterations, CFG sample)
+			{
+				this.provider=providerCtl.GetProvider();
+				this.worker=new Thread(Worker);
+				this.maxCount=iterations;
+				this.provider.StateChangeEvent.Subscribe(OnEvent);
+				this.result=null;
+				this.ready=false;
+				this.sample=sample;
+			}
+			
+			private void OnEvent(object sender, ConfigProviderStateEventArgs args)
+			{
+				try
+				{
+					if(args.State==ConfigProviderState.Online)
+						worker.Start();
+					if(args.State==ConfigProviderState.Offline)
+						provider.StateChangeEvent.Unsubscribe(OnEvent);
+				}
+				catch(Exception ex) { result=ex; }
+			}
+			
+			private void Worker()
+			{
+				ready=true;
+				while(!TestReaderWriter.trigger) {}
+				try
+				{
+					var prevConfig=sample;
+					//throw new Exception("test fail");
+					for(int i=0; i<maxCount; ++i)
+					{
+						provider.WriteConfig(prevConfig);
+						var config=provider.ReadConfig();
+						Assert.AreNotSame(sample,config);
+						Assert.AreEqual(sample,config);
+						prevConfig=config;
+					}
+				}
+				catch(Exception ex) { result=ex; }
+			}
+			
+			public void WaitForExit()
+			{
+				worker.Join();
+			}
+		}
+		
+		public static void MultiThreadReadWrite<CFG>(IConfigProviderController<CFG> providerCtl, CFG sample, int workersCount, int iterations)
+			where CFG: class, IEquatable<CFG>, new() 
+		{
+			TestReaderWriter.trigger=false;
+			
+			var provider=providerCtl.GetProvider();
+			Assert.AreEqual(ConfigProviderState.Init, provider.State);
+			Assert.AreEqual(false, provider.IsWriteEnabled);
+			
+			var workers=new TestWriter<CFG>[workersCount];
+			for(int i=0; i<workersCount; ++i)
+				workers[i]=new TestWriter<CFG>(providerCtl,iterations,sample);
+			
+			providerCtl.Init();
+			Assert.AreEqual(ConfigProviderState.Online, provider.State);
+			Assert.AreEqual(true, provider.IsWriteEnabled);
+			
+			while(!((Func<bool>)(()=>{
+				for(int i=0; i<workersCount; ++i)
+					if(!workers[i].ready)
+						return false;
+				return true;
+			}))()) {}
+			
+			TestReaderWriter.trigger=true;
 			for(int i=0; i<workersCount; ++i)
 			{
 				workers[i].WaitForExit();
