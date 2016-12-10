@@ -39,6 +39,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config\Abstracts\BasicConfigProvider.cs" />
     <Compile Include="Config\ConfigProviderException.cs" />
     <Compile Include="Config\ConfigProviderState.cs" />
     <Compile Include="Config\ConfigProviderStateEventArgs.cs" />
@@ -81,6 +82,7 @@
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
     <Folder Include="Config\FileConfigProvider\Private" />
+    <Folder Include="Config\Abstracts" />
     <Folder Include="Config\Private" />
     <Folder Include="Converters" />
     <Folder Include="Serialization" />
