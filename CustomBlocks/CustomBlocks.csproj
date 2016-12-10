@@ -40,7 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\Abstracts\BasicConfigProvider.cs" />
-    <Compile Include="Config\ConfigProviderException.cs" />
+    <Compile Include="Config\Abstracts\ConfigProviderException.cs" />
     <Compile Include="Config\ConfigProviderState.cs" />
     <Compile Include="Config\ConfigProviderStateEventArgs.cs" />
     <Compile Include="Config\FileConfigProvider\FileConfigProvider.cs" />

@@ -28,16 +28,16 @@ using System;
 namespace DarkCaster.Config
 {
 	/// <summary>
-	/// Base class for exceptions that config provider can throw in expected error situations.
+	/// Parent class for all exceptions that config provider may throw in expected error situations.
 	/// Config provider instance should not break when throwing this type of exceptions,
 	/// and it may continue (when source of the problem is fixed).
 	/// </summary>
-	public abstract class ConfigProviderException : Exception
+	public class ConfigProviderException : Exception
 	{
 		public readonly string id;		
 		public readonly ConfigProviderState state;
 		
-		protected ConfigProviderException(string id, ConfigProviderState state, string message, Exception inner)
+		public ConfigProviderException(string id, ConfigProviderState state, string message, Exception inner)
 			: base (message, inner)
 		{
 			this.id = id;
