@@ -41,8 +41,11 @@
   <ItemGroup>
     <Compile Include="Config\Abstracts\BasicConfigProvider.cs" />
     <Compile Include="Config\Abstracts\ConfigProviderException.cs" />
-    <Compile Include="Config\ConfigProviderState.cs" />
-    <Compile Include="Config\ConfigProviderStateEventArgs.cs" />
+    <Compile Include="Config\Abstracts\ConfigProviderState.cs" />
+    <Compile Include="Config\Abstracts\ConfigProviderStateEventArgs.cs" />
+    <Compile Include="Config\Abstracts\IConfigProvider.cs" />
+    <Compile Include="Config\Abstracts\IConfigProviderController.cs" />
+    <Compile Include="Config\Abstracts\IReadOnlyConfigProvider.cs" />
     <Compile Include="Config\FileConfigProvider\FileConfigProvider.cs" />
     <Compile Include="Config\FileConfigProvider\FileConfigProviderDeinitException.cs" />
     <Compile Include="Config\FileConfigProvider\FileConfigProviderInitException.cs" />
@@ -51,10 +54,8 @@
     <Compile Include="Config\FileConfigProvider\Private\FileConfigStorageBackend.cs" />
     <Compile Include="Config\FileConfigProvider\Private\ConfigFileId.cs" />
     <Compile Include="Config\FileConfigProvider\Private\FileConfigStorageBackendManager.cs" />
-    <Compile Include="Config\IConfigProviderController.cs" />
-    <Compile Include="Config\IReadOnlyConfigProvider.cs" />
-    <Compile Include="Config\Private\IConfigStorageBackend.cs" />
-    <Compile Include="Config\Private\IConfigStorageBackendFactory.cs" />
+    <Compile Include="Config\Abstracts\Private\IConfigStorageBackend.cs" />
+    <Compile Include="Config\Abstracts\Private\IConfigStorageBackendFactory.cs" />
     <Compile Include="Converters\Base85.cs" />
     <Compile Include="Events\EventDbgException.cs" />
     <Compile Include="Events\SafeEvent.cs" />
@@ -72,7 +73,6 @@
     <Compile Include="Serialization\SerializationFactoryException.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationHelperFactory.cs" />
     <Compile Include="Serialization\BinarySerialization\BinarySerializationFactoryException.cs" />
-    <Compile Include="Config\IConfigProvider.cs" />
     <Compile Include="Events\EventException.cs" />
     <Compile Include="Events\EventSubscriptionException.cs" />
     <Compile Include="Events\EventRaiseException.cs" />
@@ -83,7 +83,7 @@
     <Folder Include="Config\FileConfigProvider" />
     <Folder Include="Config\FileConfigProvider\Private" />
     <Folder Include="Config\Abstracts" />
-    <Folder Include="Config\Private" />
+    <Folder Include="Config\Abstracts\Private" />
     <Folder Include="Converters" />
     <Folder Include="Serialization" />
     <Folder Include="Serialization\BinarySerialization" />
