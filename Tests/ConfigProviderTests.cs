@@ -42,7 +42,8 @@ namespace Tests
 			return config;
 		}
 		
-		public static CFG WriteRead<CFG>(IConfigProviderController<CFG> providerCtl, Type ReadExceptionType, CFG config) where CFG: class, new()
+		public static CFG WriteRead<CFG>(IConfigProviderController<CFG> providerCtl, Type ReadExceptionType, CFG config)
+			where CFG: class, new()
 		{
 			var provider=providerCtl.GetProvider();
 			Assert.AreEqual(ConfigProviderState.Init, provider.State);
@@ -58,6 +59,25 @@ namespace Tests
 			Assert.AreEqual(ConfigProviderState.Offline, provider.State);
 			Assert.AreEqual(false, provider.IsWriteEnabled);
 			return config2;
+		}
+		
+		public static void WriteReadFail<CFG>(IConfigProviderController<CFG> providerCtlWithFailingBackend, Type ReadExceptionType, Type WriteExceptionType, CFG config)
+			where CFG: class, new()
+		{
+			var provider=providerCtlWithFailingBackend.GetProvider();
+			Assert.AreEqual(ConfigProviderState.Init, provider.State);
+			Assert.AreEqual(false, provider.IsWriteEnabled);
+			Assert.Throws(ReadExceptionType,()=>provider.ReadConfig());
+			providerCtlWithFailingBackend.Init();
+			Assert.AreEqual(ConfigProviderState.Online, provider.State);
+			Assert.AreEqual(true, provider.IsWriteEnabled);
+			Assert.Throws(WriteExceptionType,()=>provider.WriteConfig(config));
+			Assert.Throws(ReadExceptionType,()=>provider.ReadConfig());
+			Assert.AreEqual(ConfigProviderState.Online, provider.State);
+			Assert.AreEqual(true, provider.IsWriteEnabled);
+			providerCtlWithFailingBackend.Shutdown();
+			Assert.AreEqual(ConfigProviderState.Offline, provider.State);
+			Assert.AreEqual(false, provider.IsWriteEnabled);
 		}
 		
 		public static async Task<CFG> WriteReadAsync<CFG>(IConfigProviderController<CFG> providerCtl, Type ReadExceptionType, CFG config) where CFG: class, new()
@@ -76,6 +96,32 @@ namespace Tests
 			Assert.AreEqual(ConfigProviderState.Offline, provider.State);
 			Assert.AreEqual(false, provider.IsWriteEnabled);
 			return config2;
+		}
+		
+		public static async Task WriteReadFailAsync<CFG>(IConfigProviderController<CFG> providerCtlWithFailingBackend, Type ReadExceptionType, Type WriteExceptionType, CFG config)
+			where CFG: class, new()
+		{
+			var provider=providerCtlWithFailingBackend.GetProvider();
+			Assert.AreEqual(ConfigProviderState.Init, provider.State);
+			Assert.AreEqual(false, provider.IsWriteEnabled);
+			Assert.Throws(ReadExceptionType,()=>provider.ReadConfig());
+			providerCtlWithFailingBackend.Init();
+			Assert.AreEqual(ConfigProviderState.Online, provider.State);
+			Assert.AreEqual(true, provider.IsWriteEnabled);
+			bool failed=false;
+			try { await provider.WriteConfigAsync(config); }
+			catch(Exception ex)
+			{
+				failed=true;
+				Assert.IsInstanceOf(WriteExceptionType,ex);
+			}
+			Assert.AreEqual(true,failed);
+			Assert.Throws(ReadExceptionType,()=>provider.ReadConfig());
+			Assert.AreEqual(ConfigProviderState.Online, provider.State);
+			Assert.AreEqual(true, provider.IsWriteEnabled);
+			providerCtlWithFailingBackend.Shutdown();
+			Assert.AreEqual(ConfigProviderState.Offline, provider.State);
+			Assert.AreEqual(false, provider.IsWriteEnabled);
 		}
 		
 		public static class TestReaderWriter

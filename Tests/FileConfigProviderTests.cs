@@ -117,6 +117,25 @@ namespace Tests
 		}
 		
 		[Test]
+		public void WriteFail()
+		{
+			var check=new MockConfig();
+			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var backendMock=new MockConfigProviderBackend(true, null, 1.0f);
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			ConfigProviderTests.WriteReadFail(providerCtl, typeof(FileConfigProviderReadException), typeof(FileConfigProviderWriteException), check);
+			providerCtl.Dispose();
+			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
+			Assert.LessOrEqual(1,backendMock.FetchCount);
+			Assert.LessOrEqual(1,backendMock.WriteCount);
+			backendMock.Dispose();
+			Assert.AreEqual(1,serializer.DataStorageCount);
+		}
+		
+		[Test]
 		public void WriteAsync()
 		{
 			var check=new MockConfig();
