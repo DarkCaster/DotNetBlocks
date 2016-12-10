@@ -35,9 +35,15 @@ namespace DarkCaster.Config.Private
 	/// Class of this interface must be fully threadsafe, and may generate
 	/// same shared instance of IConfigStorageBackend on each invocation
 	/// (IConfigStorageBackend instances may be shared by design for some config provider tests).
+	/// Configuration for backend to be created by factory should be stored inside IConfigStorageBackendFactory.
 	/// </summary>
 	public interface IConfigStorageBackendFactory
 	{
+		/// <summary>
+		/// Get some string resource id, which is uniquely describe resource address for witch created backend will operate
+		/// </summary>
+		/// <returns></returns>
+		string GetId();
 		/// <summary>
 		/// Create new IConfigStorageBackend, with params preconfigured in factory code
 		/// </summary>

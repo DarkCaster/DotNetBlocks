@@ -93,12 +93,8 @@ namespace DarkCaster.Config
 						if (state == ConfigProviderState.Online)
 							throw new InitCancelledException();
 						if (state == ConfigProviderState.Offline)
-							throw new FileConfigProviderInitException(fileId.actualFilename, state, "This FileConfigProvider is offline, create new object", null);
-						try
-						{
-							if (!bkIsExt)
-								backend = FileConfigStorageBackendManager.GetBackend(fileId);
-						}
+							throw new ConfigProviderException(backendFactory.GetId(), state, "This FileConfigProvider is offline, create new object", null);
+						try { backend = backendFactory.Create(); }
 						catch (Exception ex)
 						{
 							backendEx = ex;
@@ -115,7 +111,7 @@ namespace DarkCaster.Config
 					}
 				}, opLock.ExitWriteLock);
 				if(backendEx!=null)
-					throw new FileConfigProviderInitException(fileId.actualFilename, state, "Backend failed to initialise", backendEx);
+					throw new ConfigProviderException(backendFactory.GetId(), state, "Backend failed to initialise", backendEx);
 			}
 			catch(InitCancelledException) {}
 		}
@@ -133,15 +129,8 @@ namespace DarkCaster.Config
 						if (state == ConfigProviderState.Offline)
 							throw new InitCancelledException();
 						state = ConfigProviderState.Offline;
-						try
-						{
-							if (!bkIsExt && backend != null)
-								FileConfigStorageBackendManager.FlushBackend(backend);
-						}
-						catch (Exception ex)
-						{
-							backendEx = ex;
-						}
+						try { backendFactory.Destroy(backend); }
+						catch (Exception ex) { backendEx = ex; }
 						backend = null;
 						return new ConfigProviderStateEventArgs(ConfigProviderState.Offline, false);
 					}
@@ -152,7 +141,7 @@ namespace DarkCaster.Config
 					}
 				}, opLock.ExitWriteLock);
 				if(backendEx!=null)
-					throw new FileConfigProviderDeinitException(fileId.actualFilename, state, "Backend failed to deinitialize", backendEx);
+					throw new ConfigProviderException(backendFactory.GetId(), state, "Backend failed to deinitialize", backendEx);
 			}
 			catch(InitCancelledException) {}
 		}
@@ -204,13 +193,10 @@ namespace DarkCaster.Config
 			try
 			{
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
+					throw new ConfigProviderException(backendFactory.GetId(),state,"Config provider is not online",null);
 				var data=serializer.Serialize(config);
 				try { backend.Commit(data); }
-				catch(Exception ex)
-				{
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to write config data",ex);
-				}
+				catch(Exception ex)	{ throw new ConfigProviderException(backendFactory.GetId(),state,"Failed to write config data",ex); }
 			}
 			finally { opLock.ExitReadLock(); }
 		}
@@ -223,13 +209,10 @@ namespace DarkCaster.Config
 			try
 			{
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
+					throw new ConfigProviderException(backendFactory.GetId(),state,"Config provider is not online",null);
 				var data=serializer.Serialize(config);
 				try { await backend.CommitAsync(data); }
-				catch(Exception ex)
-				{
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to write config data",ex);
-				}
+				catch(Exception ex) { throw new ConfigProviderException(backendFactory.GetId(),state,"Failed to write config data",ex); }
 			}
 			finally { opLock.ExitReadLock(); }
 		}
@@ -252,13 +235,10 @@ namespace DarkCaster.Config
 			try
 			{
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
-					throw new FileConfigProviderReadException(fileId.actualFilename,state,"Config provider is not online",null);
+					throw new ConfigProviderException(backendFactory.GetId(),state,"Config provider is not online",null);
 				byte[] data=null;
 				try{ data=backend.Fetch(); }
-				catch(Exception ex)
-				{
-					throw new FileConfigProviderReadException(fileId.actualFilename,state,"Failed to read raw config data from backend",ex);
-				}
+				catch(Exception ex) { throw new ConfigProviderException(backendFactory.GetId(),state,"Failed to read raw config data from backend",ex); }
 				//create new CFG instance
 				if(data == null || data.Length == 0)
 					return new CFG();
@@ -273,11 +253,11 @@ namespace DarkCaster.Config
 			try
 			{
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Config provider is not online",null);
+					throw new ConfigProviderException(backendFactory.GetId(),state,"Config provider is not online",null);
 				try{ backend.MarkForDelete(); }
 				catch(Exception ex)
 				{
-					throw new FileConfigProviderWriteException(fileId.actualFilename,state,"Failed to mark config to delete",ex);
+					throw new ConfigProviderException(backendFactory.GetId(),state,"Failed to mark config to delete",ex);
 				}
 			}
 			finally { opLock.ExitReadLock(); }
