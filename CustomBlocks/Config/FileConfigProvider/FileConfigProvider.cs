@@ -46,10 +46,10 @@ namespace DarkCaster.Config.Files
 		/// <param name="dirName">Directory name for config files storage. Directory location is platform dependend.</param>
 		/// <param name="id"></param>
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, string dirName, string id)
-			: this(serializer, new FileConfigStorageBackendFactory(dirName,id)) {}
+			: this(serializer, new FileConfigBackendFactory(dirName,id)) {}
 		
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, string filename)
-			: this(serializer, new FileConfigStorageBackendFactory(filename)) {}
+			: this(serializer, new FileConfigBackendFactory(filename)) {}
 		
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigBackendFactory backendFactory)
 			: base(serializer,backendFactory) {}

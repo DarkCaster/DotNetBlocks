@@ -1,4 +1,4 @@
-﻿// FileConfigStorageBackendFactory.cs
+﻿// FileConfigBackendFactory.cs
 //
 // The MIT License (MIT)
 //
@@ -32,19 +32,19 @@ namespace DarkCaster.Config.Files.Private
 	/// <summary>
 	/// Factory for FileConfigStorageBackend
 	/// </summary>
-	public class FileConfigStorageBackendFactory : IConfigBackendFactory
+	public class FileConfigBackendFactory : IConfigBackendFactory
 	{
 		private readonly ConfigFileId fileId;
 		
-		private FileConfigStorageBackendFactory() {}
+		private FileConfigBackendFactory() {}
 		
-		public FileConfigStorageBackendFactory(string dirName, string id)
+		public FileConfigBackendFactory(string dirName, string id)
 			: this(new ConfigFileId(dirName,id)) {}
 		
-		public FileConfigStorageBackendFactory(string filename)
+		public FileConfigBackendFactory(string filename)
 			: this(new ConfigFileId(filename)) {}
 		
-		internal FileConfigStorageBackendFactory(ConfigFileId fileId) 
+		internal FileConfigBackendFactory(ConfigFileId fileId) 
 		{
 			this.fileId = fileId;
 		}

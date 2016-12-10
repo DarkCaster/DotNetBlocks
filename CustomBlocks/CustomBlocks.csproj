@@ -53,7 +53,7 @@
     <Compile Include="Config\FileConfigProvider\FileConfigProviderWriteException.cs" />
     <Compile Include="Config\FileConfigProvider\Private\FileConfigBackend.cs" />
     <Compile Include="Config\FileConfigProvider\Private\ConfigFileId.cs" />
-    <Compile Include="Config\FileConfigProvider\Private\FileConfigStorageBackendFactory.cs" />
+    <Compile Include="Config\FileConfigProvider\Private\FileConfigBackendFactory.cs" />
     <Compile Include="Config\Abstracts\Private\IConfigBackend.cs" />
     <Compile Include="Config\Abstracts\Private\IConfigBackendFactory.cs" />
     <Compile Include="Converters\Base85.cs" />
