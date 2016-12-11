@@ -47,6 +47,7 @@
     <Compile Include="MMHashTests.cs" />
     <Compile Include="Mocks\MockConfig.cs" />
     <Compile Include="Mocks\MockConfigBackend.cs" />
+    <Compile Include="Mocks\MockConfigBackendFactory.cs" />
     <Compile Include="Mocks\MockSerializationHelper.cs" />
     <Compile Include="Mocks\MockSerializationHelperTests.cs" />
     <Compile Include="MsgPackSerializerTests.cs" />
