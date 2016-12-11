@@ -39,6 +39,7 @@ namespace DarkCaster.Config.Files
 	public sealed class FileConfigProvider<CFG> : BasicConfigProvider<CFG>
 		where CFG: class, new()
 	{
+		#pragma warning disable 618
 		/// <summary>
 		/// Create new FileConfigProvider instance.
 		/// </summary>
@@ -55,7 +56,9 @@ namespace DarkCaster.Config.Files
 		/// <param name="filename">Config file filename</param>
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, string filename)
 			: this(serializer, new FileConfigBackendFactory(filename)) {}
+		#pragma warning restore 618
 		
+		[Obsolete("This constructor is not recommended for direct use. Dedicated for unit testing.")]
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, IConfigBackendFactory backendFactory)
 			: base(serializer,backendFactory) {}
 		
