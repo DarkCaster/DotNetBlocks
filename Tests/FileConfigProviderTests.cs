@@ -33,7 +33,6 @@ using DarkCaster.Config.Files;
 
 namespace Tests
 {
-	/*
 	//disable warning about obsolete FileConfigProvider's constructor used for tests. 
 	#pragma warning disable 618
 	
@@ -47,25 +46,27 @@ namespace Tests
 		[Test]
 		public void Init()
 		{
-			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendMock);
+			var backendFactory=new MockConfigBackendFactory(true, null, 0.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(new MockSerializationHelper<MockConfig>(), backendFactory);
 			ConfigProviderTests.Init(providerCtl);
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 		}
 		
 		[Test]
 		public void ReadNull()
 		{
-			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
+			var backendFactory=new MockConfigBackendFactory(true, null, 0.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
 			var serializer=new MockSerializationHelper<MockConfig>();
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
 			var check=ConfigProviderTests.Read(providerCtl, typeof(FileConfigProviderReadException));
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
 			Assert.LessOrEqual(2,backendMock.FetchCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 			Assert.AreEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreEqual(check.randomString,MockConfig.stringDefault);
 			Assert.AreEqual(0,serializer.DataStorageCount);
@@ -80,13 +81,14 @@ namespace Tests
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
 			var data=serializer.Serialize(check);
-			var backendMock=new MockConfigProviderBackend(true, data, 0.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var backendFactory=new MockConfigBackendFactory(true, data, 0.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
 			var verify=ConfigProviderTests.Read(providerCtl, typeof(FileConfigProviderReadException));
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
 			Assert.LessOrEqual(2,backendMock.FetchCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 			Assert.AreNotSame(check,verify);
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
@@ -102,14 +104,15 @@ namespace Tests
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
-			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var backendFactory=new MockConfigBackendFactory(true, null, 0.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
 			var verify=ConfigProviderTests.WriteRead(providerCtl, typeof(FileConfigProviderReadException), check);
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
 			Assert.LessOrEqual(1,backendMock.FetchCount);
 			Assert.LessOrEqual(1,backendMock.WriteCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 			Assert.AreNotSame(check,verify);
 			Assert.AreEqual(check,verify);
 			Assert.AreNotEqual(verify.randomInt,MockConfig.intDefault);
@@ -125,14 +128,15 @@ namespace Tests
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
-			var backendMock=new MockConfigProviderBackend(true, null, 1.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var backendFactory=new MockConfigBackendFactory(true, null, 1.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
 			ConfigProviderTests.WriteReadFail(providerCtl, typeof(FileConfigProviderReadException), typeof(FileConfigProviderWriteException), check);
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
 			Assert.LessOrEqual(1,backendMock.FetchCount);
 			Assert.LessOrEqual(1,backendMock.WriteCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 			Assert.AreEqual(1,serializer.DataStorageCount);
 		}
 		
@@ -144,15 +148,16 @@ namespace Tests
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
-			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var backendFactory=new MockConfigBackendFactory(true, null, 0.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
 			var task=Task<MockConfig>.Run(()=>ConfigProviderTests.WriteRead(providerCtl, typeof(FileConfigProviderReadException), check));
 			var verify=task.Result;
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
 			Assert.LessOrEqual(1,backendMock.FetchCount);
 			Assert.LessOrEqual(1,backendMock.WriteCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 			Assert.AreNotSame(check,verify);
 			Assert.AreEqual(check,verify);
 			Assert.AreNotEqual(verify.randomInt,MockConfig.intDefault);
@@ -171,13 +176,14 @@ namespace Tests
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
 			var data=serializer.Serialize(check);
-			var backendMock=new MockConfigProviderBackend(false, data, 0.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var backendFactory=new MockConfigBackendFactory(false, data, 0.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
 			ConfigProviderTests.MultiThreadRead(providerCtl,check,workerCount,iterations);
 			providerCtl.Dispose();
 			Assert.AreEqual(1,backendMock.WriteAllowedCount);
 			Assert.AreEqual(workerCount*iterations,backendMock.FetchCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 			Assert.AreEqual(1,serializer.DataStorageCount);
 		}
 		
@@ -191,18 +197,18 @@ namespace Tests
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
-			var backendMock=new MockConfigProviderBackend(true, null, 0.0f);
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendMock);
+			var backendFactory=new MockConfigBackendFactory(true, null, 0.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
 			ConfigProviderTests.MultiThreadReadWrite(providerCtl,check,workerCount,iterations);
 			providerCtl.Dispose();
 			Assert.AreEqual(2,backendMock.WriteAllowedCount);
 			Assert.AreEqual(workerCount*iterations,backendMock.FetchCount);
 			Assert.AreEqual(workerCount*iterations,backendMock.WriteCount);
-			backendMock.Dispose();
+			backendFactory.Destroy(backendMock);
 			Assert.AreEqual(workerCount*iterations,serializer.DataStorageCount);
 		}
 		
 	}
 	#pragma warning restore 618
-	*/
 }

@@ -30,15 +30,11 @@ namespace Tests.Mocks
 {
 	public class MockConfigBackendFactory : IConfigBackendFactory
 	{
-		private readonly bool writeAllowed;
-		private readonly byte[] data;
-		private readonly float failProb;
+		private readonly MockConfigBackend backend;
 		
 		public MockConfigBackendFactory(bool writeAllowed, byte[] data=null, float failProb=0.0f)
 		{
-			this.writeAllowed=writeAllowed;
-			this.data=data;
-			this.failProb=failProb;
+			backend=new MockConfigBackend(writeAllowed,data,failProb);
 		}
 		
 		public string GetId()
@@ -48,14 +44,16 @@ namespace Tests.Mocks
 		
 		public IConfigBackend Create()
 		{
-			return new MockConfigBackend(writeAllowed,data,failProb);
+			return backend;
 		}
 		
 		public void Destroy(IConfigBackend target)
 		{
 			var result=target as MockConfigBackend;
 			if(result==null)
-				return;
+				throw new Exception("Wrong backend type!");
+			if(result!=backend)
+				throw new Exception("Wrong backend instance!");
 			result.Dispose();
 		}
 	}
