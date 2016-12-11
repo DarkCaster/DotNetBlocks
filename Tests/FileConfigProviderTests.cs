@@ -27,8 +27,6 @@ using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Tests.Mocks;
-using DarkCaster.Serialization;
-using DarkCaster.Config;
 using DarkCaster.Config.Files;
 
 namespace Tests
