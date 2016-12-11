@@ -141,6 +141,27 @@ namespace Tests
 		}
 		
 		[Test]
+		public void WriteAsyncFail()
+		{
+			var check=new MockConfig();
+			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var backendFactory=new MockConfigBackendFactory(true, null, 1.0f);
+			var backendMock=backendFactory.Create() as MockConfigBackend;
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
+			Task task=Task.Run(async ()=> await ConfigProviderTests.WriteReadFailAsync(providerCtl, typeof(FileConfigProviderReadException), typeof(FileConfigProviderWriteException), check));
+			task.Wait();
+			providerCtl.Dispose();
+			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
+			Assert.LessOrEqual(1,backendMock.FetchCount);
+			Assert.LessOrEqual(1,backendMock.WriteCount);
+			backendFactory.Destroy(backendMock);
+			Assert.AreEqual(1,serializer.DataStorageCount);
+		}
+		
+		[Test]
 		public void WriteAsync()
 		{
 			var check=new MockConfig();
@@ -151,7 +172,7 @@ namespace Tests
 			var backendFactory=new MockConfigBackendFactory(true, null, 0.0f);
 			var backendMock=backendFactory.Create() as MockConfigBackend;
 			var providerCtl=new FileConfigProvider<MockConfig>(serializer, backendFactory);
-			var task=Task<MockConfig>.Run(()=>ConfigProviderTests.WriteRead(providerCtl, typeof(FileConfigProviderReadException), check));
+			var task=Task<MockConfig>.Run(async ()=> await ConfigProviderTests.WriteReadAsync(providerCtl, typeof(FileConfigProviderReadException), check));
 			var verify=task.Result;
 			providerCtl.Dispose();
 			Assert.LessOrEqual(1,backendMock.WriteAllowedCount);
