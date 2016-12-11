@@ -1,4 +1,4 @@
-﻿// MockConfigProviderBackend.cs
+﻿// MockConfigBackend.cs
 //
 // The MIT License (MIT)
 //
@@ -33,7 +33,7 @@ namespace Tests.Mocks
 	/// <summary>
 	///  Storage backend mock for use with tests of FileConfigProvider
 	/// </summary>
-	public class MockConfigProviderBackend : IConfigBackend, IDisposable
+	public class MockConfigBackend : IConfigBackend, IDisposable
 	{
 		private readonly bool writeAllowed;
 		private readonly ReaderWriterLockSlim readLock;
@@ -61,7 +61,7 @@ namespace Tests.Mocks
 		public int DeleteCount { get { return deleteCount; }}
 		public int WriteAllowedCount { get { return writeAllowedCount; }}
 		
-		public MockConfigProviderBackend(bool writeAllowed, byte[] data=null, float failProb=0.0f)
+		public MockConfigBackend(bool writeAllowed, byte[] data=null, float failProb=0.0f)
 		{
 			this.writeAllowed=writeAllowed;
 			this.cachedData=data;
