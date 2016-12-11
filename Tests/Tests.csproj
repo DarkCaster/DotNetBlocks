@@ -40,11 +40,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base85Tests.cs" />
+    <Compile Include="BasicConfigProviderTests.cs" />
     <Compile Include="BinarySerializerTests.cs" />
     <Compile Include="ConfigProviderTests.cs" />
     <Compile Include="FileConfigProviderTests.cs" />
     <Compile Include="JsonSerializerTests.cs" />
     <Compile Include="MMHashTests.cs" />
+    <Compile Include="Mocks\MockBasicConfigProvider.cs" />
     <Compile Include="Mocks\MockConfig.cs" />
     <Compile Include="Mocks\MockConfigBackend.cs" />
     <Compile Include="Mocks\MockConfigBackendFactory.cs" />
