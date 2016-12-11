@@ -44,6 +44,7 @@
     <Compile Include="BinarySerializerTests.cs" />
     <Compile Include="ConfigProviderTests.cs" />
     <Compile Include="FileConfigProviderTests.cs" />
+    <Compile Include="FrameworkSafetyTests.cs" />
     <Compile Include="JsonSerializerTests.cs" />
     <Compile Include="MMHashTests.cs" />
     <Compile Include="Mocks\MockBasicConfigProvider.cs" />
