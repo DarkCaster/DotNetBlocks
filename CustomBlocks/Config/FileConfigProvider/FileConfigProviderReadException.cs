@@ -34,5 +34,8 @@ namespace DarkCaster.Config.Files
 	{
 		public FileConfigProviderReadException(string id, ConfigProviderState state, string message, Exception inner)
 			: base (id, state, message, inner) {}
+		
+		public FileConfigProviderReadException(ConfigProviderException ex)
+			: base (ex.id, ex.state, ex.Message, ex.InnerException) {}
 	}
 }

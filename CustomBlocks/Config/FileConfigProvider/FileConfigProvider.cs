@@ -43,11 +43,16 @@ namespace DarkCaster.Config.Files
 		/// Create new FileConfigProvider instance.
 		/// </summary>
 		/// <param name="serializer">Serializer that will encode and decode config data into classes</param>
-		/// <param name="dirName">Directory name for config files storage. Directory location is platform dependend.</param>
-		/// <param name="id"></param>
+		/// <param name="dirName">Directory name for config files storage. Directory location is platform dependend</param>
+		/// <param name="id">Config ID. Will be used when generating real config file name</param>
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, string dirName, string id)
 			: this(serializer, new FileConfigBackendFactory(dirName,id)) {}
 		
+		/// <summary>
+		/// Create new FileConfigProvider instance.
+		/// </summary>
+		/// <param name="serializer">Serializer that will encode and decode config data into classes</param>
+		/// <param name="filename">Config file filename</param>
 		public FileConfigProvider(ISerializationHelper<CFG> serializer, string filename)
 			: this(serializer, new FileConfigBackendFactory(filename)) {}
 		
@@ -56,32 +61,38 @@ namespace DarkCaster.Config.Files
 		
 		public override void Init()
 		{
-			throw new NotImplementedException("TODO");
+			try { base.Init(); }
+			catch(ConfigProviderException ex) { throw new FileConfigProviderInitException(ex); }
 		}
 		
 		public override void Shutdown()
 		{
-			throw new NotImplementedException("TODO");
+			try { base.Shutdown(); }
+			catch(ConfigProviderException ex) { throw new FileConfigProviderDeinitException(ex); }
 		}
 				
 		public override void WriteConfig(CFG config)
 		{
-			throw new NotImplementedException("TODO");
+			try { base.WriteConfig(config); }
+			catch(ConfigProviderException ex) { throw new FileConfigProviderWriteException(ex); }
 		}
 		
 		public override async Task WriteConfigAsync(CFG config)
 		{
-			throw new NotImplementedException("TODO");
+			try { await base.WriteConfigAsync(config); }
+			catch(ConfigProviderException ex) { throw new FileConfigProviderWriteException(ex); }
 		}
 		
 		public override CFG ReadConfig()
 		{
-			throw new NotImplementedException("TODO");
+			try { return base.ReadConfig(); }
+			catch(ConfigProviderException ex) { throw new FileConfigProviderReadException(ex); }
 		}
 		
 		public override void MarkConfigForDelete()
 		{
-			throw new NotImplementedException("TODO");
+			try { base.MarkConfigForDelete(); }
+			catch(ConfigProviderException ex) { throw new FileConfigProviderWriteException(ex); }
 		}
 	}
 }

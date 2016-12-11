@@ -34,5 +34,8 @@ namespace DarkCaster.Config.Files
 	{
 		public FileConfigProviderDeinitException(string id, ConfigProviderState state, string message, Exception inner)
 			: base (id, state, message, inner) {}
+		
+		public FileConfigProviderDeinitException(ConfigProviderException ex)
+			: base (ex.id, ex.state, ex.Message, ex.InnerException) {}
 	}
 }
