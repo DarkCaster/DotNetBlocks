@@ -93,6 +93,7 @@ namespace Tests
 			await provider.WriteConfigAsync(config);
 			var config2=provider.ReadConfig();
 			Assert.AreNotSame(config,config2); //references must differ
+			provider.MarkConfigForDelete();
 			providerCtl.Shutdown();
 			Assert.AreEqual(ConfigProviderState.Offline, provider.State);
 			Assert.AreEqual(false, provider.IsWriteEnabled);
