@@ -248,6 +248,27 @@ namespace Tests
 			Assert.AreNotEqual(verify.randomString,MockConfig.stringDefault);
 			Assert.AreEqual(1,serializer.DataStorageCount);
 		}
+		
+		[Test]
+		public void Real_WriteAsync()
+		{
+			const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+			string randomId= new string(Enumerable.Repeat(chars, (new Random()).Next(8,16)).Select(s => s[(new Random()).Next(s.Length)]).ToArray());
+			var check=new MockConfig();
+			check.Randomize();
+			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
+			var serializer=new MockSerializationHelper<MockConfig>();
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer,"test",randomId);
+			var task=Task<MockConfig>.Run(async ()=> await ConfigProviderTests.WriteReadAsync(providerCtl, typeof(FileConfigProviderReadException), check));
+			var verify=task.Result;
+			providerCtl.Dispose();
+			Assert.AreNotSame(check,verify);
+			Assert.AreEqual(check,verify);
+			Assert.AreNotEqual(verify.randomInt,MockConfig.intDefault);
+			Assert.AreNotEqual(verify.randomString,MockConfig.stringDefault);
+			Assert.AreEqual(1,serializer.DataStorageCount);
+		}
 	}
 	#pragma warning restore 618
 }
