@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Tests.Mocks;
@@ -231,14 +232,15 @@ namespace Tests
 		[Test]
 		public void Real_Write()
 		{
+			const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+			string randomId= new string(Enumerable.Repeat(chars, (new Random()).Next(8,16)).Select(s => s[(new Random()).Next(s.Length)]).ToArray());
 			var check=new MockConfig();
 			check.Randomize();
 			Assert.AreNotEqual(check.randomInt,MockConfig.intDefault);
 			Assert.AreNotEqual(check.randomString,MockConfig.stringDefault);
 			var serializer=new MockSerializationHelper<MockConfig>();
-			var providerCtl=new FileConfigProvider<MockConfig>(serializer,"test","test");
+			var providerCtl=new FileConfigProvider<MockConfig>(serializer,"test",randomId);
 			var verify=ConfigProviderTests.WriteRead(providerCtl, typeof(FileConfigProviderReadException), check);
-			providerCtl.GetProvider().MarkConfigForDelete();
 			providerCtl.Dispose();
 			Assert.AreNotSame(check,verify);
 			Assert.AreEqual(check,verify);
