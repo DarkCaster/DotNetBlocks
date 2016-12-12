@@ -24,7 +24,7 @@
 //
 
 using System;
-
+using System.Collections.Generic;
 using DarkCaster.Config.Private;
 
 namespace DarkCaster.Config.Files.Private
@@ -49,19 +49,72 @@ namespace DarkCaster.Config.Files.Private
 			this.fileId = fileId;
 		}
 		
+		private static readonly object metaLock=new object();
+		private static readonly Dictionary<ConfigFileId, BackendInfo> backends = new Dictionary<ConfigFileId, BackendInfo>(31);
+		private static readonly Dictionary<ConfigFileId, int> refCounters= new Dictionary<ConfigFileId, int>(31);
+		
+		private class BackendInfo
+		{
+			public readonly object locker = new object();
+			public FileConfigBackend backend = null;
+		}
+		
 		public string GetId()
 		{
-			throw new NotImplementedException("TODO");
+			return fileId.actualFilename;
 		}
 		
 		public IConfigBackend Create()
 		{
-			throw new NotImplementedException("TODO");
+			BackendInfo info = null;
+			lock(metaLock)
+			{
+				if(!refCounters.ContainsKey(fileId))
+				{
+					backends.Add(fileId, new BackendInfo());
+					refCounters.Add(fileId, 0);
+				}
+				refCounters[fileId] = refCounters[fileId] + 1;
+				info = backends[fileId];
+			}
+			
+			//use different lockers for backends that serve different fileId
+			//to allow concurrency when performing init for several different backends at same time
+			lock(info.locker)
+			{
+				if(info.backend==null)
+					info.backend=new FileConfigBackend(fileId);
+				return info.backend;
+			}
 		}
 		
 		public void Destroy(IConfigBackend target)
 		{
-			throw new NotImplementedException("TODO");
+			if(target == null)
+				throw new ArgumentNullException("target");
+			if(!(target is FileConfigBackend))
+				throw new ArgumentException("target is not a FileConfigBackend","target");
+			var testTarget=(FileConfigBackend)target;
+			lock(metaLock)
+			{
+				if(!refCounters.ContainsKey(fileId))
+					throw new Exception("FileConfigBackendFactory.Destroy method triggered before FileConfigBackendFactory.Create");
+				var locker=backends[fileId].locker;
+				lock(locker)
+				{
+					var backend = backends[fileId].backend;
+					if(backend != testTarget)
+						throw new ArgumentException("Trying to destroy backend produced by different factory","target");
+					if(refCounters[fileId] <= 1)
+					{
+						refCounters.Remove(fileId);
+						backends.Remove(fileId);
+						backend.Dispose();
+					}
+					else
+						refCounters[fileId] = refCounters[fileId] - 1;
+				}
+			}
 		}
 	}
 }
