@@ -80,9 +80,9 @@ namespace Tests
 		}
 		
 		//using code from https://blogs.msdn.microsoft.com/pfxteam/2012/02/12/building-async-coordination-primitives-part-7-asyncreaderwriterlock/
-		public class AsyncReaderWriterLock
+		public class SampleAsyncReaderWriterLock
 		{
-			public AsyncReaderWriterLock()
+			public SampleAsyncReaderWriterLock()
 			{
 				m_readerReleaser = Task.FromResult(new Releaser(this, false));
 				m_writerReleaser = Task.FromResult(new Releaser(this, true));
@@ -90,10 +90,10 @@ namespace Tests
 		
 			public struct Releaser : IDisposable
 			{
-				private readonly AsyncReaderWriterLock m_toRelease;
+				private readonly SampleAsyncReaderWriterLock m_toRelease;
 				private readonly bool m_writer;
 
-				internal Releaser(AsyncReaderWriterLock toRelease, bool writer)
+				internal Releaser(SampleAsyncReaderWriterLock toRelease, bool writer)
 				{
 					m_toRelease = toRelease;
 					m_writer = writer;
@@ -186,7 +186,7 @@ namespace Tests
 			}
 		}
 		
-		private static AsyncReaderWriterLock asyncLock = new AsyncReaderWriterLock();
+		private static SampleAsyncReaderWriterLock asyncLock = new SampleAsyncReaderWriterLock();
 		
 		//should fail
 		private async Task<int> AsyncRWLockTestAsync()
