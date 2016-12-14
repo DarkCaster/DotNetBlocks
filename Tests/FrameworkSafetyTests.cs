@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Tests
@@ -48,10 +49,30 @@ namespace Tests
 			}
 		}
 		
-		/*[Test()]
-		public void ConcurrentDictionary()
+		private static ReaderWriterLockSlim failingLock=new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+		
+		//should fail
+		private async Task<int> RWLockTestAsync()
 		{
-			ConcurrentDictionaryTestCase.Execute();
-		}*/
+			for(int i=0; i<10; ++i)
+			{
+				failingLock.EnterReadLock();
+				await Task.Delay(100);
+				failingLock.ExitReadLock();
+			}
+			return 0;
+		}
+		
+		[Test()]
+		public void RWLockTest()
+		{
+			try
+			{
+				var task=Task.Run(async () => await RWLockTestAsync());
+				var i=task.Result;
+			}
+			catch(AggregateException ex) { Assert.IsInstanceOf(typeof(SynchronizationLockException),ex.InnerException); }
+			catch(Exception ex) { throw ex; }
+		}
 	}
 }
