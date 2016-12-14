@@ -152,7 +152,7 @@ namespace Tests
 				TaskCompletionSource<Releaser> toWake = null;
 
 				lock (m_waitingWriters) {
-					//–m_status;
+					m_status--;
 					if (m_status == 0 && m_waitingWriters.Count > 0) {
 						m_status = -1;
 						toWake = m_waitingWriters.Dequeue();
@@ -195,7 +195,11 @@ namespace Tests
 			{
 				using(var enter=await asyncLock.ReaderLockAsync())
 				{
-					await Task.Delay(100);
+					await Task.Delay(50);
+				}
+				using(var enter=await asyncLock.WriterLockAsync())
+				{
+					await Task.Delay(50);
 				}
 			}
 			return 0;
@@ -205,6 +209,28 @@ namespace Tests
 		public void AsyncLockTest()
 		{
 			var task = Task.Run(async () => await AsyncRWLockTestAsync());
+			var i = task.Result;
+		}
+		
+				
+		private async Task<int> AsyncRWLockTest2_Async()
+		{
+			for (int i = 0; i < 10; ++i) 
+			{
+				var enter=await asyncLock.ReaderLockAsync();
+				await Task.Delay(50);
+				enter.Dispose();
+				enter=await asyncLock.WriterLockAsync();
+				await Task.Delay(50);
+				enter.Dispose();
+			}
+			return 0;
+		}
+		
+		[Test]
+		public void AsyncLockTest2()
+		{
+			var task = Task.Run(async () => await AsyncRWLockTest2_Async());
 			var i = task.Result;
 		}
 	}
