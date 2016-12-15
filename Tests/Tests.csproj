@@ -39,6 +39,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncRWLockTests.cs" />
     <Compile Include="Base85Tests.cs" />
     <Compile Include="BasicConfigProviderTests.cs" />
     <Compile Include="BinarySerializerTests.cs" />

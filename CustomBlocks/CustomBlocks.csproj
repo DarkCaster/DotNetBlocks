@@ -39,6 +39,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Async\AsyncRWLock.cs" />
     <Compile Include="Config\Abstracts\BasicConfigProvider.cs" />
     <Compile Include="Config\Abstracts\ConfigProviderException.cs" />
     <Compile Include="Config\Abstracts\ConfigProviderState.cs" />
@@ -91,6 +92,7 @@
     <Folder Include="Serialization\Private\" />
     <Folder Include="Config\" />
     <Folder Include="Events\" />
+    <Folder Include="Async" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
