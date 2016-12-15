@@ -24,56 +24,123 @@
 //
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace DarkCaster.Async
 {
 	/// <summary>
 	/// Based on ideas from https://blogs.msdn.microsoft.com/pfxteam/2012/02/12/building-async-coordination-primitives-part-7-asyncreaderwriterlock .
-	/// Reader\writer lock implementation with support for async lock aquire\release.
+	/// Simple reader\writer lock implementation with support for async lock aquire.
 	/// Lock aquire\release may be performed from different threads.
 	/// </summary>
 	public class AsyncRWLock
 	{
-		public async Task EnterReadLockAsync()
+		private readonly object opLock;
+		private readonly Task completedTask;
+		
+		private readonly Queue<TaskCompletionSource<bool>> writerAwaiters;
+		private bool writerIsActive;
+		private int writersWaiting;
+		
+		private TaskCompletionSource<bool> readerAwaiter;
+		private int readersActive;
+		private int readersWaiting;
+		
+		public AsyncRWLock()
 		{
-			throw new NotImplementedException("TODO");
+			this.opLock=new object();
+			this.completedTask=Task.FromResult(false);
+			this.writerAwaiters = new Queue<TaskCompletionSource<bool>>();
+			this.writerIsActive=false;
+			this.writersWaiting=0;
+			this.readerAwaiter = new TaskCompletionSource<bool>();
+			this.readersActive=0;
+			this.readersWaiting=0;
 		}
 		
-		public async Task EnterWriteLockAsync()
+		public Task EnterReadLockAsync()
 		{
-			throw new NotImplementedException("TODO");
+			lock(opLock)
+			{
+				if(writerIsActive || writersWaiting > 0)
+				{
+					++readersWaiting;
+					return readerAwaiter.Task.ContinueWith(t => t.Result);
+				}
+				++readersActive;
+				return completedTask;
+			}
+		}
+		
+		public Task EnterWriteLockAsync()
+		{
+			lock(opLock)
+			{
+				if(readersActive > 0 || writerIsActive)
+				{
+					++writersWaiting;
+					var writerAwaiter=new TaskCompletionSource<bool>();
+					writerAwaiters.Enqueue(writerAwaiter);
+					return writerAwaiter.Task;
+				}
+				writerIsActive=true;
+				return completedTask;
+			}
 		}
 		
 		public void EnterReadLock()
 		{
-			throw new NotImplementedException("TODO");
+			EnterReadLockAsync().Wait();
 		}
 		
 		public void EnterWriteLock()
 		{
-			throw new NotImplementedException("TODO");
+			EnterWriteLockAsync().Wait();
 		}
-		
+				
 		public void ExitReadLock()
 		{
-			throw new NotImplementedException("TODO");
+			lock(opLock)
+			{
+				if(writerIsActive)
+					throw new Exception("ExitReadLock call was called after EnterWriteLock!");
+				--readersActive;
+				if(readersActive<0)
+					throw new Exception("Excessive ExitReadLock call detected!");
+				if(readersActive == 0 && writersWaiting > 0)
+				{
+					writerIsActive=true;
+					writersWaiting--;
+					writerAwaiters.Dequeue().SetResult(true);
+				}
+			}
 		}
 		
 		public void ExitWriteLock()
 		{
-			throw new NotImplementedException("TODO");
-		}
-		
-		private static Task CreateCompletedTask()
-		{
-			return Task.WhenAll();
-		}
-		
-		public AsyncRWLock()
-		{
-			var x=CreateCompletedTask();
-			
+			lock(opLock)
+			{
+				if(readersActive>0)
+					throw new Exception(string.Format("ExitWriteLock call was called while {0} readers still active", readersActive));
+				if(!writerIsActive)
+					throw new Exception("Excessive ExitWriteLock call detected!");
+				if(writersWaiting>0)
+				{
+					writerIsActive=true;
+					writersWaiting--;
+					writerAwaiters.Dequeue().SetResult(true);
+					return;
+				}
+				writerIsActive=false;
+				if(readersWaiting>0)
+				{
+					readersActive=readersWaiting;
+					readersWaiting=0;
+					readerAwaiter.SetResult(true);
+					readerAwaiter=new TaskCompletionSource<bool>();
+				}
+			}
 		}
 	}
 }
