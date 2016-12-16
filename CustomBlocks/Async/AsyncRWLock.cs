@@ -121,7 +121,43 @@ namespace DarkCaster.Async
 				return true;
 			}
 		}
-				
+		
+		public int WaitingWriteCount
+		{
+			get
+			{
+				lock(opLock)
+					return writersWaiting;
+			}
+		}
+		
+		public int WaitingReadCount
+		{
+			get
+			{
+				lock(opLock)
+					return readersWaiting;
+			}
+		}
+		
+		public int CurrentReadCount
+		{
+			get
+			{
+				lock(opLock)
+					return readersActive;
+			}
+		}
+		
+		public bool WriterIsActive
+		{
+			get
+			{
+				lock(opLock)
+					return writerIsActive;
+			}
+		}
+		
 		public void ExitReadLock()
 		{
 			lock(opLock)
