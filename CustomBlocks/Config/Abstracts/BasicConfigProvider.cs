@@ -27,6 +27,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using DarkCaster.Events;
+using DarkCaster.Async;
 using DarkCaster.Serialization;
 using DarkCaster.Config.Private;
 
@@ -41,7 +42,7 @@ namespace DarkCaster.Config
 	public abstract class BasicConfigProvider<CFG> : IConfigProviderController<CFG>, IConfigProvider<CFG>
 		where CFG: class, new()
 	{
-		private readonly ReaderWriterLockSlim opLock;
+		private readonly AsyncRWLock opLock;
 		private readonly ISerializationHelper<CFG> serializer;
 		private readonly IConfigBackendFactory backendFactory;
 		private readonly ISafeEventCtrl<ConfigProviderStateEventArgs> stateEventCtl;
@@ -62,7 +63,7 @@ namespace DarkCaster.Config
 			this.backendFactory=backendFactory;
 			this.backend=null;
 			this.state=ConfigProviderState.Init;
-			this.opLock=new ReaderWriterLockSlim();
+			this.opLock=new AsyncRWLock();
 			#if DEBUG
 			var ev=new SafeEventDbg<ConfigProviderStateEventArgs>();
 			#else
@@ -201,9 +202,7 @@ namespace DarkCaster.Config
 		
 		public virtual async Task WriteConfigAsync(CFG config)
 		{
-			//should not lock for long, except when performing init\deinit (but write should not occur in such situations).
-			//TODO: check, maybe it is ok to wrap this in separate Task()
-			opLock.EnterReadLock();
+			await opLock.EnterReadLockAsync();
 			try
 			{
 				if(state == ConfigProviderState.Init || state == ConfigProviderState.Offline)
