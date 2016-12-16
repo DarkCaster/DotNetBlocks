@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DarkCaster.Async
@@ -77,7 +78,7 @@ namespace DarkCaster.Async
 		{
 			lock(opLock)
 			{
-				if(readersActive > 0 || writerIsActive)
+				if(writerIsActive || readersActive > 0)
 				{
 					++writersWaiting;
 					var writerAwaiter=new TaskCompletionSource<bool>();
@@ -98,16 +99,38 @@ namespace DarkCaster.Async
 		{
 			EnterWriteLockAsync().Wait();
 		}
+		
+		public bool TryEnterReadLock()
+		{
+			lock(opLock)
+			{
+				if(writerIsActive || writersWaiting > 0)
+					return false;
+				EnterReadLockAsync().Wait();
+				return true;
+			}
+		}
+		
+		public bool TryEnterWriteLock()
+		{
+			lock(opLock)
+			{
+				if(readersActive > 0 || writerIsActive)
+					return false;
+				EnterWriteLockAsync().Wait();
+				return true;
+			}
+		}
 				
 		public void ExitReadLock()
 		{
 			lock(opLock)
 			{
 				if(writerIsActive)
-					throw new Exception("ExitReadLock call was called after EnterWriteLock!");
+					throw new SynchronizationLockException("ExitReadLock call was called after EnterWriteLock!");
 				--readersActive;
 				if(readersActive<0)
-					throw new Exception("Excessive ExitReadLock call detected!");
+					throw new SynchronizationLockException("Excessive ExitReadLock call detected!");
 				if(readersActive == 0 && writersWaiting > 0)
 				{
 					writerIsActive=true;
@@ -122,9 +145,9 @@ namespace DarkCaster.Async
 			lock(opLock)
 			{
 				if(readersActive>0)
-					throw new Exception(string.Format("ExitWriteLock call was called while {0} readers still active", readersActive));
+					throw new SynchronizationLockException(string.Format("ExitWriteLock call was called while {0} readers still active", readersActive));
 				if(!writerIsActive)
-					throw new Exception("Excessive ExitWriteLock call detected!");
+					throw new SynchronizationLockException("Excessive ExitWriteLock call detected!");
 				if(writersWaiting>0)
 				{
 					writerIsActive=true;
