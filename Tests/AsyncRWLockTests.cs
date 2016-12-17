@@ -206,6 +206,8 @@ namespace Tests
 		[Test]
 		public void ReadLockMultithread()
 		{
+			for(int i=0;i<10;++i)
+			{
 			var rwLock=new AsyncRWLock();
 			var reader1=new Task(()=>{
 			                           	if(rwLock.TryEnterReadLock())
@@ -252,7 +254,7 @@ namespace Tests
 			reader1.Wait();
 			reader2.Wait();
 			reader3.Wait();
-			Assert.AreEqual(TaskStatus.RanToCompletion ,reader1.Status);
+			Assert.AreEqual(TaskStatus.RanToCompletion, reader1.Status);
 			Assert.AreEqual(TaskStatus.RanToCompletion, reader2.Status);
 			Assert.AreEqual(TaskStatus.RanToCompletion, reader3.Status);
 			AssertCounters(rwLock,0,0,false,0);
@@ -260,11 +262,14 @@ namespace Tests
 			AssertCounters(rwLock,0,0,true,0);
 			rwLock.ExitWriteLock();
 			AssertCounters(rwLock,0,0,false,0);
+			}
 		}
 		
 		[Test]
 		public void ReadLockAsyncMultithread()
 		{
+			for(int i=0;i<10;++i)
+			{
 			var rwLock=new AsyncRWLock();
 			var reader1=new Task(async ()=>{
 			                           	if(rwLock.TryEnterReadLock())
@@ -314,11 +319,16 @@ namespace Tests
 			Assert.AreEqual(TaskStatus.RanToCompletion, reader1.Status);
 			Assert.AreEqual(TaskStatus.RanToCompletion, reader2.Status);
 			Assert.AreEqual(TaskStatus.RanToCompletion, reader3.Status);
+			/*Assert.AreEqual(0,rwLock.CurrentReadCount);
+			Assert.AreEqual(0,rwLock.WaitingReadCount);
+			Assert.AreEqual(false,rwLock.WriterIsActive);
+			Assert.AreEqual(0,rwLock.WaitingWriteCount);*/
 			AssertCounters(rwLock,0,0,false,0);
 			Assert.True(rwLock.TryEnterWriteLock());
 			AssertCounters(rwLock,0,0,true,0);
 			rwLock.ExitWriteLock();
 			AssertCounters(rwLock,0,0,false,0);
+			}
 		}
 	}
 }
