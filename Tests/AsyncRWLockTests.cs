@@ -17,10 +17,19 @@ namespace Tests
 		
 		private static void AssertCounters(AsyncRWLock rwLock, int currentReadCount, int waitingReadCount, bool writerIsActive, int waitingWriteCount)
 		{
-			Assert.AreEqual(currentReadCount,rwLock.CurrentReadCount);
-			Assert.AreEqual(waitingReadCount,rwLock.WaitingReadCount);
-			Assert.AreEqual(writerIsActive,rwLock.WriterIsActive);
-			Assert.AreEqual(waitingWriteCount,rwLock.WaitingWriteCount);
+			var currentReadCountActual=rwLock.CurrentReadCount;
+			var waitingReadCountActual=rwLock.WaitingReadCount;
+			var writerIsActiveActual=rwLock.WriterIsActive;
+			var waitingWriteCountActual=rwLock.WaitingWriteCount;
+			
+			if(currentReadCountActual!=currentReadCount)
+				throw new Exception(string.Format("Expected CurrentReadCount is {0}, but actual is {1} ",currentReadCount,currentReadCountActual));
+			if(waitingReadCountActual!=waitingReadCount)
+				throw new Exception(string.Format("Expected WaitingReadCount is {0}, but actual is {1} ",waitingReadCount,waitingReadCountActual));
+			if(writerIsActiveActual!=writerIsActive)
+				throw new Exception(string.Format("Expected WriterIsActive is {0}, but actual is {1} ",writerIsActive,writerIsActiveActual));
+			if(waitingWriteCountActual!=waitingWriteCount)
+				throw new Exception(string.Format("Expected WaitingWriteCount is {0}, but actual is {1} ",waitingWriteCount,waitingWriteCountActual));
 		}
 		
 		[Test]
