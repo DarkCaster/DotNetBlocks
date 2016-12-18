@@ -280,6 +280,7 @@ namespace Tests
 					await rwLock.EnterReadLockAsync();
 					await Task.Delay(250);
 					rwLock.ExitReadLock();
+					return true;
 				});
 				Thread.Sleep(100);
 				AssertCounters(rwLock, 0, 1, true, 0);
@@ -289,6 +290,7 @@ namespace Tests
 					await rwLock.EnterReadLockAsync();
 					await Task.Delay(250);
 					rwLock.ExitReadLock();
+					return true;
 				});
 				Thread.Sleep(100);
 				AssertCounters(rwLock, 0, 2, true, 0);
@@ -298,6 +300,7 @@ namespace Tests
 					rwLock.EnterReadLock();
 					Thread.Sleep(250);
 					rwLock.ExitReadLock();
+					return true;
 				});
 				Thread.Sleep(100);
 				AssertCounters(rwLock, 0, 3, true, 0);
@@ -311,9 +314,9 @@ namespace Tests
 				AssertCounters(rwLock, 3, 0, false, 0);
 				Assert.False(rwLock.TryEnterWriteLock());
 				AssertCounters(rwLock, 3, 0, false, 0);
-				Task.WaitAll(reader1);
-				Task.WaitAll(reader2);
-				Task.WaitAll(reader3);
+				Assert.True(reader1.Result);
+				Assert.True(reader2.Result);
+				Assert.True(reader3.Result);
 				Assert.AreEqual(TaskStatus.RanToCompletion, reader1.Status);
 				Assert.AreEqual(TaskStatus.RanToCompletion, reader2.Status);
 				Assert.AreEqual(TaskStatus.RanToCompletion, reader3.Status);
