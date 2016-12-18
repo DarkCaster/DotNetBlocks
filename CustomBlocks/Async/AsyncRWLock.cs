@@ -164,9 +164,9 @@ namespace DarkCaster.Async
 			{
 				if(writerIsActive)
 					throw new SynchronizationLockException("ExitReadLock call was called after EnterWriteLock!");
-				--readersActive;
-				if(readersActive<0)
+				if(readersActive<1)
 					throw new SynchronizationLockException("Excessive ExitReadLock call detected!");
+				--readersActive;
 				if(readersActive == 0 && writersWaiting > 0)
 				{
 					writerIsActive=true;
