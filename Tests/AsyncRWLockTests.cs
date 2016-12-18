@@ -336,6 +336,12 @@ namespace Tests
 			rwLock.EnterWriteLock();
 			AssertCounters(rwLock, 0, 0, true, 0);
 			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitReadLock);
+			rwLock.ExitWriteLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterWriteLock();
+			AssertCounters(rwLock, 0, 0, true, 0);
+			rwLock.ExitWriteLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
 		}
 		
 		[Test]
@@ -348,6 +354,11 @@ namespace Tests
 			rwLock.ExitReadLock();
 			AssertCounters(rwLock, 0, 0, false, 0);
 			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitReadLock);
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterReadLock();
+			AssertCounters(rwLock, 1, 0, false, 0);
+			rwLock.ExitReadLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
 		}
 		
 		[Test]
@@ -356,6 +367,56 @@ namespace Tests
 			var rwLock = new AsyncRWLock();
 			AssertCounters(rwLock, 0, 0, false, 0);
 			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitReadLock);
+			rwLock.EnterReadLock();
+			AssertCounters(rwLock, 1, 0, false, 0);
+			rwLock.ExitReadLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+		}
+		
+		[Test]
+		public void ExitWriteLockFail1()
+		{
+			var rwLock = new AsyncRWLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterReadLock();
+			AssertCounters(rwLock, 1, 0, false, 0);
+			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitWriteLock);
+			rwLock.ExitReadLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterReadLock();
+			AssertCounters(rwLock, 1, 0, false, 0);
+			rwLock.ExitReadLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+		}
+		
+		[Test]
+		public void ExitWriteLockFail2()
+		{
+			var rwLock = new AsyncRWLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterWriteLock();
+			AssertCounters(rwLock, 0, 0, true, 0);
+			rwLock.ExitWriteLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitWriteLock);
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterWriteLock();
+			AssertCounters(rwLock, 0, 0, true, 0);
+			rwLock.ExitWriteLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+		}
+		
+		[Test]
+		public void ExitWriteLockFail3()
+		{
+			var rwLock = new AsyncRWLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitWriteLock);
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterWriteLock();
+			AssertCounters(rwLock, 0, 0, true, 0);
+			rwLock.ExitWriteLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
 		}
 	}
 }
