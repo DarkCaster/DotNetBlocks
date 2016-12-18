@@ -327,5 +327,35 @@ namespace Tests
 				AssertCounters(rwLock, 0, 0, false, 0);
 			}
 		}
+		
+		[Test]
+		public void ExitReadLockFail1()
+		{
+			var rwLock = new AsyncRWLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterWriteLock();
+			AssertCounters(rwLock, 0, 0, true, 0);
+			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitReadLock);
+		}
+		
+		[Test]
+		public void ExitReadLockFail2()
+		{
+			var rwLock = new AsyncRWLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			rwLock.EnterReadLock();
+			AssertCounters(rwLock, 1, 0, false, 0);
+			rwLock.ExitReadLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitReadLock);
+		}
+		
+		[Test]
+		public void ExitReadLockFail3()
+		{
+			var rwLock = new AsyncRWLock();
+			AssertCounters(rwLock, 0, 0, false, 0);
+			Assert.Throws(typeof(SynchronizationLockException), rwLock.ExitReadLock);
+		}
 	}
 }
