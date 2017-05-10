@@ -9,6 +9,9 @@ if [ "$?" != "0" ]; then
 fi
 }
 
+rm -f "$script_dir/NuGet.Config"
+check_error
+
 "$script_dir/External/DotNetBuildTools/prepare-and-build.sh" "$script_dir/External"
 check_error
 
@@ -17,4 +20,3 @@ check_error
 
 chmod 644 "$script_dir/NuGet.Config"
 check_error
-
