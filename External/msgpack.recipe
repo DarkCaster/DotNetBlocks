@@ -1,4 +1,3 @@
 sources="msgpack"
-targets="MsgPack.Cli.0.7.1.nupkg"
+targets="MsgPack.Cli.0.9.0-beta2.nupkg"
 files="msgpack-nuspec.patch"
-
