@@ -53,7 +53,7 @@ Task("Patch").Does(() => { Patch("msgpack","../msgpack-nuspec.patch",1); });
 Task("Build").IsDependentOn("Patch").Does(() =>
 {
   if(IsRunningOnWindows())
-    MSBuild("msgpack/MsgPack.sln", settings => settings.SetConfiguration(configuration).WithTarget("src\\MsgPack\\MsgPack:Rebuild"));
+    MSBuild("msgpack/MsgPack.sln", settings => settings.SetConfiguration(configuration).WithTarget("src\\_NET45\\MsgPack_Net45:Rebuild"));
   else
   {
     MSBuild_Linux("msgpack/MsgPack.sln");
