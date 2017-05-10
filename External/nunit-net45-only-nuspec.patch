@@ -1,0 +1,68 @@
+diff -uprN nunit/nuget/framework/nunit.nuspec nunit.new/nuget/framework/nunit.nuspec
+--- nunit/nuget/framework/nunit.nuspec	2017-05-11 02:08:19.331230719 +0300
++++ nunit.new/nuget/framework/nunit.nuspec	2017-05-11 02:31:16.447444720 +0300
+@@ -27,33 +27,12 @@ Supported platforms:
+     <language>en-US</language>
+     <tags>nunit test testing tdd framework fluent assert theory plugin addin</tags>
+     <copyright>Copyright (c) 2017 Charlie Poole</copyright>
+-    <dependencies>
+-      <group targetFramework="netstandard1.6">
+-        <dependency id="NETStandard.Library" version="1.6.0" />
+-        <dependency id="System.Runtime.Loader" version="4.0.0" />
+-      </group>
+-    </dependencies>
+   </metadata>
+   <files>
+     <file src="LICENSE.txt" />
+     <file src="NOTICES.txt" />
+     <file src="CHANGES.txt" />
+-    <file src="bin/net-2.0/nunit.framework.dll" target="lib/net20" />
+-    <file src="bin/net-2.0/nunit.framework.xml" target="lib/net20" />
+-    <file src="bin/net-2.0/NUnit.System.Linq.dll" target="lib/net20" />
+-    <file src="bin/net-3.5/nunit.framework.dll" target="lib/net35" />
+-    <file src="bin/net-3.5/nunit.framework.xml" target="lib/net35" />
+-    <file src="bin/net-4.0/nunit.framework.dll" target="lib/net40" />
+-    <file src="bin/net-4.0/nunit.framework.xml" target="lib/net40" />
+     <file src="bin/net-4.5/nunit.framework.dll" target="lib/net45" />
+     <file src="bin/net-4.5/nunit.framework.xml" target="lib/net45" />
+-    <file src="bin/netstandard16/nunit.framework.dll" target="lib/netstandard1.6" />
+-    <file src="bin/netstandard16/nunit.framework.xml" target="lib/netstandard1.6" />
+-    <file src="bin/portable/nunit.framework.dll" target="lib/portable-net45+win8+wp8+wpa81" />
+-    <file src="bin/portable/nunit.framework.xml" target="lib/portable-net45+win8+wp8+wpa81" />
+-    <file src="bin/portable/nunit.framework.dll" target="lib/MonoAndroid" />
+-    <file src="bin/portable/nunit.framework.xml" target="lib/MonoAndroid" />
+-    <file src="bin/portable/nunit.framework.dll" target="lib/Xamarin.iOS10" />
+-    <file src="bin/portable/nunit.framework.xml" target="lib/Xamarin.iOS10" />
+   </files>
+ </package>
+diff -uprN nunit/nuget/nunitlite/nunitlite.nuspec nunit.new/nuget/nunitlite/nunitlite.nuspec
+--- nunit/nuget/nunitlite/nunitlite.nuspec	2017-05-11 02:08:19.331230719 +0300
++++ nunit.new/nuget/nunitlite/nunitlite.nuspec	2017-05-11 02:35:57.575938719 +0300
+@@ -30,27 +30,14 @@ How to use this package:
+       <group>
+         <dependency id="NUnit" version="[$version$]" />
+       </group>
+-      <group targetFramework="netstandard1.6">
+-        <dependency id="NETStandard.Library" version="1.6.0" />
+-      </group>
+     </dependencies>
+   </metadata>
+   <files>
+     <file src="LICENSE.txt" />
+     <file src="NOTICES.txt" />
+     <file src="CHANGES.txt" />
+-    <file src="bin/net-2.0/nunitlite.dll" target="lib/net20" />
+-    <file src="bin/net-3.5/nunitlite.dll" target="lib/net35" />
+-    <file src="bin/net-4.0/nunitlite.dll" target="lib/net40" />
+     <file src="bin/net-4.5/nunitlite.dll" target="lib/net45" />
+-    <file src="bin/netstandard16/nunitlite.dll" target="lib/netstandard1.6" />
+-    <file src="bin/portable/nunitlite.dll" target="lib/portable-net45+win8+wp8+wpa81+Xamarin.Mac" />
+-    <file src="bin/net-2.0/nunitlite-runner.exe" target="tools/net20" />
+-    <file src="bin/net-3.5/nunitlite-runner.exe" target="tools/net35" />
+-    <file src="bin/net-4.0/nunitlite-runner.exe" target="tools/net40" />
+     <file src="bin/net-4.5/nunitlite-runner.exe" target="tools/net45" />
+-    <file src="bin/netstandard16/nunitlite-runner.exe" target="tools/netcore" />
+-    <file src="bin/portable/nunitlite-runner.exe" target="tools/portable" />
+     <file src="..\..\nuget\nunitlite\Program.cs" target="content" />
+     <file src="..\..\nuget\nunitlite\Program.vb" target="content" />
+     <file src="..\..\nuget\nunitlite\install.ps1" target="tools" />

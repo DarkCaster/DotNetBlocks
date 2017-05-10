@@ -1,0 +1,31 @@
+diff -uprN nunit/build.cake nunit.new/build.cake
+--- nunit/build.cake	2017-05-11 02:08:19.319224720 +0300
++++ nunit.new/build.cake	2017-05-11 02:27:40.439494719 +0300
+@@ -28,10 +28,10 @@ var packageVersion = version + modifier
+ //////////////////////////////////////////////////////////////////////
+ 
+ var WindowsFrameworks = new string[] {
+-    "net-4.5", "net-4.0", "net-3.5", "net-2.0", "netstandard16", "portable" };
++    "net-4.5" };
+ 
+ var LinuxFrameworks = new string[] {
+-    "net-4.5", "net-4.0", "net-3.5", "net-2.0" };
++    "net-4.5" };
+ 
+ var AllFrameworks = IsRunningOnWindows() ? WindowsFrameworks : LinuxFrameworks;
+ 
+@@ -614,13 +614,7 @@ Task("Rebuild")
+ Task("Build")
+     .Description("Builds all versions of the framework")
+     .IsDependentOn("InitializeBuild")
+-    .IsDependentOn("Build45")
+-    .IsDependentOn("Build40")
+-    .IsDependentOn("Build35")
+-    .IsDependentOn("Build20")
+-    .IsDependentOn("BuildNetStandard")
+-// NOTE: The following tasks use Criteria and will be skipped on Linux
+-    .IsDependentOn("BuildPortable");
++    .IsDependentOn("Build45");
+ 
+ Task("Test")
+     .Description("Builds and tests all versions of the framework")
