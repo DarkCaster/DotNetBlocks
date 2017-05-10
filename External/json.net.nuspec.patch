@@ -1,16 +1,16 @@
 diff -uprN json.net/Build/Newtonsoft.Json.nuspec json.net.new/Build/Newtonsoft.Json.nuspec
---- json.net/Build/Newtonsoft.Json.nuspec	2016-07-16 13:07:57.514654700 +0300
-+++ json.net.new/Build/Newtonsoft.Json.nuspec	2016-07-16 15:32:41.047003700 +0300
+--- json.net/Build/Newtonsoft.Json.nuspec	2017-05-10 00:28:57.858155691 +0300
++++ json.net.new/Build/Newtonsoft.Json.nuspec	2017-05-10 00:49:33.574155691 +0300
 @@ -2,7 +2,7 @@
  <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
      <metadata>
          <id>Newtonsoft.Json</id>
 -        <version></version>
-+        <version>9.0.1</version>
++        <version>10.0.2</version>
          <title>Json.NET</title>
          <description>Json.NET is a popular high-performance JSON framework for .NET</description>
          <authors>James Newton-King</authors>
-@@ -13,35 +13,10 @@
+@@ -13,25 +13,10 @@
          <tags>json</tags>
          <dependencies>
              <group targetFramework=".NETFramework4.5" />
@@ -19,35 +19,26 @@ diff -uprN json.net/Build/Newtonsoft.Json.nuspec json.net.new/Build/Newtonsoft.J
 -            <group targetFramework=".NETFramework2.0" />
 -            <group targetFramework=".NETPortable4.5-Profile259" />
 -            <group targetFramework=".NETPortable4.0-Profile328" />
+-            <group targetFramework=".NETStandard1.3">
+-                <dependency id="Microsoft.CSharp" version="4.3.0" />
+-                <dependency id="NETStandard.Library" version="1.6.1" />
+-                <dependency id="System.ComponentModel.TypeConverter" version="4.3.0" />
+-                <dependency id="System.Runtime.Serialization.Formatters" version="4.3.0" />
+-                <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" />
+-                <dependency id="System.Xml.XmlDocument" version="4.3.0" />
+-            </group>
 -            <group targetFramework=".NETStandard1.0">
--                <dependency id="Microsoft.CSharp" version="4.0.1" />
--                <dependency id="System.Collections" version="4.0.11" />
--                <dependency id="System.Diagnostics.Debug" version="4.0.11" />
--                <dependency id="System.Dynamic.Runtime" version="4.0.11" />
--                <dependency id="System.Globalization" version="4.0.11" />
--                <dependency id="System.IO" version="4.1.0" />
--                <dependency id="System.Linq" version="4.1.0" />
--                <dependency id="System.Linq.Expressions" version="4.1.0" />
--                <dependency id="System.ObjectModel" version="4.0.12" />
--                <dependency id="System.Reflection" version="4.1.0" />
--                <dependency id="System.Reflection.Extensions" version="4.0.1" />
--                <dependency id="System.Resources.ResourceManager" version="4.0.1" />
--                <dependency id="System.Runtime" version="4.1.0" />
--                <dependency id="System.Runtime.Extensions" version="4.1.0" />
--                <dependency id="System.Runtime.Serialization.Primitives" version="4.1.1" />
--                <dependency id="System.Text.Encoding" version="4.0.11" />
--                <dependency id="System.Text.Encoding.Extensions" version="4.0.11" />
--                <dependency id="System.Text.RegularExpressions" version="4.1.0" />
--                <dependency id="System.Threading" version="4.0.11" />
--                <dependency id="System.Threading.Tasks" version="4.0.11" />
--                <dependency id="System.Xml.ReaderWriter" version="4.0.11" />
--                <dependency id="System.Xml.XDocument" version="4.0.11" />
+-                <dependency id="Microsoft.CSharp" version="4.3.0" />
+-                <dependency id="NETStandard.Library" version="1.6.1" />
+-                <dependency id="System.ComponentModel.TypeConverter" version="4.3.0" />
+-                <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" />
 -            </group>
          </dependencies>
      </metadata>
+-</package>
+\ No newline at end of file
 +    <files>
 +        <file src="**/*.dll" target="lib" exclude="**/System.*;**/Microsoft.*;**/Mono.*;**/mscorlib.*" />
 +        <file src="**/*.xml" target="lib" exclude="**/System.*;**/Microsoft.*;**/Mono.*;**/mscorlib.*" />
 +    </files>
- </package>
-\ No newline at end of file
++</package>
