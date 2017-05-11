@@ -202,106 +202,81 @@ namespace Tests
 			rwLock.ExitWriteLock();
 			AssertCounters(rwLock,0,0,false,0);
 		}
-		
+
+		private volatile bool eventReset = false;
+		private volatile int taskStatus = 0;
+
 		[Test]
 		public void ReadLockMultithread()
 		{
-			for(int i=0;i<10;++i)
-			{
-			var rwLock=new AsyncRWLock();
-			var reader1=new Task(()=>{
-			                           	if(rwLock.TryEnterReadLock())
-			                           		throw new Exception("TryEnterReadLock must return false!");
-			                           	rwLock.EnterReadLock();
-			                           	Thread.Sleep(250);
-			                           	rwLock.ExitReadLock();
-			                     });
-			var reader2=new Task(()=>{
-			                           	if(rwLock.TryEnterReadLock())
-			                           		throw new Exception("TryEnterReadLock must return false!");
-			                           	rwLock.EnterReadLock();
-			                           	Thread.Sleep(250);
-			                           	rwLock.ExitReadLock();
-			                     });
-			var reader3=new Task(()=>{
-			                           	if(rwLock.TryEnterReadLock())
-			                           		throw new Exception("TryEnterReadLock must return false!");
-			                           	rwLock.EnterReadLock();
-			                           	Thread.Sleep(250);
-			                           	rwLock.ExitReadLock();
-			                     });
-			rwLock.EnterWriteLock();
-			AssertCounters(rwLock,0,0,true,0);
-			reader1.Start();
-			Thread.Sleep(100);
-			AssertCounters(rwLock,0,1,true,0);
-			reader2.Start();
-			Thread.Sleep(100);
-			AssertCounters(rwLock,0,2,true,0);
-			reader3.Start();
-			Thread.Sleep(100);
-			AssertCounters(rwLock,0,3,true,0);
-			rwLock.ExitWriteLock();
-			AssertCounters(rwLock,3,0,false,0);
-			Thread.Sleep(100);
-			AssertCounters(rwLock,3,0,false,0);
-			Assert.True(rwLock.TryEnterReadLock());
-			AssertCounters(rwLock,4,0,false,0);
-			rwLock.ExitReadLock();
-			AssertCounters(rwLock,3,0,false,0);
-			Assert.False(rwLock.TryEnterWriteLock());
-			AssertCounters(rwLock,3,0,false,0);
-			reader1.Wait();
-			reader2.Wait();
-			reader3.Wait();
-			Assert.AreEqual(TaskStatus.RanToCompletion, reader1.Status);
-			Assert.AreEqual(TaskStatus.RanToCompletion, reader2.Status);
-			Assert.AreEqual(TaskStatus.RanToCompletion, reader3.Status);
-			AssertCounters(rwLock,0,0,false,0);
-			Assert.True(rwLock.TryEnterWriteLock());
-			AssertCounters(rwLock,0,0,true,0);
-			rwLock.ExitWriteLock();
-			AssertCounters(rwLock,0,0,false,0);
-			}
-		}
-		
-		[Test]
-		public void ReadLockAsyncMultithread()
-		{
 			for (int i = 0; i < 10; ++i)
 			{
+				eventReset = false;
+				taskStatus = 0;
 				var rwLock = new AsyncRWLock();
-				AssertCounters(rwLock, 0, 0, false, 0);
+				var reader1 = new Task(() =>
+				{
+					if (rwLock.TryEnterReadLock())
+					{
+						taskStatus = -1;
+						throw new Exception("TryEnterReadLock must return false!");
+					}
+					taskStatus = 1;
+					rwLock.EnterReadLock();
+					while (!eventReset)
+						Thread.Sleep(10);
+					rwLock.ExitReadLock();
+				});
+				var reader2 = new Task(() =>
+				{
+					if (rwLock.TryEnterReadLock())
+					{
+						taskStatus = -1;
+						throw new Exception("TryEnterReadLock must return false!");
+					}
+					taskStatus = 1;
+					rwLock.EnterReadLock();
+					while (!eventReset)
+						Thread.Sleep(10);
+					rwLock.ExitReadLock();
+				});
+				var reader3 = new Task(() =>
+				{
+					if (rwLock.TryEnterReadLock())
+					{
+						taskStatus = -1;
+						throw new Exception("TryEnterReadLock must return false!");
+					}
+					taskStatus = 1;
+					rwLock.EnterReadLock();
+					while (!eventReset)
+						Thread.Sleep(10);
+					rwLock.ExitReadLock();
+				});
 				rwLock.EnterWriteLock();
 				AssertCounters(rwLock, 0, 0, true, 0);
-				var reader1 = Task.Run(async () => {
-					if (rwLock.TryEnterReadLock())
-						throw new Exception("TryEnterReadLock must return false!");
-					await rwLock.EnterReadLockAsync();
-					await Task.Delay(250);
-					rwLock.ExitReadLock();
-					return true;
-				});
+				reader1.Start();
+				while (taskStatus == 0)
+					Thread.Sleep(10);
+				if (taskStatus < 0)
+					Assert.Fail("taskStatus<0 !!!");
+				taskStatus = 0;
 				Thread.Sleep(100);
 				AssertCounters(rwLock, 0, 1, true, 0);
-				var reader2 = Task.Run(async () => {
-					if (rwLock.TryEnterReadLock())
-						throw new Exception("TryEnterReadLock must return false!");
-					await rwLock.EnterReadLockAsync();
-					await Task.Delay(250);
-					rwLock.ExitReadLock();
-					return true;
-				});
+				reader2.Start();
+				while (taskStatus == 0)
+					Thread.Sleep(10);
+				if (taskStatus < 0)
+					Assert.Fail("taskStatus<0 !!!");
+				taskStatus = 0;
 				Thread.Sleep(100);
 				AssertCounters(rwLock, 0, 2, true, 0);
-				var reader3 = Task.Run(() => {
-					if (rwLock.TryEnterReadLock())
-						throw new Exception("TryEnterReadLock must return false!");
-					rwLock.EnterReadLock();
-					Thread.Sleep(250);
-					rwLock.ExitReadLock();
-					return true;
-				});
+				reader3.Start();
+				while (taskStatus == 0)
+					Thread.Sleep(10);
+				if (taskStatus < 0)
+					Assert.Fail("taskStatus<0 !!!");
+				taskStatus = 0;
 				Thread.Sleep(100);
 				AssertCounters(rwLock, 0, 3, true, 0);
 				rwLock.ExitWriteLock();
@@ -314,6 +289,109 @@ namespace Tests
 				AssertCounters(rwLock, 3, 0, false, 0);
 				Assert.False(rwLock.TryEnterWriteLock());
 				AssertCounters(rwLock, 3, 0, false, 0);
+				eventReset = true;
+				reader1.Wait();
+				reader2.Wait();
+				reader3.Wait();
+				Assert.AreEqual(TaskStatus.RanToCompletion, reader1.Status);
+				Assert.AreEqual(TaskStatus.RanToCompletion, reader2.Status);
+				Assert.AreEqual(TaskStatus.RanToCompletion, reader3.Status);
+				AssertCounters(rwLock, 0, 0, false, 0);
+				Assert.True(rwLock.TryEnterWriteLock());
+				AssertCounters(rwLock, 0, 0, true, 0);
+				rwLock.ExitWriteLock();
+				AssertCounters(rwLock, 0, 0, false, 0);
+			}
+		}
+
+		private volatile bool eventReset_am = false;
+		private volatile int taskStatus_am = 0;
+
+		[Test]
+		public void ReadLockAsyncMultithread()
+		{
+			for (int i = 0; i < 10; ++i)
+			{
+				eventReset_am = false;
+				taskStatus_am = 0;
+				var rwLock = new AsyncRWLock();
+				AssertCounters(rwLock, 0, 0, false, 0);
+				rwLock.EnterWriteLock();
+				AssertCounters(rwLock, 0, 0, true, 0);
+				var reader1 = Task.Run(async () =>
+				{
+					if (rwLock.TryEnterReadLock())
+					{
+						taskStatus_am = -1;
+						throw new Exception("TryEnterReadLock must return false!");
+					}
+					taskStatus_am = 1;
+					await rwLock.EnterReadLockAsync();
+					while(!eventReset_am)
+						await Task.Delay(10);
+					rwLock.ExitReadLock();
+					return true;
+				});
+				while (taskStatus_am==0)
+					Thread.Sleep(10);
+				if (taskStatus_am < 0)
+					Assert.Fail("taskStatus<0 !!!");
+				taskStatus_am = 0;
+				Thread.Sleep(100);
+				AssertCounters(rwLock, 0, 1, true, 0);
+				var reader2 = Task.Run(async () =>
+				{
+					if (rwLock.TryEnterReadLock())
+					{
+						taskStatus_am = -1;
+						throw new Exception("TryEnterReadLock must return false!");
+					}
+					taskStatus_am = 1;
+					await rwLock.EnterReadLockAsync();
+					while (!eventReset_am)
+						await Task.Delay(10);
+					rwLock.ExitReadLock();
+					return true;
+				});
+				while (taskStatus_am == 0)
+					Thread.Sleep(10);
+				if (taskStatus_am < 0)
+					Assert.Fail("taskStatus<0 !!!");
+				taskStatus_am = 0;
+				Thread.Sleep(100);
+				AssertCounters(rwLock, 0, 2, true, 0);
+				var reader3 = Task.Run(() =>
+				{
+					if (rwLock.TryEnterReadLock())
+					{
+						taskStatus_am = -1;
+						throw new Exception("TryEnterReadLock must return false!");
+					}
+					taskStatus_am = 1;
+					rwLock.EnterReadLock();
+					while (!eventReset_am)
+						Thread.Sleep(10);
+					rwLock.ExitReadLock();
+					return true;
+				});
+				while (taskStatus_am == 0)
+					Thread.Sleep(10);
+				if (taskStatus_am < 0)
+					Assert.Fail("taskStatus<0 !!!");
+				taskStatus_am = 0;
+				Thread.Sleep(100);
+				AssertCounters(rwLock, 0, 3, true, 0);
+				rwLock.ExitWriteLock();
+				AssertCounters(rwLock, 3, 0, false, 0);
+				Thread.Sleep(100);
+				AssertCounters(rwLock, 3, 0, false, 0);
+				Assert.True(rwLock.TryEnterReadLock());
+				AssertCounters(rwLock, 4, 0, false, 0);
+				rwLock.ExitReadLock();
+				AssertCounters(rwLock, 3, 0, false, 0);
+				Assert.False(rwLock.TryEnterWriteLock());
+				AssertCounters(rwLock, 3, 0, false, 0);
+				eventReset_am = true;
 				Assert.True(reader1.Result);
 				Assert.True(reader2.Result);
 				Assert.True(reader3.Result);
