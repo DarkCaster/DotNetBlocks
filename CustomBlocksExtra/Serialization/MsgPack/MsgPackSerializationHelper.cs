@@ -50,12 +50,12 @@ namespace DarkCaster.Serialization.MsgPack
 			if( mode==MsgPackMode.Storage || mode==MsgPackMode.StorageCheckSum )
 			{
 				context.SerializationMethod = SerializationMethod.Map;
-				context.EnumSerializationMethod = EnumSerializationMethod.ByName;
+				context.EnumSerializationOptions.SerializationMethod = EnumSerializationMethod.ByName;
 			}
 			else
 			{
 				context.SerializationMethod = SerializationMethod.Array;
-				context.EnumSerializationMethod = EnumSerializationMethod.ByUnderlyingValue;
+				context.EnumSerializationOptions.SerializationMethod = EnumSerializationMethod.ByUnderlyingValue;
 			}
 			context.CompatibilityOptions.PackerCompatibilityOptions=PackerCompatibilityOptions.None;
 			if( mode==MsgPackMode.StorageCheckSum || mode==MsgPackMode.TransferCheckSum )
