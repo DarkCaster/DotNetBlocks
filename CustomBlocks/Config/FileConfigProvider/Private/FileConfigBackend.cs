@@ -30,6 +30,9 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Security.AccessControl;
+#if UNIX
+using Mono.Unix;
+#endif
 
 using DarkCaster.Config.Private;
 
@@ -44,30 +47,53 @@ namespace DarkCaster.Config.Files.Private
 		private readonly bool writeAllowed;
 		private volatile bool deleteOnExit;
 		private byte[] cachedData;
-		
+
 		private readonly ReaderWriterLockSlim readLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
-		
+
 		private static readonly Dictionary<string, bool> cachedPerms = new Dictionary<string, bool>();
 		private static readonly object cacheLocker = new object();
-		
+
 		private static byte[] ReadCfgFile(string target, ref bool writeAllowed)
 		{
-			byte[] result=null;
-			try { result=File.ReadAllBytes(target); }
-			catch(DirectoryNotFoundException) { } //this is ok
-			catch(FileNotFoundException) { } //this is ok
-			//any other exception is an error and write is unavailable
-			catch(Exception) { writeAllowed=false; }
+			byte[] result = null;
+			try { result = File.ReadAllBytes(target); }
+			catch (DirectoryNotFoundException) { } //this is ok
+			catch (FileNotFoundException) { } //this is ok
+			catch (Exception) { writeAllowed = false; } //any other exception is an error and write is unavailable
 			return result;
 		}
-		
+
 		//TODO: check and create separate method for mono\linux
 		//Based on http://stackoverflow.com/a/16032192
+#if UNIX
+		private static bool CheckDirAccessRights(string dir)
+		{
+			try
+			{
+				var info = new UnixDirectoryInfo(dir);
+				if (!info.CanAccess(Mono.Unix.Native.AccessModes.F_OK) ||
+					  !info.CanAccess(Mono.Unix.Native.AccessModes.R_OK) ||
+					  !info.CanAccess(Mono.Unix.Native.AccessModes.W_OK) ||
+					  !info.IsDirectory)
+					return false;
+			}
+			catch (Exception) { return false; }
+			return true;
+		}
+#else
+		private static bool CheckDirAccessRights(string dir)
+		{
+			return CheckDirAccessRights(dir,FileSystemRights.CreateFiles) &&
+		CheckDirAccessRights(dir,FileSystemRights.Delete) &&
+		CheckDirAccessRights(dir,FileSystemRights.Read) &&
+		CheckDirAccessRights(dir,FileSystemRights.Write);
+		}
+
 		private static bool CheckDirAccessRights(string dir, FileSystemRights accessRights)
 		{
 			bool isInRoleWithAccess = false;
-			try 
+			try
 			{
 				var rules = Directory.GetAccessControl(dir).GetAccessRules(true, true, typeof(NTAccount));
 				var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
@@ -93,7 +119,8 @@ namespace DarkCaster.Config.Files.Private
 			catch(Exception) { return false; }
 			return isInRoleWithAccess;
 		}
-		
+#endif
+
 		private FileConfigBackend() {}
 		
 		[Obsolete("This constructor is not for direct use. Use only for test purposes.")]
@@ -156,10 +183,7 @@ namespace DarkCaster.Config.Files.Private
 						writeAllowed &= cachedPerms[baseDir];
 					else
 					{
-						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
+						writeAllowed &= CheckDirAccessRights(baseDir);
 						cachedPerms.Add(baseDir, writeAllowed);
 					}
 				}
@@ -172,10 +196,7 @@ namespace DarkCaster.Config.Files.Private
 				if(writeAllowed)
 					lock (cacheLocker)
 					{
-						writeAllowed &= (CheckDirAccessRights(baseDir,FileSystemRights.CreateFiles) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Delete) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Read) &&
-						                 CheckDirAccessRights(baseDir,FileSystemRights.Write));
+						writeAllowed &= CheckDirAccessRights(baseDir);
 						cachedPerms[baseDir] = writeAllowed;
 					}
 			}
