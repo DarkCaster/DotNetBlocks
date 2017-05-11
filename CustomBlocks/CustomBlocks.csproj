@@ -99,6 +99,11 @@
     <Compile Include="Events\EventRaiseException.cs" />
     <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
+    <Compile Include="DataTransfer\Abstracts\INode.cs" />
+    <Compile Include="DataTransfer\Abstracts\ITopNode.cs" />
+    <Compile Include="DataTransfer\Abstracts\ITunnel.cs" />
+    <Compile Include="DataTransfer\Abstracts\TunnelState.cs" />
+    <Compile Include="DataTransfer\Abstracts\TunnelStateEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -113,6 +118,8 @@
     <Folder Include="Config\" />
     <Folder Include="Events\" />
     <Folder Include="Async" />
+    <Folder Include="DataTransfer\" />
+    <Folder Include="DataTransfer\Abstracts\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
