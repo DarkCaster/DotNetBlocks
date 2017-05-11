@@ -23,11 +23,12 @@
 // SOFTWARE.
 //
 using System;
+using System.Threading.Tasks;
 using DarkCaster.Events;
                 
 namespace DarkCaster.DataTransfer
 {
-	public interface ITunnel
+	public interface ITunnel : IDisposable
 	{
 		/// <summary>
 		/// Gets the current state of tunnel.
@@ -42,5 +43,34 @@ namespace DarkCaster.DataTransfer
 		/// Event for tunnel state change notifications.
 		/// </summary>
 		ISafeEvent<TunnelStateEventArgs> StateChangeEvent { get; }
+
+		/// <summary>
+		/// Data read request, that blocks while awaiting for data.
+		/// May return less data, than requested.
+		/// May be used in offline state, to read remaining data from tunnel.
+		/// </summary>
+		/// <returns>Bytes count that was actually read, before disconnect</returns>
+		/// <param name="sz">Bytes count to read</param>
+		/// <param name="buffer">Buffer, where to store received data</param>
+		/// <param name="offset">Offset</param>
+		int ReadData(int sz, byte[] buffer, int offset = 0);
+
+		/// <summary>
+		/// Data write request, that blocks execution while writing requested amound of data.
+		/// </summary>
+		/// <param name="sz">Bytes count to write</param>
+		/// <param name="buffer">Buffer, where source data is located</param>
+		/// <param name="offset">Offset</param>
+		void WriteData(int sz, byte[] buffer, int offset = 0);
+
+		/// <summary>
+		/// Same as ReadData, but async
+		/// </summary>
+		Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0);
+
+		/// <summary>
+		/// Same as WriteData, but async
+		/// </summary>
+		Task WriteDataAsync(int sz, byte[] buffer, int offset = 0);
 	}
 }

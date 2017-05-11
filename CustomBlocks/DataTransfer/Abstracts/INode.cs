@@ -29,6 +29,5 @@ namespace DarkCaster.DataTransfer
 	public interface INode : ITopNode
 	{
 		ITunnel OpenTunnel(byte[] configData);
-		void CloseTunnel(ITunnel tunnel);
 	}
 }
