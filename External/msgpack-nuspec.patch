@@ -1,8 +1,11 @@
 diff -uprN msgpack/MsgPack.nuspec msgpack.new/MsgPack.nuspec
 --- msgpack/MsgPack.nuspec	2017-05-11 01:42:11.183548719 +0300
-+++ msgpack.new/MsgPack.nuspec	2017-05-11 02:03:24.239758720 +0300
-@@ -3,7 +3,7 @@
-   <metadata minClientVersion="2.12">
++++ msgpack.new/MsgPack.nuspec	2017-05-11 19:20:25.208181711 +0300
+@@ -1,9 +1,9 @@
+ ﻿<?xml version="1.0" encoding="utf-8"?>
+ <package>
+-  <metadata minClientVersion="2.12">
++  <metadata minClientVersion="2.8">
      <id>MsgPack.Cli</id>
      <title>MessagePack for CLI</title>
 -    <version>0.0.0-development</version>
