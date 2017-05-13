@@ -25,7 +25,7 @@
 using System;
 using System.Threading.Tasks;
 using DarkCaster.Events;
-                
+
 namespace DarkCaster.DataTransfer
 {
 	public interface ITunnel : IDisposable
@@ -72,5 +72,7 @@ namespace DarkCaster.DataTransfer
 		/// Same as WriteData, but async
 		/// </summary>
 		Task WriteDataAsync(int sz, byte[] buffer, int offset = 0);
+
+		void Disconnect();
 	}
 }

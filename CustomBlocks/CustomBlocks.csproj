@@ -104,6 +104,8 @@
     <Compile Include="DataTransfer\Abstracts\ITunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelState.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelStateEventArgs.cs" />
+    <Compile Include="DataTransfer\Abstracts\TunnelException.cs" />
+    <Compile Include="DataTransfer\Abstracts\BaseTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
