@@ -37,18 +37,20 @@ namespace DarkCaster.DataTransfer.Udp
 	{
 		private readonly Socket client;
 
-		public UdpClientTunnel(IPAddress[] addr, int port)
+		public UdpClientTunnel(IPAddress[] addr, int port, int timeout = 0)
 		{
 			client = new Socket(SocketType.Dgram, ProtocolType.Udp);
 			client.Bind(new IPEndPoint(IPAddress.Any, 0));
 			client.Connect(addr, port);
+			client.ReceiveTimeout = timeout;
+			client.SendTimeout = timeout;
 		}
 
-		public UdpClientTunnel(string host, int port)
-			: this(Dns.GetHostEntry(host).AddressList, port) { }
+		public UdpClientTunnel(string host, int port, int timeout = 0)
+			: this(Dns.GetHostEntry(host).AddressList, port, timeout) { }
 
-		public UdpClientTunnel(IPAddress addr, int port)
-			: this(new IPAddress[1] { addr }, port) { }
+		public UdpClientTunnel(IPAddress addr, int port, int timeout = 0)
+			: this(new IPAddress[1] { addr }, port, timeout) { }
 
 		public override int ReadData(int sz, byte[] buffer, int offset = 0)
 		{
@@ -82,7 +84,29 @@ namespace DarkCaster.DataTransfer.Udp
 
 		public override async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			var curState = state;
+			if (curState != TunnelState.Online)
+				throw new UdpReadException(curState, "Cannot perform read from tunnel that is not online!", null);
+			try
+			{
+				return await Task.Factory.FromAsync(
+					(callback,state)=>client.BeginReceive(buffer,offset,sz,SocketFlags.None,callback,state),
+					client.EndReceive,null).ConfigureAwait(false);
+			}
+			catch (SocketException ex)
+			{
+				if (ex.ErrorCode == (int)SocketError.TimedOut)
+					return 0;
+				if (ex.ErrorCode == (int)SocketError.MessageSize)
+					return sz;
+				evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline), () => state = TunnelState.Offline);
+				throw new UdpReadException(curState, "SocketException while trying to read data. ErrorCode=" + ((SocketError)ex.ErrorCode).ToString("G"), ex);
+			}
+			catch (Exception ex)
+			{
+				evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline), () => state = TunnelState.Offline);
+				throw new UdpReadException(curState, "Error while trying to read data!", ex);
+			}
 		}
 
 		public override async Task WriteDataAsync(int sz, byte[] buffer, int offset = 0)
