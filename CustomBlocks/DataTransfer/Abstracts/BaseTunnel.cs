@@ -24,17 +24,15 @@
 //
 using System;
 using System.Threading.Tasks;
-using DarkCaster.Async;
 using DarkCaster.Events;
 
 namespace DarkCaster.DataTransfer
 {
 	public abstract class BaseTunnel : ITunnel
 	{
-		protected readonly AsyncRWLock opLock = new AsyncRWLock();
 		protected readonly ISafeEventCtrl<TunnelStateEventArgs> evCtl;
 		protected readonly ISafeEvent<TunnelStateEventArgs> ev;
-		protected TunnelState state = TunnelState.Init;
+		protected volatile TunnelState state = TunnelState.Init;
 		protected volatile bool isDisposed = false;
 
 		protected BaseTunnel()
@@ -55,15 +53,7 @@ namespace DarkCaster.DataTransfer
 
 		public virtual ISafeEvent<TunnelStateEventArgs> StateChangeEvent { get { return ev; } }
 
-		public virtual TunnelState State
-		{
-			get
-			{
-				opLock.EnterReadLock();
-				try { return state; }
-				finally { opLock.ExitReadLock(); }
-			}
-		}
+		public virtual TunnelState State { get { return state; } }
 
 		public virtual void Dispose()
 		{
