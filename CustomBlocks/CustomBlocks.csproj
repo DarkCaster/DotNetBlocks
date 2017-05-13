@@ -104,7 +104,9 @@
     <Compile Include="DataTransfer\Abstracts\ITunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelState.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelStateEventArgs.cs" />
+    <Compile Include="DataTransfer\Udp\UdpClientTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelException.cs" />
+    <Compile Include="DataTransfer\Udp\UdpReadException.cs" />
     <Compile Include="DataTransfer\Abstracts\BaseTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -122,6 +124,7 @@
     <Folder Include="Async" />
     <Folder Include="DataTransfer\" />
     <Folder Include="DataTransfer\Abstracts\" />
+    <Folder Include="DataTransfer\Udp\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
