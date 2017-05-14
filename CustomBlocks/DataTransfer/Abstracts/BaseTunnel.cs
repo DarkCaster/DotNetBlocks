@@ -30,12 +30,13 @@ namespace DarkCaster.DataTransfer
 {
 	public abstract class BaseTunnel : ITunnel
 	{
+		private class OfflineSwitchException : Exception {}
 		protected readonly ISafeEventCtrl<TunnelStateEventArgs> evCtl;
 		protected readonly ISafeEvent<TunnelStateEventArgs> ev;
 		protected volatile TunnelState state = TunnelState.Init;
 		protected volatile bool isDisposed = false;
 
-		protected BaseTunnel()
+		private BaseTunnel()
 		{
 #if DEBUG
 			evCtl = new SafeEventDbg<TunnelStateEventArgs>();
@@ -49,6 +50,20 @@ namespace DarkCaster.DataTransfer
 		protected BaseTunnel(TunnelState defaultState = TunnelState.Init) : this()
 		{
 			state = defaultState;
+		}
+
+		protected void SwitchToOffline()
+		{
+			try
+			{
+				evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline), () =>
+				{
+					if (state == TunnelState.Offline)
+						throw new OfflineSwitchException();
+					state = TunnelState.Offline;
+				});
+			}
+			catch(OfflineSwitchException){}
 		}
 
 		public virtual ISafeEvent<TunnelStateEventArgs> StateChangeEvent { get { return ev; } }
@@ -66,8 +81,8 @@ namespace DarkCaster.DataTransfer
 
 		public abstract void Disconnect();
 		public abstract int ReadData(int sz, byte[] buffer, int offset = 0);
-		public abstract void WriteData(int sz, byte[] buffer, int offset = 0);
+		public abstract int WriteData(int sz, byte[] buffer, int offset = 0);
 		public abstract Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0);
-		public abstract Task WriteDataAsync(int sz, byte[] buffer, int offset = 0);
+		public abstract Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0);
 	}
 }

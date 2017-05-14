@@ -61,7 +61,7 @@ namespace DarkCaster.DataTransfer
 		/// <param name="sz">Bytes count to write</param>
 		/// <param name="buffer">Buffer, where source data is located</param>
 		/// <param name="offset">Offset</param>
-		void WriteData(int sz, byte[] buffer, int offset = 0);
+		int WriteData(int sz, byte[] buffer, int offset = 0);
 
 		/// <summary>
 		/// Same as ReadData, but async
@@ -71,7 +71,7 @@ namespace DarkCaster.DataTransfer
 		/// <summary>
 		/// Same as WriteData, but async
 		/// </summary>
-		Task WriteDataAsync(int sz, byte[] buffer, int offset = 0);
+		Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0);
 
 		void Disconnect();
 	}
