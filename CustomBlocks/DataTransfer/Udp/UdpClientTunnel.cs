@@ -67,19 +67,37 @@ namespace DarkCaster.DataTransfer.Udp
 					return 0;
 				if (ex.ErrorCode == (int)SocketError.MessageSize)
 					return sz;
-				evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline), () => state = TunnelState.Offline);
-				throw new UdpReadException(curState, "SocketException while trying to read data. ErrorCode=" + ((SocketError)ex.ErrorCode).ToString("G"), ex);
+				SwitchToOffline();
+				throw new UdpReadException(curState, "SocketException while trying to receive data. ErrorCode=" + ((SocketError)ex.ErrorCode).ToString("G"), ex);
 			}
 			catch (Exception ex)
 			{
-				evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline), () => state = TunnelState.Offline);
+				SwitchToOffline();
 				throw new UdpReadException(curState, "Error while trying to read data!", ex);
 			}
 		}
 
-		public override void WriteData(int sz, byte[] buffer, int offset = 0)
+		public override int WriteData(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			var curState = state;
+			if (curState != TunnelState.Online)
+				throw new UdpReadException(curState, "Cannot perform write into tunnel that is not online!", null);
+			try
+			{
+				return client.Send(buffer, offset, sz, SocketFlags.None);
+			}
+			catch (SocketException ex)
+			{
+				if (ex.ErrorCode == (int)SocketError.TimedOut || ex.ErrorCode == (int)SocketError.MessageSize)
+					return 0;
+				SwitchToOffline();
+				throw new UdpReadException(curState, "SocketException while trying to send data. ErrorCode=" + ((SocketError)ex.ErrorCode).ToString("G"), ex);
+			}
+			catch (Exception ex)
+			{
+				SwitchToOffline();
+				throw new UdpReadException(curState, "Error while trying to send data!", ex);
+			}
 		}
 
 		public override async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
@@ -99,24 +117,45 @@ namespace DarkCaster.DataTransfer.Udp
 					return 0;
 				if (ex.ErrorCode == (int)SocketError.MessageSize)
 					return sz;
-				evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline), () => state = TunnelState.Offline);
+				SwitchToOffline();
 				throw new UdpReadException(curState, "SocketException while trying to read data. ErrorCode=" + ((SocketError)ex.ErrorCode).ToString("G"), ex);
 			}
 			catch (Exception ex)
 			{
-				evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline), () => state = TunnelState.Offline);
+				SwitchToOffline();
 				throw new UdpReadException(curState, "Error while trying to read data!", ex);
 			}
 		}
 
-		public override async Task WriteDataAsync(int sz, byte[] buffer, int offset = 0)
+		public override async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			var curState = state;
+			if (curState != TunnelState.Online)
+				throw new UdpReadException(curState, "Cannot perform write into tunnel that is not online!", null);
+			try
+			{
+				return await Task.Factory.FromAsync(
+					(callback, state) => client.BeginSend(buffer, offset, sz, SocketFlags.None, callback, state),
+					client.EndSend, null).ConfigureAwait(false);
+			}
+			catch (SocketException ex)
+			{
+				if (ex.ErrorCode == (int)SocketError.TimedOut || ex.ErrorCode == (int)SocketError.MessageSize)
+					return 0;
+				SwitchToOffline();
+				throw new UdpReadException(curState, "SocketException while trying to send data. ErrorCode=" + ((SocketError)ex.ErrorCode).ToString("G"), ex);
+			}
+			catch (Exception ex)
+			{
+				SwitchToOffline();
+				throw new UdpReadException(curState, "Error while trying to send data!", ex);
+			}
 		}
 
 		public override void Disconnect()
 		{
-			throw new NotImplementedException("TODO");
+			client.Close();
+			SwitchToOffline();
 		}
 
 		public override void Dispose()
