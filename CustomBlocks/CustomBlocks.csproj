@@ -104,6 +104,7 @@
     <Compile Include="DataTransfer\Abstracts\ITunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelState.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelStateEventArgs.cs" />
+    <Compile Include="DataTransfer\Udp\UdpClientNode.cs" />
     <Compile Include="DataTransfer\Udp\UdpClientTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\TunnelException.cs" />
     <Compile Include="DataTransfer\Udp\UdpReadException.cs" />
