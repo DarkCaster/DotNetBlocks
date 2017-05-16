@@ -99,16 +99,16 @@
     <Compile Include="Events\EventRaiseException.cs" />
     <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
-    <Compile Include="DataTransfer\Abstracts\INode.cs" />
-    <Compile Include="DataTransfer\Abstracts\ITopNode.cs" />
-    <Compile Include="DataTransfer\Abstracts\ITunnel.cs" />
-    <Compile Include="DataTransfer\Abstracts\TunnelState.cs" />
-    <Compile Include="DataTransfer\Abstracts\TunnelStateEventArgs.cs" />
     <Compile Include="DataTransfer\Udp\UdpClientNode.cs" />
     <Compile Include="DataTransfer\Udp\UdpClientTunnel.cs" />
-    <Compile Include="DataTransfer\Abstracts\TunnelException.cs" />
     <Compile Include="DataTransfer\Udp\UdpReadException.cs" />
-    <Compile Include="DataTransfer\Abstracts\BaseTunnel.cs" />
+    <Compile Include="DataTransfer\Abstracts\Client\ITunnel.cs" />
+    <Compile Include="DataTransfer\Abstracts\Client\ITopNode.cs" />
+    <Compile Include="DataTransfer\Abstracts\Client\BaseTunnel.cs" />
+    <Compile Include="DataTransfer\Abstracts\Client\INode.cs" />
+    <Compile Include="DataTransfer\Abstracts\Client\TunnelState.cs" />
+    <Compile Include="DataTransfer\Abstracts\Client\TunnelException.cs" />
+    <Compile Include="DataTransfer\Abstracts\Client\TunnelStateEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -126,6 +126,7 @@
     <Folder Include="DataTransfer\" />
     <Folder Include="DataTransfer\Abstracts\" />
     <Folder Include="DataTransfer\Udp\" />
+    <Folder Include="DataTransfer\Abstracts\Client\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
