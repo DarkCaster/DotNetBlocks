@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.DataTransfer
+namespace DarkCaster.DataTransfer.Client
 {
 	/// <summary>
 	/// Parent class for all exceptions that ITunnel instance may throw in expected error situations.

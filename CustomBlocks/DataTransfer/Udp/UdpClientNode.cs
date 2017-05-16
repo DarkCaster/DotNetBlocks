@@ -24,11 +24,11 @@
 //
 using System;
 
-namespace DarkCaster.DataTransfer.Udp
+namespace DarkCaster.DataTransfer.Client
 {
 	public class UdpClientNode : INode
 	{
-		public IClientTunnel OpenTunnel(byte[] configData)
+		public ITunnel OpenTunnel(byte[] configData)
 		{
 			throw new NotImplementedException("TODO");
 		}

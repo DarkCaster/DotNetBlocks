@@ -31,7 +31,7 @@ using System.Net.Sockets;
 using DarkCaster.Events;
 using DarkCaster.Async;
 
-namespace DarkCaster.DataTransfer.Udp
+namespace DarkCaster.DataTransfer.Client
 {
 	public class UdpClientTunnel : BaseTunnel
 	{

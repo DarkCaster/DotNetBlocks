@@ -23,7 +23,7 @@
 // SOFTWARE.
 //
 using System;
-namespace DarkCaster.DataTransfer
+namespace DarkCaster.DataTransfer.Client
 {
 	/// <summary>
 	/// EventArgs with info about new state.

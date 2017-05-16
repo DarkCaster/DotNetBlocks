@@ -25,7 +25,7 @@
 
 using System;
 
-namespace DarkCaster.DataTransfer.Udp
+namespace DarkCaster.DataTransfer.Client
 {
 	/// <summary>
 	/// Exception, that may be thrown by UdpClientTunnel and UdpServerTunnel when performing read operation

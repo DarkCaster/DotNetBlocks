@@ -26,7 +26,7 @@ using System;
 using System.Threading.Tasks;
 using DarkCaster.Events;
 
-namespace DarkCaster.DataTransfer
+namespace DarkCaster.DataTransfer.Client
 {
 	public interface ITunnel : IDisposable
 	{
