@@ -26,8 +26,9 @@ using System;
 
 namespace DarkCaster.DataTransfer.Client
 {
-	public interface INode : ITopNode
+	public interface INode
 	{
 		ITunnel OpenTunnel(byte[] configData);
+		string GetInfo();
 	}
 }
