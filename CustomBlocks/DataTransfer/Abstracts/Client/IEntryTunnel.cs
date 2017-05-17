@@ -28,7 +28,17 @@ using DarkCaster.Events;
 
 namespace DarkCaster.DataTransfer.Client
 {
-	public interface IEntryTunnel
+	/// <summary>
+	/// Client side entry-tunnel.
+	/// Object of this interface should be used to perform data transfer from user's code, instead of using INode directly.
+	/// Methods defined here must be thread-safe.
+	/// Concurrent reads and concurrent writes must be interlocked,
+	/// read and write methods should be allowed to execute at the same time concurrently,
+	/// disconnect must be interlocked with both read and write activity.
+	/// StateChangeEvent event may be thrown anytime, and it must be thrown from separate thread.
+	/// Do not call Dispose from state change event handler, because it will damage internal state of ISafeEvent object.
+	/// </summary>
+	public interface IEntryTunnel : IDisposable
 	{
 		/// <summary>
 		/// Gets the current state of tunnel.
@@ -47,7 +57,7 @@ namespace DarkCaster.DataTransfer.Client
 		/// Data read request. Blocks while awaiting for data.
 		/// May return less data, than requested.
 		/// May be used in offline state, to read remaining data from tunnel.
-		/// In offline mode, return 0 when no data left.
+		/// In offline or init mode, return 0 when no data left.
 		/// </summary>
 		/// <returns>Bytes count that was actually read</returns>
 		/// <param name="sz">Bytes count to read</param>
@@ -57,7 +67,10 @@ namespace DarkCaster.DataTransfer.Client
 
 		/// <summary>
 		/// Data write request, that blocks execution while writing requested amound of data.
+		/// May return less data-written count, than requested.
+		/// In offline or init mode always return 0.
 		/// </summary>
+		/// <returns>Bytes count that was actually written</returns>
 		/// <param name="sz">Bytes count to write</param>
 		/// <param name="buffer">Buffer, where source data is located</param>
 		/// <param name="offset">Offset</param>
@@ -73,6 +86,16 @@ namespace DarkCaster.DataTransfer.Client
 		/// </summary>
 		Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0);
 
+		/// <summary>
+		/// Close tunnel connection.
+		/// State change event will be thrown, and tunnel state will be set to "offline".
+		/// May block while performing disconnect request.
+		/// </summary>
 		void Disconnect();
+
+		/// <summary>
+		/// Same as Disconnect, but async
+		/// </summary>
+		Task DisconnectAsync();
 	}
 }
