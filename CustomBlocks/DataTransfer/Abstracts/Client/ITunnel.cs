@@ -31,20 +31,6 @@ namespace DarkCaster.DataTransfer.Client
 	public interface ITunnel : IDisposable
 	{
 		/// <summary>
-		/// Gets the current state of tunnel.
-		/// Must be thread safe, and to be interlocked with state changes,
-		/// so, any thread that want to request current state will get proper value.
-		/// No exceptions should be thrown when accessing this property.
-		/// </summary>
-		/// <value>Current state</value>
-		TunnelState State { get; }
-
-		/// <summary>
-		/// Event for tunnel state change notifications.
-		/// </summary>
-		ISafeEvent<TunnelStateEventArgs> StateChangeEvent { get; }
-
-		/// <summary>
 		/// Data read request, that blocks while awaiting for data.
 		/// May return less data, than requested.
 		/// May be used in offline state, to read remaining data from tunnel.
