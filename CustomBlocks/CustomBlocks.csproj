@@ -100,14 +100,12 @@
     <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\ITunnel.cs" />
-    <Compile Include="DataTransfer\Abstracts\Client\BaseTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\INode.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelState.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelException.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelStateEventArgs.cs" />
     <Compile Include="DataTransfer\Udp\Client\UdpClientNode.cs" />
     <Compile Include="DataTransfer\Udp\Client\UdpClientTunnel.cs" />
-    <Compile Include="DataTransfer\Udp\Client\UdpReadException.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\IEntryNode.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\IEntryTunnel.cs" />
   </ItemGroup>
