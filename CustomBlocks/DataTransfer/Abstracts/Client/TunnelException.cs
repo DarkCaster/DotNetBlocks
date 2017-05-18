@@ -28,15 +28,10 @@ using System;
 namespace DarkCaster.DataTransfer.Client
 {
 	/// <summary>
-	/// Parent class for all exceptions that ITunnel instance may throw in expected error situations.
+	/// All valid (expected) exceptions that may be thrown by ITunnel objects wrapped by this exception class
 	/// </summary>
 	public class TunnelException : Exception
 	{
-		public readonly TunnelState state;
-
-		public TunnelException(TunnelState state, string message, Exception inner) : base(message, inner)
-		{
-			this.state = state;
-		}
+		public TunnelException(string message, Exception inner) : base(message, inner) {}
 	}
 }
