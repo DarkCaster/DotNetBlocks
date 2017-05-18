@@ -28,19 +28,7 @@ namespace DarkCaster.DataTransfer.Client
 {
 	public class UdpClientNode : INode
 	{
-		public ITunnel OpenTunnel(byte[] configData)
-		{
-			throw new NotImplementedException("TODO");
-		}
-
-		public INode Downstream { get { throw new NotImplementedException("TODO"); } }
-
-		public string GetInfo()
-		{
-			throw new NotImplementedException("TODO");
-		}
-
-		public void Dispose()
+		public ITunnel OpenTunnel()
 		{
 			throw new NotImplementedException("TODO");
 		}

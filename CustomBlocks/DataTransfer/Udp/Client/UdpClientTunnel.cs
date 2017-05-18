@@ -33,7 +33,8 @@ using DarkCaster.Async;
 
 namespace DarkCaster.DataTransfer.Client
 {
-	public class UdpClientTunnel : BaseTunnel
+	/*
+	public class UdpClientTunnel
 	{
 		private readonly Socket client;
 
@@ -165,4 +166,5 @@ namespace DarkCaster.DataTransfer.Client
 			base.Dispose();
 		}
 	}
+	*/
 }
