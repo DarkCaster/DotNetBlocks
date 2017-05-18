@@ -108,6 +108,7 @@
     <Compile Include="DataTransfer\Udp\Client\UdpClientTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\IEntryNode.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\IEntryTunnel.cs" />
+    <Compile Include="DataTransfer\EntryTunnel\EntryTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -127,6 +128,7 @@
     <Folder Include="DataTransfer\Udp\" />
     <Folder Include="DataTransfer\Abstracts\Client\" />
     <Folder Include="DataTransfer\Udp\Client\" />
+    <Folder Include="DataTransfer\EntryTunnel\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
