@@ -1,4 +1,4 @@
-﻿// TunnelException.cs
+﻿// TunnelEofException.cs
 //
 // The MIT License (MIT)
 //
@@ -22,16 +22,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-
 using System;
-
 namespace DarkCaster.DataTransfer.Client
 {
-	/// <summary>
-	/// All valid (expected) exceptions that may be thrown by ITunnel objects wrapped by this exception class
-	/// </summary>
-	public class TunnelException : Exception
+	public class TunnelEofException : Exception
 	{
-		public TunnelException(string message, Exception inner) : base(message, inner) {}
+		public TunnelEofException(Exception ex) : base("No more data to read or write because tunnel is closed", ex) { }
+		public TunnelEofException() : base("No more data to read or write because tunnel is closed", null) { }
 	}
 }
