@@ -37,7 +37,8 @@ namespace DarkCaster.DataTransfer.Client
 		private volatile TunnelState state = TunnelState.Init;
 		private volatile bool isDisposed = false;
 
-		private int stateChangeTasksRunning = 0;
+		private int stateChangeWorkers = 0;
+
 		private readonly ISafeEventCtrl<TunnelStateEventArgs> evCtl;
 		private readonly ISafeEvent<TunnelStateEventArgs> ev;
 
@@ -68,7 +69,7 @@ namespace DarkCaster.DataTransfer.Client
 		{
 			int sleep = 1;
 			const int max_sleep = 50;
-			while (Interlocked.CompareExchange(ref stateChangeTasksRunning, 0, 0) != 0)
+			while ( Interlocked.CompareExchange(ref stateChangeWorkers, 0, 0) > 0 )
 			{
 				Thread.Sleep(sleep);
 				sleep *= 2;
@@ -81,7 +82,7 @@ namespace DarkCaster.DataTransfer.Client
 		{
 			int sleep = 1;
 			const int max_sleep = 50;
-			while (Interlocked.CompareExchange(ref stateChangeTasksRunning, 0, 0) != 0)
+			while ( Interlocked.CompareExchange(ref stateChangeWorkers, 0, 0) > 0 )
 			{
 				await Task.Delay(sleep);
 				sleep *= 2;
@@ -92,31 +93,35 @@ namespace DarkCaster.DataTransfer.Client
 
 		public void InitTask()
 		{
-			Interlocked.Increment(ref stateChangeTasksRunning);
-			Task.Run(()=>
+			Interlocked.Increment(ref stateChangeWorkers);
+			writeLock.Wait();
+			readLock.Wait();
+			Task.Run(() =>
 			{
+				var pendingState = TunnelState.Online;
+				Exception tEx = null;
 				try
 				{
-					try
-					{
-						Volatile.Write(ref downstream, downstreamNode.OpenTunnel());
-						Thread.MemoryBarrier(); //additional safeguard, may be redundant. 
-					}
-					catch (TunnelException ex)
-					{
-						evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Offline, ex), () => { state = TunnelState.Offline; });
-						return;
-					}
-					evCtl.Raise(this, new TunnelStateEventArgs(TunnelState.Online, null), () => { state = TunnelState.Online; });
+					Volatile.Write(ref downstream, downstreamNode.OpenTunnel());
+					Thread.MemoryBarrier(); //additional safeguard, may be redundant.
+				}
+				catch (Exception ex)
+				{
+					tEx = ex;
 				}
 				finally
 				{
-					Interlocked.Decrement(ref stateChangeTasksRunning);
+					evCtl.Raise(this, new TunnelStateEventArgs(pendingState, tEx), () => {
+						state = pendingState;
+						writeLock.Release();
+						readLock.Release();
+					});
+					Interlocked.Decrement(ref stateChangeWorkers);
 				}
 			});
 		}
 
-		private void SwitchToOffline(TunnelException ex)
+		private void SwitchToOffline(Exception ex)
 		{
 			try
 			{
@@ -130,13 +135,13 @@ namespace DarkCaster.DataTransfer.Client
 			catch (OfflineSwitchException) { }
 		}
 
-		private void SwitchToOfflineTask(TunnelException ex)
+		private void SwitchToOfflineTask(Exception ex)
 		{
-			Interlocked.Increment(ref stateChangeTasksRunning);
+			Interlocked.Increment(ref stateChangeWorkers);
 			Task.Run(()=>
 			{
 				SwitchToOffline(ex);
-				Interlocked.Decrement(ref stateChangeTasksRunning);
+				Interlocked.Decrement(ref stateChangeWorkers);
 			});
 		}
 
@@ -147,17 +152,14 @@ namespace DarkCaster.DataTransfer.Client
 			readLock.Wait();
 			try
 			{
-				if (state == TunnelState.Init)
-					return 0;
-				try
-				{
-					return downstream.ReadData(sz, buffer, offset);
-				}
-				catch (TunnelException ex)
-				{
-					SwitchToOfflineTask(ex);
-					return 0;
-				}
+				return downstream.ReadData(sz, buffer, offset);
+			}
+			catch (Exception ex)
+			{
+				if (state == TunnelState.Offline)
+					throw new TunnelEofException(ex);
+				SwitchToOfflineTask(ex);
+				throw;
 			}
 			finally
 			{
@@ -170,17 +172,18 @@ namespace DarkCaster.DataTransfer.Client
 			writeLock.Wait();
 			try
 			{
-				if (state != TunnelState.Online)
-					return 0;
-				try
-				{
-					return downstream.WriteData(sz, buffer, offset);
-				}
-				catch (TunnelException ex)
-				{
-					SwitchToOfflineTask(ex);
-					return 0;
-				}
+				if (state == TunnelState.Offline)
+					throw new TunnelEofException();
+				return downstream.WriteData(sz, buffer, offset);
+			}
+			catch (TunnelEofException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				SwitchToOfflineTask(ex);
+				throw;
 			}
 			finally
 			{
@@ -191,19 +194,16 @@ namespace DarkCaster.DataTransfer.Client
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			await readLock.WaitAsync();
-			try
-			{
-				if (state == TunnelState.Init)
-					return 0;
 				try
 				{
 					return await downstream.ReadDataAsync(sz, buffer, offset);
 				}
-				catch (TunnelException ex)
-				{
-					SwitchToOfflineTask(ex);
-					return 0;
-				}
+			catch (Exception ex)
+			{
+				if (state == TunnelState.Offline)
+					throw new TunnelEofException(ex);
+				SwitchToOfflineTask(ex);
+				throw;
 			}
 			finally
 			{
@@ -216,17 +216,18 @@ namespace DarkCaster.DataTransfer.Client
 			await writeLock.WaitAsync();
 			try
 			{
-				if (state != TunnelState.Online)
-					return 0;
-				try
-				{
-					return await downstream.WriteDataAsync(sz, buffer, offset);
-				}
-				catch (TunnelException ex)
-				{
-					SwitchToOfflineTask(ex);
-					return 0;
-				}
+				if (state == TunnelState.Offline)
+					throw new TunnelEofException();
+				return await downstream.WriteDataAsync(sz, buffer, offset);
+			}
+			catch (TunnelEofException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				SwitchToOfflineTask(ex);
+				throw;
 			}
 			finally
 			{
@@ -239,19 +240,19 @@ namespace DarkCaster.DataTransfer.Client
 			writeLock.Wait();
 			readLock.Wait();
 			WaitStateChangeTasks();
-			Interlocked.Increment(ref stateChangeTasksRunning);
+			Interlocked.Increment(ref stateChangeWorkers);
 			Task.Run(() =>
 			{
 				try
 				{
-					TunnelException tEx = null;
+					Exception tEx = null;
 					try { downstream.Disconnect(); }
-					catch (TunnelException ex) { tEx = ex; }
+					catch (Exception ex) { tEx = ex; }
 					SwitchToOffline(tEx);
 				}
 				finally
 				{
-					Interlocked.Decrement(ref stateChangeTasksRunning);
+					Interlocked.Decrement(ref stateChangeWorkers);
 					readLock.Release();
 					writeLock.Release();
 				}
@@ -265,9 +266,9 @@ namespace DarkCaster.DataTransfer.Client
 			await WaitStateChangeTasksAsync();
 			try
 			{
-				TunnelException tEx = null;
+				Exception tEx = null;
 				try { downstream.Disconnect(); }
-				catch (TunnelException ex) { tEx = ex; }
+				catch (Exception ex) { tEx = ex; }
 				SwitchToOfflineTask(tEx);
 			}
 			finally
@@ -279,17 +280,17 @@ namespace DarkCaster.DataTransfer.Client
 
 		public void Dispose()
 		{
+			if (isDisposed)
+				return;
+			isDisposed = true;
 			writeLock.Wait();
 			readLock.Wait();
 			WaitStateChangeTasks();
-			if (isDisposed)
-				return;
-			TunnelException tEx = null;
+			Exception tEx = null;
 			try { downstream.Dispose(); }
-			catch (TunnelException ex) { tEx = ex; }
+			catch (Exception ex) { tEx = ex; }
 			SwitchToOfflineTask(tEx);
 			WaitStateChangeTasks();
-			isDisposed = true;
 			evCtl.Dispose();
 			writeLock.Release();
 			writeLock.Dispose();
