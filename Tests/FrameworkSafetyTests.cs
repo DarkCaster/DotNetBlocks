@@ -78,5 +78,27 @@ namespace Tests
 			}
 			catch (Exception ex) { throw ex; }
 		}
+
+		private class ThreadSpawner
+		{
+			private int counter;
+			public ThreadSpawner()
+			{
+				Task.Run(()=>Worker());
+				for (int i = 0; i < 1250000000; ++i)
+					if (Interlocked.CompareExchange(ref counter, i + 1, i) != i)
+						throw new Exception("Thread write value while constructor is running!");
+			}
+			public void Worker()
+			{
+					Interlocked.Exchange(ref counter,-1);
+			}
+		}
+
+		[Test]
+		public void ThreadFromConstructor()
+		{
+			Assert.Throws(typeof(Exception),() => new ThreadSpawner());
+		}
 	}
 }
