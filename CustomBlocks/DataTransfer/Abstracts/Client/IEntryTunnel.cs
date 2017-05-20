@@ -63,10 +63,17 @@ namespace DarkCaster.DataTransfer.Client
 		ISafeEvent<TunnelStateEventArgs> StateChangeEvent { get; }
 
 		/// <summary>
+		/// Initiate tunnel connect routine.
+		/// Will not block, because all work is performed in background.
+		/// When tunnel is finally connected (or failed to connect), StateChangeEvent will be thrown.
+		/// </summary>
+		void Connect();
+
+		/// <summary>
 		/// Data read request. Blocks while awaiting for data.
 		/// May return less data, than requested.
 		/// May be used in offline state, to read remaining data from tunnel.
-		/// While tunnel in init mode, it will block while tunnel do not switch to online or offline state.
+		/// While tunnel is connecting, it will block while tunnel do not switch to online or offline state.
 		/// In offline state it will read remaining data, and throw TunnelEofException when no stale data left in tunnel. 
 		/// </summary>
 		/// <returns>Bytes count that was actually read</returns>
@@ -78,7 +85,7 @@ namespace DarkCaster.DataTransfer.Client
 		/// <summary>
 		/// Data write request, that blocks execution while writing requested amound of data.
 		/// May return less data-written count, than requested.
-		/// While tunnel in init mode, it will block while tunnel do not switch to online or offline state.
+		/// While tunnel is connecting, it will block while tunnel do not switch to online or offline state.
 		/// In offline state it will throw TunnelEofException.
 		/// </summary>
 		/// <returns>Bytes count that was actually written</returns>

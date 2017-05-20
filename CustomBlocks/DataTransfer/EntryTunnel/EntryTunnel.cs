@@ -33,17 +33,14 @@ namespace DarkCaster.DataTransfer.Client
 	{
 		private readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
 		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
-
-		private volatile TunnelState state = TunnelState.Init;
-		private int isDisposed = 0;
-
-		private int stateChangeWorkers = 0;
-
 		private readonly ISafeEventCtrl<TunnelStateEventArgs> evCtl;
 		private readonly ISafeEvent<TunnelStateEventArgs> ev;
-
 		private readonly INode downstreamNode;
+
+		private volatile TunnelState state = TunnelState.Init;
 		private ITunnel downstream;
+		private int isDisposed = 0;
+		private int stateChangeWorkers = 0;
 
 		private class OfflineSwitchException : Exception { }
 
@@ -65,20 +62,7 @@ namespace DarkCaster.DataTransfer.Client
 
 		public TunnelState State { get { return state; } }
 
-		private async Task WaitStateChangeTasksAsync()
-		{
-			int sleep = 1;
-			const int max_sleep = 50;
-			while ( Interlocked.CompareExchange(ref stateChangeWorkers, 0, 0) > 0 )
-			{
-				await Task.Delay(sleep);
-				sleep *= 2;
-				if (sleep > max_sleep)
-					sleep = max_sleep;
-			}
-		}
-
-		public void InitTask()
+		public void Connect()
 		{
 			Interlocked.Increment(ref stateChangeWorkers);
 			writeLock.Wait();
@@ -89,8 +73,9 @@ namespace DarkCaster.DataTransfer.Client
 				Exception tEx = null;
 				try
 				{
-					Volatile.Write(ref downstream, downstreamNode.OpenTunnel());
-					Thread.MemoryBarrier(); //additional safeguard, may be redundant.
+					//should be written and read later without issues,
+					//because access to this field is synchronized with readLock and writeLock
+					downstream=downstreamNode.OpenTunnel();
 				}
 				catch (Exception ex)
 				{
@@ -143,7 +128,7 @@ namespace DarkCaster.DataTransfer.Client
 			}
 			catch (Exception ex)
 			{
-				if (state == TunnelState.Offline)
+				if (state != TunnelState.Online)
 					throw new TunnelEofException(ex);
 				SwitchToOfflineTask(ex);
 				throw;
@@ -159,7 +144,7 @@ namespace DarkCaster.DataTransfer.Client
 			writeLock.Wait();
 			try
 			{
-				if (state == TunnelState.Offline)
+				if (state != TunnelState.Online)
 					throw new TunnelEofException();
 				return downstream.WriteData(sz, buffer, offset);
 			}
@@ -181,13 +166,13 @@ namespace DarkCaster.DataTransfer.Client
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			await readLock.WaitAsync();
-				try
-				{
-					return await downstream.ReadDataAsync(sz, buffer, offset);
-				}
+			try
+			{
+				return await downstream.ReadDataAsync(sz, buffer, offset);
+			}
 			catch (Exception ex)
 			{
-				if (state == TunnelState.Offline)
+				if (state != TunnelState.Online)
 					throw new TunnelEofException(ex);
 				SwitchToOfflineTask(ex);
 				throw;
@@ -203,7 +188,7 @@ namespace DarkCaster.DataTransfer.Client
 			await writeLock.WaitAsync();
 			try
 			{
-				if (state == TunnelState.Offline)
+				if (state != TunnelState.Online)
 					throw new TunnelEofException();
 				return await downstream.WriteDataAsync(sz, buffer, offset);
 			}
@@ -274,10 +259,19 @@ namespace DarkCaster.DataTransfer.Client
 				return;
 			Task.Run(async () =>
 			{
+				//perform disconnect
 				await DisconnectAsync();
 				//wait for all event handlers is complete,
 				//so it is still possible to read remaining data from disconnect event handler, and finish all your data transfer stuff.
-				await WaitStateChangeTasksAsync();
+				int sleep = 1;
+				const int max_sleep = 50;
+				while (Interlocked.CompareExchange(ref stateChangeWorkers, 0, 0) > 0)
+				{
+					await Task.Delay(sleep);
+					sleep *= 2;
+					if (sleep > max_sleep)
+						sleep = max_sleep;
+				}
 				//actually disposing entry-tunnel's internal stuff.
 				//if you still need to use object after disconnect, do not use dispose before all data read\write work is complete. 
 				downstream.Dispose();
