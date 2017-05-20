@@ -35,7 +35,7 @@ namespace DarkCaster.DataTransfer.Client
 		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
 
 		private volatile TunnelState state = TunnelState.Init;
-		private volatile bool isDisposed = false;
+		private int isDisposed = 0;
 
 		private int stateChangeWorkers = 0;
 
@@ -64,19 +64,6 @@ namespace DarkCaster.DataTransfer.Client
 		}
 
 		public TunnelState State { get { return state; } }
-
-		private void WaitStateChangeTasks()
-		{
-			int sleep = 1;
-			const int max_sleep = 50;
-			while ( Interlocked.CompareExchange(ref stateChangeWorkers, 0, 0) > 0 )
-			{
-				Thread.Sleep(sleep);
-				sleep *= 2;
-				if (sleep > max_sleep)
-					sleep = max_sleep;
-			}
-		}
 
 		private async Task WaitStateChangeTasksAsync()
 		{
@@ -235,67 +222,69 @@ namespace DarkCaster.DataTransfer.Client
 			}
 		}
 
-		public void Disconnect()
+		private void CommitDisconnect()
 		{
-			writeLock.Wait();
-			readLock.Wait();
-			WaitStateChangeTasks();
 			Interlocked.Increment(ref stateChangeWorkers);
 			Task.Run(() =>
 			{
 				try
 				{
-					Exception tEx = null;
-					try { downstream.Disconnect(); }
-					catch (Exception ex) { tEx = ex; }
-					SwitchToOffline(tEx);
+					evCtl.Raise(this, () =>
+					{
+						try
+						{
+							if (state == TunnelState.Offline)
+								throw new OfflineSwitchException();
+							Exception tEx = null;
+							try { downstream.Disconnect(); }
+							catch (Exception ex) { tEx = ex; }
+							state = TunnelState.Offline;
+							return new TunnelStateEventArgs(TunnelState.Offline, tEx);
+						}
+						finally
+						{
+							// we need this to allow user's event handlers to call read\write methods
+							readLock.Release();
+							writeLock.Release();
+						}
+					});
 				}
-				finally
-				{
-					Interlocked.Decrement(ref stateChangeWorkers);
-					readLock.Release();
-					writeLock.Release();
-				}
+				catch (OfflineSwitchException) {}
+				Interlocked.Decrement(ref stateChangeWorkers);
 			});
+		}
+
+		public void Disconnect()
+		{
+			writeLock.Wait();
+			readLock.Wait();
+			CommitDisconnect();
 		}
 
 		public async Task DisconnectAsync()
 		{
 			await writeLock.WaitAsync();
 			await readLock.WaitAsync();
-			await WaitStateChangeTasksAsync();
-			try
-			{
-				Exception tEx = null;
-				try { downstream.Disconnect(); }
-				catch (Exception ex) { tEx = ex; }
-				SwitchToOfflineTask(tEx);
-			}
-			finally
-			{
-				readLock.Release();
-				writeLock.Release();
-			}
+			CommitDisconnect();
 		}
 
 		public void Dispose()
 		{
-			if (isDisposed)
+			if(Interlocked.CompareExchange(ref isDisposed, 1, 0) == 1)
 				return;
-			isDisposed = true;
-			writeLock.Wait();
-			readLock.Wait();
-			WaitStateChangeTasks();
-			Exception tEx = null;
-			try { downstream.Dispose(); }
-			catch (Exception ex) { tEx = ex; }
-			SwitchToOfflineTask(tEx);
-			WaitStateChangeTasks();
-			evCtl.Dispose();
-			writeLock.Release();
-			writeLock.Dispose();
-			readLock.Release();
-			readLock.Dispose();
+			Task.Run(async () =>
+			{
+				await DisconnectAsync();
+				//wait for all event handlers is complete,
+				//so it is still possible to read remaining data from disconnect event handler, and finish all your data transfer stuff.
+				await WaitStateChangeTasksAsync();
+				//actually disposing entry-tunnel's internal stuff.
+				//if you still need to use object after disconnect, do not use dispose before all data read\write work is complete. 
+				downstream.Dispose();
+				evCtl.Dispose();
+				writeLock.Dispose();
+				readLock.Dispose();
+			});
 		}
 	}
 }

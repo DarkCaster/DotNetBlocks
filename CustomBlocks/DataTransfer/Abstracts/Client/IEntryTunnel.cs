@@ -31,19 +31,20 @@ namespace DarkCaster.DataTransfer.Client
 	/// <summary>
 	/// Client side entry-tunnel.
 	/// Object of this interface should be used to perform data transfer from user's code, instead of using INode directly.
-	/// Methods defined here must be thread-safe.
-	/// Concurrent reads and concurrent writes must be interlocked,
-	/// read and write methods should be allowed to execute at the same time concurrently,
-	/// disconnect must be interlocked with both read and write activity.
-	/// StateChangeEvent event may be thrown anytime, and it must be thrown from separate thread.
-	/// Do not call Dispose from state change event handler, because it will damage internal state of ISafeEvent object.
+	/// Defined methods are thread-safe. Some methods combinations use locks to guarantee state and data consistency:
+	/// read and write methods may be executed at the same time concurrently,
+	/// but no two parallel read or write calls allowed,
+	/// disconnect is interlocked with both read and write activity,
+	/// StateChangeEvent event may be thrown anytime and it will be always thrown from separate thread.
+	/// Dispose can be called from event handler, it will perform disconnect\cleanup in separate thread and wait for all currently running event handlers is complete.
 	/// </summary>
 	public interface IEntryTunnel : IDisposable
 	{
 		/// <summary>
 		/// Gets the current state of tunnel.
-		/// This feature is using volatile field, but it change is not atomic with tunnel state change event.
-		/// So use it only as informational property, do not plan any complex behaviour on it.
+		/// This feature is using volatile field.
+		/// It's change is not atomic with tunnel state change event.
+		/// However it is guaranteed that it will be updated while raising an event.
 		/// </summary>
 		/// <value>Current state</value>
 		TunnelState State { get; }
@@ -51,13 +52,22 @@ namespace DarkCaster.DataTransfer.Client
 		/// <summary>
 		/// Event for tunnel state change notifications.
 		/// </summary>
+		/// <value>
+		/// Tunnel state change event.
+		/// Subscribe to receive notifications about tunnel state changes.
+		/// You can subscribe to this event using it's SafeExec method to guarantee that you not miss event raise while subscribing.
+		/// Also, reading State property inside SafeExec block will guarantee that you always get it's actual value.
+		/// Use of this event is optional.
+		/// It may be used to spawn data transfer job in separate thread when tunnel is connected, for example. 
+		/// </value>
 		ISafeEvent<TunnelStateEventArgs> StateChangeEvent { get; }
 
 		/// <summary>
 		/// Data read request. Blocks while awaiting for data.
 		/// May return less data, than requested.
 		/// May be used in offline state, to read remaining data from tunnel.
-		/// In offline or init mode, return 0 when no data left.
+		/// While tunnel in init mode, it will block while tunnel do not switch to online or offline state.
+		/// In offline state it will read remaining data, and throw TunnelEofException when no stale data left in tunnel. 
 		/// </summary>
 		/// <returns>Bytes count that was actually read</returns>
 		/// <param name="sz">Bytes count to read</param>
@@ -68,7 +78,8 @@ namespace DarkCaster.DataTransfer.Client
 		/// <summary>
 		/// Data write request, that blocks execution while writing requested amound of data.
 		/// May return less data-written count, than requested.
-		/// In offline or init mode always return 0.
+		/// While tunnel in init mode, it will block while tunnel do not switch to online or offline state.
+		/// In offline state it will throw TunnelEofException.
 		/// </summary>
 		/// <returns>Bytes count that was actually written</returns>
 		/// <param name="sz">Bytes count to write</param>
@@ -87,14 +98,15 @@ namespace DarkCaster.DataTransfer.Client
 		Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0);
 
 		/// <summary>
-		/// Close tunnel connection.
-		/// State change event will be thrown, and tunnel state will be set to "offline".
-		/// May block while performing disconnect request.
+		/// Request tunnel to close it's connection.
+		/// May block while awaiting for current read and write operations to complete.
+		/// State change event will be thrown, and tunnel state will be set to "offline", when tunnel disconnects.
+		/// It will be performed from separate thread.
 		/// </summary>
 		void Disconnect();
 
 		/// <summary>
-		/// Same as Disconnect, but async
+		/// Same as Disconnect, but read-write locks awaiting is async friendly.
 		/// </summary>
 		Task DisconnectAsync();
 	}
