@@ -57,6 +57,8 @@
     <Compile Include="SafeEventTests.cs" />
     <Compile Include="Shared\SafeEventTestsStuff.cs" />
     <Compile Include="CommonEventTests.cs" />
+    <Compile Include="CommonTunnelConfigTests.cs" />
+    <Compile Include="TunnelConfigFactoryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
