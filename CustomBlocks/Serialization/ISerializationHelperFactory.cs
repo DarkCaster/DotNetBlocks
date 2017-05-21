@@ -58,7 +58,7 @@ namespace DarkCaster.Serialization
 		/// <summary>
 		/// Wrapper for non-generic <code>GetHelper(Type type)</code>.
 		/// Return generic ISerializationHelper that use non generic serialization backend.
-		/// For use as drop-in replacement to generic <code>GetHelper<T>()</code>.
+		/// For use as drop-in replacement to generic <code>GetHelper&lt;T&gt;()</code>.
 		/// Serialization helper instance returned by this method perform additional type conversion
 		/// from external type <code>ExtType</code> to internal type <code>intType</code>
 		/// before performing serialization and vise versa when performing deserialization.
