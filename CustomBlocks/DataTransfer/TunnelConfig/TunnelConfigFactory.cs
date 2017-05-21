@@ -41,7 +41,7 @@ namespace DarkCaster.DataTransfer.Config
 
 		public ISerializationHelper<ITunnelConfig> CreateSerializationHelper()
 		{
-			return (ISerializationHelper<ITunnelConfig>)serializationFactory.GetHelper<TunnelConfig>();
+			return serializationFactory.GetHelper<ITunnelConfig>(typeof(TunnelConfig));
 		}
 	}
 }
