@@ -55,5 +55,10 @@ namespace DarkCaster.Serialization.Binary
 				throw new BinarySerializationFactoryException(type, false, ex);
 			}
 		}
+
+		public ISerializationHelper<ExtType> GetHelper<ExtType>(Type intType)
+		{
+			return new SerializationHelperProxy<ExtType>(GetHelper(intType));
+		}
 	}
 }

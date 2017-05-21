@@ -55,5 +55,10 @@ namespace DarkCaster.Serialization.Json
 				throw new JsonSerializationFactoryException(type, false, ex);
 			}
 		}
+
+		public ISerializationHelper<ExtType> GetHelper<ExtType>(Type intType)
+		{
+			return new SerializationHelperProxy<ExtType>(GetHelper(intType));
+		}
 	}
 }

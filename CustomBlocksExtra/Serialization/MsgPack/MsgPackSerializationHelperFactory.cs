@@ -59,6 +59,11 @@ namespace DarkCaster.Serialization.MsgPack
 				throw new MsgPackSerializationFactoryException(type, false, mode, ex);
 			}
 		}
+
+		public ISerializationHelper<ExtType> GetHelper<ExtType>(Type intType)
+		{
+			return new SerializationHelperProxy<ExtType>(GetHelper(intType));
+		}
 	}
 }
 
