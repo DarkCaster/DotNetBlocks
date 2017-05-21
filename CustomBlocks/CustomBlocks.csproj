@@ -109,6 +109,8 @@
     <Compile Include="DataTransfer\Abstracts\Client\IEntryTunnel.cs" />
     <Compile Include="DataTransfer\EntryTunnel\EntryTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelEofException.cs" />
+    <Compile Include="DataTransfer\Abstracts\Config\ITunnelConfig.cs" />
+    <Compile Include="DataTransfer\Abstracts\Config\ITunnelConfigFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -129,6 +131,7 @@
     <Folder Include="DataTransfer\Abstracts\Client\" />
     <Folder Include="DataTransfer\Udp\Client\" />
     <Folder Include="DataTransfer\EntryTunnel\" />
+    <Folder Include="DataTransfer\Abstracts\Config\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
