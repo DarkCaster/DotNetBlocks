@@ -113,6 +113,7 @@
     <Compile Include="DataTransfer\Abstracts\Config\ITunnelConfigFactory.cs" />
     <Compile Include="DataTransfer\TunnelConfig\TunnelConfig.cs" />
     <Compile Include="DataTransfer\TunnelConfig\TunnelConfigFactory.cs" />
+    <Compile Include="Serialization\SerializationHelperProxy.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
