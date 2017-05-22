@@ -100,5 +100,27 @@ namespace Tests
 			Assert.AreEqual(dTestVal, config2.Get<double>("dtest"));
 			Assert.AreEqual(sTestVal, config2.Get<string>("stest"));
 		}
+
+		public static void ITunnelConfig_CorrectSetGet<T>(ITunnelConfig config, T val)
+		{
+			Assert.DoesNotThrow(() => config.Set("testVal", val));
+			T compare = config.Get<T>("testVal");
+			Assert.AreEqual(val, compare);
+		}
+
+		public static void ITunnelConfig_WrongSetGet(ITunnelConfig config)
+		{
+			int val = new Random().Next()+1;
+			Assert.DoesNotThrow(() => config.Set("testVal", val));
+			long compare = config.Get<long>("testVal");
+			Assert.AreNotEqual((long)val,compare);
+			Assert.AreEqual(compare, 0L);
+		}
+
+		public static void ITunnelConfig_EmptyGet<T>(ITunnelConfig config)
+		{
+			T compare = config.Get<T>("not_exist");
+			Assert.AreEqual(compare, default(T));
+		}
 	}
 }
