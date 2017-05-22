@@ -39,13 +39,13 @@ namespace DarkCaster.DataTransfer.Config
 		/// </summary>
 		/// <param name="key">Key.</param>
 		/// <param name="val">Value.</param>
-		void Set(string key, object val);
+		void Set<T>(string key, T val);
 
 		/// <summary>
 		/// Get config option value specified by key.
 		/// </summary>
 		/// <returns>Config value. Return null if there is no such key.</returns>
 		/// <param name="key">Key.</param>
-		object Get(string key);
+		T Get<T>(string key);
 	}
 }

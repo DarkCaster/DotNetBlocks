@@ -23,26 +23,226 @@
 // SOFTWARE.
 //
 using System;
+using System.Text;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
+
 namespace DarkCaster.DataTransfer.Config
 {
 	[Serializable]
 	public class TunnelConfig : ITunnelConfig
 	{
-		private readonly ConcurrentDictionary<string, object> storage;
-		public ConcurrentDictionary<string, object> Storage { get { return storage; } }
-		public TunnelConfig() { storage = new ConcurrentDictionary<string, object>(); }
-		public TunnelConfig(ConcurrentDictionary<string, object> storage) { this.storage = storage; }
-
-		public void Set(string key, object val)
+		[Serializable]
+		public class StorageRecord
 		{
-			storage.AddOrUpdate(key, val, (k, old_v) => val);
+			public byte PType { get; set; }
+			public byte[] Payload { get; set; }
 		}
-		public object Get(string key)
+
+		private ConcurrentDictionary<string, StorageRecord> storage=new ConcurrentDictionary<string, StorageRecord>();
+
+		public KeyValuePair<string, StorageRecord>[] Storage
 		{
-			object result = null;
-			storage.TryGetValue(key,out result);
+			get { return storage.ToArray(); }
+			set { storage=new ConcurrentDictionary<string, StorageRecord>(value); }
+		}
+
+		private byte[] ConvertForBigEndian(byte[] input)
+		{
+			if (BitConverter.IsLittleEndian)
+				return input;
+			var reverse = new byte[input.Length];
+			Buffer.BlockCopy(input,0,reverse,0,input.Length);
+			Array.Reverse(reverse);
+			return reverse;
+		}
+
+		private StorageRecord WriteRecord(byte[] val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 0,
+				Payload = val
+			};
 			return result;
+		}
+
+		private StorageRecord WriteRecord(bool val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 1,
+				Payload = new byte[1] { val ? (byte)1 : (byte)0 }
+			};
+			return result;
+		}
+
+		private StorageRecord WriteRecord(int val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 2,
+				Payload = ConvertForBigEndian(BitConverter.GetBytes(val))
+			};
+			return result;
+		}
+
+		private StorageRecord WriteRecord(uint val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 3,
+				Payload = ConvertForBigEndian(BitConverter.GetBytes(val))
+			};
+			return result;
+		}
+
+		private StorageRecord WriteRecord(long val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 4,
+				Payload = ConvertForBigEndian(BitConverter.GetBytes(val))
+			};
+			return result;
+		}
+
+		private StorageRecord WriteRecord(ulong val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 5,
+				Payload = ConvertForBigEndian(BitConverter.GetBytes(val))
+			};
+			return result;
+		}
+
+		private StorageRecord WriteRecord(float val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 6,
+				Payload = ConvertForBigEndian(BitConverter.GetBytes(val))
+			};
+			return result;
+		}
+
+		private StorageRecord WriteRecord(double val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 7,
+				Payload = ConvertForBigEndian(BitConverter.GetBytes(val))
+			};
+			return result;
+		}
+
+		private StorageRecord WriteRecord(string val)
+		{
+			var result = new StorageRecord()
+			{
+				PType = 8,
+				Payload = Encoding.UTF8.GetBytes(val)
+			};
+			return result;
+		}
+
+		private byte[] ReadByteRecord(StorageRecord input)
+		{
+			return input.Payload;
+		}
+
+		private bool ReadBoolRecord(StorageRecord input)
+		{
+			return input.Payload[0] != 0 ? true : false;
+		}
+
+		private int ReadIntRecord(StorageRecord input)
+		{
+			return BitConverter.ToInt32(ConvertForBigEndian(input.Payload),0);
+		}
+
+		private uint ReadUIntRecord(StorageRecord input)
+		{
+			return BitConverter.ToUInt32(ConvertForBigEndian(input.Payload), 0);
+		}
+
+		private long ReadLongRecord(StorageRecord input)
+		{
+			return BitConverter.ToInt64(ConvertForBigEndian(input.Payload), 0);
+		}
+
+		private ulong ReadULongRecord(StorageRecord input)
+		{
+			return BitConverter.ToUInt64(ConvertForBigEndian(input.Payload), 0);
+		}
+
+		private float ReadFloatRecord(StorageRecord input)
+		{
+			return BitConverter.ToSingle(ConvertForBigEndian(input.Payload), 0);
+		}
+
+		private double ReadDoubleRecord(StorageRecord input)
+		{
+			return BitConverter.ToDouble(ConvertForBigEndian(input.Payload), 0);
+		}
+
+		private string ReadStringRecord(StorageRecord input)
+		{
+			return Encoding.UTF8.GetString(input.Payload);
+		}
+
+		//TODO: make proper restritions and conversions for supported T types.
+		public void Set<T>(string key, T val)
+		{
+			StorageRecord result = null;
+			if (typeof(T) == typeof(byte[]))
+				result = WriteRecord((byte[])(object)val);
+			else if (typeof(T) == typeof(bool))
+				result = WriteRecord((bool)(object)val);
+			else if (typeof(T) == typeof(int))
+				result = WriteRecord((int)(object)val);
+			else if (typeof(T) == typeof(uint))
+				result = WriteRecord((uint)(object)val);
+			else if (typeof(T) == typeof(long))
+				result = WriteRecord((long)(object)val);
+			else if (typeof(T) == typeof(ulong))
+				result = WriteRecord((ulong)(object)val);
+			else if (typeof(T) == typeof(float))
+				result = WriteRecord((float)(object)val);
+			else if (typeof(T) == typeof(double))
+				result = WriteRecord((double)(object)val);
+			else if (typeof(T) == typeof(string))
+				result = WriteRecord((string)(object)val);
+			else
+				throw new NotSupportedException("Unsupported type!");
+			storage.AddOrUpdate(key.ToLower(), result, (k, old_v) => result);
+		}
+
+		public T Get<T>(string key)
+		{
+			if(storage.TryGetValue(key, out StorageRecord record))
+			{
+				if (record.PType == 0 && typeof(T) == typeof(byte[]))
+					return (T)(object)ReadByteRecord(record);
+				if (record.PType == 1 && typeof(T) == typeof(bool))
+					return (T)(object)ReadBoolRecord(record);
+				if (record.PType == 2 && typeof(T) == typeof(int))
+					return (T)(object)ReadIntRecord(record);
+				if (record.PType == 3 && typeof(T) == typeof(uint))
+					return (T)(object)ReadUIntRecord(record);
+				if (record.PType == 4 && typeof(T) == typeof(long))
+					return (T)(object)ReadLongRecord(record);
+				if (record.PType == 5 && typeof(T) == typeof(ulong))
+					return (T)(object)ReadULongRecord(record);
+				if (record.PType == 6 && typeof(T) == typeof(float))
+					return (T)(object)ReadFloatRecord(record);
+				if (record.PType == 7 && typeof(T) == typeof(double))
+					return (T)(object)ReadDoubleRecord(record);
+				if (record.PType == 8 && typeof(T) == typeof(string))
+					return (T)(object)ReadStringRecord(record);
+			}
+			return default(T);
 		}
 	}
 }
