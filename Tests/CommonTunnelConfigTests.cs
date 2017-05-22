@@ -1,4 +1,4 @@
-﻿// TunnelConfigTests.cs
+﻿﻿// TunnelConfigTests.cs
 //
 // The MIT License (MIT)
 //
@@ -56,19 +56,49 @@ namespace Tests
 
 		public static void ITunnelConfigFactory_Serializer(ITunnelConfigFactory factory)
 		{
-			ISerializationHelper<ITunnelConfig> serializer = factory.CreateSerializationHelper();
+			//create original config
 			ITunnelConfig config = factory.CreateNew();
-			int testVal = new Random().Next();
-			config.Set("test",testVal);
+			int iTestVal = new Random().Next();
+			config.Set("iTest", iTestVal);
+			uint uiTestVal = (uint)(new Random().Next());
+			config.Set("uiTest", uiTestVal);
+			long lTestVal = new Random().Next();
+			config.Set("lTest", lTestVal);
+			ulong ulTestVal = (ulong)(new Random().Next());
+			config.Set("ulTest", ulTestVal);
+			bool bTestVal = (new Random().NextDouble()) > 0.5;
+			config.Set("bTest", bTestVal);
+			var byTestVal=new byte[10]; new Random().NextBytes(byTestVal);
+			config.Set("byTest", byTestVal);
+			float fTestVal = (float)(new Random().NextDouble());
+			config.Set("fTest", fTestVal);
+			double dTestVal = new Random().NextDouble();
+			config.Set("dTest", dTestVal);
+			string sTestVal = "test";
+			config.Set("sTest", sTestVal);
+
+			//serialize
+			ISerializationHelper<ITunnelConfig> serializer = factory.CreateSerializationHelper();
 			byte[] data = null;
 			Assert.DoesNotThrow(()=> { data = serializer.Serialize(config); });
 			Assert.IsNotNull(data);
+
+			//deserialize
 			ITunnelConfig config2 = null;
 			Assert.DoesNotThrow(()=> { config2 = serializer.Deserialize(data); });
 			Assert.IsNotNull(config2);
 			Assert.AreNotSame(config,config2);
-			int testVal2 = (int)config2.Get("test");
-			Assert.AreEqual(testVal, testVal2);
+
+			//compare values
+			Assert.AreEqual(iTestVal, config2.Get<int>("itest"));
+			Assert.AreEqual(uiTestVal, config2.Get<uint>("uitest"));
+			Assert.AreEqual(lTestVal, config2.Get<long>("ltest"));
+			Assert.AreEqual(ulTestVal, config2.Get<ulong>("ultest"));
+			Assert.AreEqual(byTestVal, config2.Get<byte[]>("bytest"));
+			Assert.AreEqual(bTestVal, config2.Get<bool>("btest"));
+			Assert.AreEqual(fTestVal, config2.Get<float>("ftest"));
+			Assert.AreEqual(dTestVal, config2.Get<double>("dtest"));
+			Assert.AreEqual(sTestVal, config2.Get<string>("stest"));
 		}
 	}
 }
