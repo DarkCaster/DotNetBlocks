@@ -45,6 +45,11 @@ namespace Tests
 			CommonTunnelConfigTests.ITunnelConfigFactory_CreateSerializer(new TunnelConfigFactory(sf));
 		}
 
+		public static void TunnelConfigFactory_Serializer(ISerializationHelperFactory sf)
+		{
+			CommonTunnelConfigTests.ITunnelConfigFactory_Serializer(new TunnelConfigFactory(sf));
+		}
+
 		[Test]
 		public void TunnelConfigFactory_Json_CreateNew()
 		{
@@ -87,6 +92,25 @@ namespace Tests
 			TunnelConfigFactory_CreateSerializer(new MsgPackSerializationHelperFactory(MsgPackMode.TransferCheckSum));
 		}
 
+		[Test]
+		public void TunnelConfigFactory_Json_Serializer()
+		{
+			TunnelConfigFactory_Serializer(new JsonSerializationHelperFactory());
+		}
 
+		[Test]
+		public void TunnelConfigFactory_Binary_Serializer()
+		{
+			TunnelConfigFactory_Serializer(new BinarySerializationHelperFactory());
+		}
+
+		[Test]
+		public void TunnelConfigFactory_MsgPack_Serializer()
+		{
+			TunnelConfigFactory_Serializer(new MsgPackSerializationHelperFactory(MsgPackMode.Storage));
+			TunnelConfigFactory_Serializer(new MsgPackSerializationHelperFactory(MsgPackMode.StorageCheckSum));
+			TunnelConfigFactory_Serializer(new MsgPackSerializationHelperFactory(MsgPackMode.Transfer));
+			TunnelConfigFactory_Serializer(new MsgPackSerializationHelperFactory(MsgPackMode.TransferCheckSum));
+		}
 	}
 }
