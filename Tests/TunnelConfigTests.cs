@@ -35,31 +35,8 @@ namespace Tests
 	[TestFixture]
 	public class TunnelConfigTests
 	{
-		/*
-		 * //create original config
-			ITunnelConfig config = factory.CreateNew();
-			int iTestVal = new Random().Next();
-			config.Set("iTest", iTestVal);
-			uint uiTestVal = (uint)(new Random().Next());
-			config.Set("uiTest", uiTestVal);
-			long lTestVal = new Random().Next();
-			config.Set("lTest", lTestVal);
-			ulong ulTestVal = (ulong)(new Random().Next());
-			config.Set("ulTest", ulTestVal);
-			bool bTestVal = (new Random().NextDouble()) > 0.5;
-			config.Set("bTest", bTestVal);
-			var byTestVal=new byte[10]; new Random().NextBytes(byTestVal);
-			config.Set("byTest", byTestVal);
-			float fTestVal = (float)(new Random().NextDouble());
-			config.Set("fTest", fTestVal);
-			double dTestVal = new Random().NextDouble();
-			config.Set("dTest", dTestVal);
-			string sTestVal = "test";
-			config.Set("sTest", sTestVal);
-		*/
-
 		[Test]
-		public void Int_GetSet()
+		public void Int_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -68,7 +45,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void UInt_GetSet()
+		public void UInt_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -77,7 +54,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void Long_GetSet()
+		public void Long_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -86,7 +63,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void ULong_GetSet()
+		public void ULong_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -95,7 +72,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void Float_GetSet()
+		public void Float_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -104,7 +81,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void Double_GetSet()
+		public void Double_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -113,7 +90,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void Byte_GetSet()
+		public void Byte_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -122,7 +99,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void Bool_GetSet()
+		public void Bool_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
@@ -131,12 +108,71 @@ namespace Tests
 		}
 
 		[Test]
-		public void String_GetSet()
+		public void String_SetGet()
 		{
 			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
 			var config = factory.CreateNew();
 			string val = "The quick brown fox jumps over the lazy dog";
 			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, val);
+		}
+
+		[Test]
+		public void TypeRewrite()
+		{
+			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
+			var config = factory.CreateNew();
+
+			int iTestVal = new Random().Next();
+			uint uiTestVal = (uint)(new Random().Next());
+			long lTestVal = new Random().Next();
+			ulong ulTestVal = (ulong)(new Random().Next());
+			bool bTestVal = (new Random().NextDouble()) > 0.5;
+			var byTestVal = new byte[10]; new Random().NextBytes(byTestVal);
+			float fTestVal = (float)(new Random().NextDouble());
+			double dTestVal = new Random().NextDouble();
+			string sTestVal = "test";
+
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, iTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, uiTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, lTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, ulTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, bTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, byTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, fTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, dTestVal);
+			CommonTunnelConfigTests.ITunnelConfig_CorrectSetGet(config, sTestVal);
+		}
+
+		[Test]
+		public void Wrong_SetGet()
+		{
+			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
+			var config = factory.CreateNew();
+			CommonTunnelConfigTests.ITunnelConfig_WrongSetGet(config);
+		}
+
+		[Test]
+		public void Wrong_EmptyGet()
+		{
+			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
+			var config = factory.CreateNew();
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<bool>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<byte[]>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<int>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<uint>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<long>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<ulong>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<float>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<double>(config);
+			CommonTunnelConfigTests.ITunnelConfig_EmptyGet<string>(config);
+		}
+
+		[Test]
+		public void Wrong_Type()
+		{
+			var factory = new TunnelConfigFactory(new BinarySerializationHelperFactory());
+			var config = factory.CreateNew();
+			Assert.Throws(typeof(NotSupportedException),()=>config.Set<Guid>("fail",Guid.NewGuid()));
 		}
 	}
 }
