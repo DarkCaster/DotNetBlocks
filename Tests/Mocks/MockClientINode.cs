@@ -36,6 +36,8 @@ namespace Tests.Mocks
 		private readonly float partialOpProbability;
 		private readonly int noFailOpsCounter;
 
+		public MockClientITunnel LastTunnel { get; set; }
+
 		public MockClientINode(int minDelay, int maxDelay, float failProbability, float partialOpProbability, int noFailOpsCount)
 		{
 			this.minDelay = minDelay;
@@ -43,13 +45,15 @@ namespace Tests.Mocks
 			this.failProbability = failProbability;
 			this.partialOpProbability = partialOpProbability;
 			this.noFailOpsCounter = noFailOpsCount;
+			LastTunnel = null;
 		}
 
 		public ITunnel OpenTunnel(ITunnelConfig config)
 		{
 			if (config == null)
 				throw new Exception("config parameter cannot be null!");
-			return new MockClientITunnel(minDelay, maxDelay, failProbability, partialOpProbability, noFailOpsCounter);
+			LastTunnel=new MockClientITunnel(minDelay, maxDelay, failProbability, partialOpProbability, noFailOpsCounter);
+			return LastTunnel;
 		}
 	}
 }
