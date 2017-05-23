@@ -26,6 +26,7 @@ using System;
 using NUnit.Framework;
 using DarkCaster.DataTransfer.Config;
 using DarkCaster.DataTransfer.Client;
+using Tests.Mocks;
 
 namespace Tests
 {
@@ -35,7 +36,22 @@ namespace Tests
 		[Test]
 		public void NewNode()
 		{
-			Assert.DoesNotThrow(()=>new EntryNode(null));
+			var mockNode = new MockClientINode(0,0,0,0,10);
+			Assert.DoesNotThrow(()=>new EntryNode(mockNode));
+		}
+
+		[Test]
+		public void NewTunnel()
+		{
+			var mockNode = new MockClientINode(0, 0, 0, 0, 10);
+			var config = new MockITunnelConfigFactory().CreateNew();
+			IEntryNode node = null;
+			Assert.DoesNotThrow(() => { node = new EntryNode(mockNode); });
+			var tunnel = node.OpenTunnel(config);
+			Assert.DoesNotThrow(tunnel.Disconnect);
+			Assert.DoesNotThrow(tunnel.Disconnect); //multiple disconnect calls should be handled
+			Assert.DoesNotThrow(tunnel.Dispose);
+			Assert.DoesNotThrow(tunnel.Dispose); //multiple dispose calls should be handled
 		}
 	}
 }
