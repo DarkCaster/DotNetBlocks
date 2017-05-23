@@ -62,6 +62,9 @@
     <Compile Include="TunnelConfigTests.cs" />
     <Compile Include="EntryTunnelTests.cs" />
     <Compile Include="Mocks\MockClientITunnel.cs" />
+    <Compile Include="Mocks\MockClientINode.cs" />
+    <Compile Include="Mocks\MockITunnelConfig.cs" />
+    <Compile Include="Mocks\MockITunnelConfigFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
