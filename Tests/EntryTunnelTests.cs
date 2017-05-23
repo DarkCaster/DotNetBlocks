@@ -48,6 +48,7 @@ namespace Tests
 			IEntryNode node = null;
 			Assert.DoesNotThrow(() => { node = new EntryNode(mockNode); });
 			var tunnel = node.OpenTunnel(config);
+			Assert.DoesNotThrow(tunnel.Connect);
 			Assert.DoesNotThrow(tunnel.Disconnect);
 			Assert.DoesNotThrow(tunnel.Disconnect); //multiple disconnect calls should be handled
 			Assert.DoesNotThrow(tunnel.Dispose);
