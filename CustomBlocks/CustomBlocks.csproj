@@ -114,6 +114,7 @@
     <Compile Include="DataTransfer\TunnelConfig\TunnelConfig.cs" />
     <Compile Include="DataTransfer\TunnelConfig\TunnelConfigFactory.cs" />
     <Compile Include="Serialization\SerializationHelperProxy.cs" />
+    <Compile Include="DataTransfer\EntryTunnel\EntryNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
