@@ -23,10 +23,12 @@
 // SOFTWARE.
 //
 using System;
+using DarkCaster.DataTransfer.Config;
+
 namespace DarkCaster.DataTransfer.Client
 {
 	public interface IEntryNode
 	{
-		IEntryTunnel OpenTunnel();
+		IEntryTunnel OpenTunnel(ITunnelConfig config);
 	}
 }

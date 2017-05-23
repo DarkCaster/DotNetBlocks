@@ -23,11 +23,12 @@
 // SOFTWARE.
 //
 using System;
+using DarkCaster.DataTransfer.Config;
 
 namespace DarkCaster.DataTransfer.Client
 {
 	public interface INode
 	{
-		ITunnel OpenTunnel();
+		ITunnel OpenTunnel(ITunnelConfig config);
 	}
 }

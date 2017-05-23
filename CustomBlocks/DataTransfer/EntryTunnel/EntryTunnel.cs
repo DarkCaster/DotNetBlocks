@@ -26,6 +26,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using DarkCaster.Events;
+using DarkCaster.DataTransfer.Config;
 
 namespace DarkCaster.DataTransfer.Client
 {
@@ -36,6 +37,7 @@ namespace DarkCaster.DataTransfer.Client
 		private readonly ISafeEventCtrl<TunnelStateEventArgs> evCtl;
 		private readonly ISafeEvent<TunnelStateEventArgs> ev;
 		private readonly INode downstreamNode;
+		private readonly ITunnelConfig config;
 
 		private volatile TunnelState state = TunnelState.Init;
 		private ITunnel downstream;
@@ -55,9 +57,10 @@ namespace DarkCaster.DataTransfer.Client
 #endif
 		}
 
-		public EntryTunnel(INode downstreamNode) : this()
+		public EntryTunnel(INode downstreamNode, ITunnelConfig config) : this()
 		{
 			this.downstreamNode = downstreamNode;
+			this.config = config;
 		}
 
 		public TunnelState State { get { return state; } }
@@ -75,7 +78,7 @@ namespace DarkCaster.DataTransfer.Client
 				{
 					//should be written and read later without issues,
 					//because access to this field is synchronized with readLock and writeLock
-					downstream=downstreamNode.OpenTunnel();
+					downstream=downstreamNode.OpenTunnel(config);
 				}
 				catch (Exception ex)
 				{
