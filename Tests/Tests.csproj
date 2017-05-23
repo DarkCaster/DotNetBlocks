@@ -60,6 +60,7 @@
     <Compile Include="CommonTunnelConfigTests.cs" />
     <Compile Include="TunnelConfigFactoryTests.cs" />
     <Compile Include="TunnelConfigTests.cs" />
+    <Compile Include="EntryTunnelTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
