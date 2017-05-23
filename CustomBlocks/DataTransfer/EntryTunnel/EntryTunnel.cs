@@ -44,7 +44,7 @@ namespace DarkCaster.DataTransfer.Client
 		private int isDisposed = 0;
 		private int stateChangeWorkers = 0;
 
-		private class OfflineSwitchException : Exception { }
+		private class StateSwitchException : Exception { }
 
 		private EntryTunnel()
 		{
@@ -83,14 +83,28 @@ namespace DarkCaster.DataTransfer.Client
 				catch (Exception ex)
 				{
 					tEx = ex;
+					pendingState = TunnelState.Offline;
 				}
 				finally
 				{
-					evCtl.Raise(this, new TunnelStateEventArgs(pendingState, tEx), () => {
-						state = pendingState;
-						writeLock.Release();
-						readLock.Release();
-					});
+					try
+					{
+						evCtl.Raise(this, new TunnelStateEventArgs(pendingState, tEx), () =>
+						{
+							try
+							{
+								if (state != TunnelState.Init)
+									throw new StateSwitchException();
+								state = pendingState;
+							}
+							finally
+							{
+								writeLock.Release();
+								readLock.Release();
+							}
+						});
+					}
+					catch(StateSwitchException) {}
 					Interlocked.Decrement(ref stateChangeWorkers);
 				}
 			});
@@ -198,7 +212,7 @@ namespace DarkCaster.DataTransfer.Client
 						try
 						{
 							if (state == TunnelState.Offline)
-								throw new OfflineSwitchException();
+								throw new StateSwitchException();
 							try { downstream.Disconnect(); }
 							catch (Exception ex) { if (iEx == null) iEx = ex; }
 							state = TunnelState.Offline;
@@ -216,7 +230,7 @@ namespace DarkCaster.DataTransfer.Client
 						}
 					});
 				}
-				catch (OfflineSwitchException) {}
+				catch (StateSwitchException) {}
 				Interlocked.Decrement(ref stateChangeWorkers);
 			});
 		}
