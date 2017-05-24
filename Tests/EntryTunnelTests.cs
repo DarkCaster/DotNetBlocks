@@ -54,13 +54,44 @@ namespace Tests
 			connectDone = true;
 		}
 
+		private void WaitForConnectHandlerFired(int timelimit)
+		{
+			while (!connectDone)
+			{
+				if (timelimit <= 0)
+					throw new Exception("WaitForConnectHandlerFired timed out!");
+				Thread.Sleep(250);
+				timelimit -= 250;
+			}
+			connectDone = false;
+		}
+
+		private void CheckForConnectHandlerExceptions(Type expectedExType)
+		{
+			var testedEx = connectEx;
+			connectEx = null;
+			if (testedEx == null && expectedExType != null)
+			{
+				throw new Exception("connectEx is null, but expected exception of type :" + expectedExType.ToString());
+			}
+			if (testedEx != null && (expectedExType == null || testedEx.GetType() != expectedExType))
+			{
+				throw testedEx;
+			}
+		}
+
+		private void ResetConnectHandler()
+		{
+			connectState = TunnelState.Init;
+			connectEx = null;
+			connectDone = false;
+		}
+
 		[Test]
 		public void NewTunnel()
 		{
 			Interlocked.Exchange(ref connectStateInvCount, 0);
-			connectState = TunnelState.Init;
-			connectEx = null;
-			connectDone = false;
+			ResetConnectHandler();
 
 			var mockNode = new MockClientINode(0, 0, 0, 0, 10);
 			var config = new MockITunnelConfigFactory().CreateNew();
@@ -70,21 +101,16 @@ namespace Tests
 			tunnel.StateChangeEvent.Subscribe(NewTunnelConnectHandler);
 			Assert.DoesNotThrow(tunnel.Connect);
 
-			while(!connectDone) {}
+			WaitForConnectHandlerFired(2000);
+			CheckForConnectHandlerExceptions(null);
 			Assert.AreEqual(TunnelState.Online, connectState);
-			if (connectEx != null)
-				throw connectEx;
-
-			connectEx = null;
-			connectDone = false;
 
 			Assert.DoesNotThrow(tunnel.Disconnect);
 			Assert.DoesNotThrow(tunnel.Disconnect); //multiple disconnect calls should be handled
 
-			while (!connectDone) { }
+			WaitForConnectHandlerFired(2000);
+			CheckForConnectHandlerExceptions(null);
 			Assert.AreEqual(TunnelState.Offline, connectState);
-			if (connectEx != null)
-				throw connectEx;
 
 			Assert.DoesNotThrow(tunnel.Dispose);
 			Assert.DoesNotThrow(tunnel.Dispose); //multiple dispose calls should be handled
@@ -94,7 +120,48 @@ namespace Tests
 			var dbgTunnel = mockNode.LastTunnel;
 			Assert.NotNull(dbgTunnel);
 			Assert.AreEqual(1,dbgTunnel.DisconectCount);
-			Assert.AreEqual(1,dbgTunnel.DisposeCount);
+		}
+
+		[Test]
+		public void TunnelDispose()
+		{
+			Interlocked.Exchange(ref connectStateInvCount, 0);
+			ResetConnectHandler();
+
+			var mockNode = new MockClientINode(0, 0, 0, 0, 10);
+			var config = new MockITunnelConfigFactory().CreateNew();
+			IEntryNode node = null;
+			Assert.DoesNotThrow(() => { node = new EntryNode(mockNode); });
+			var tunnel = node.OpenTunnel(config);
+			tunnel.StateChangeEvent.Subscribe(NewTunnelConnectHandler);
+			Assert.DoesNotThrow(tunnel.Connect);
+
+			WaitForConnectHandlerFired(2000);
+			CheckForConnectHandlerExceptions(null);
+			Assert.AreEqual(TunnelState.Online, connectState);
+
+			Assert.DoesNotThrow(tunnel.Dispose);
+			Assert.DoesNotThrow(tunnel.Dispose); //multiple dispose calls should be handled
+
+			WaitForConnectHandlerFired(2000);
+			CheckForConnectHandlerExceptions(null);
+			Assert.AreEqual(TunnelState.Offline, connectState);
+
+			Assert.AreEqual(2, Interlocked.CompareExchange(ref connectStateInvCount, 0, 0));
+
+			var dbgTunnel = mockNode.LastTunnel;
+			Assert.NotNull(dbgTunnel);
+			Assert.AreEqual(1, dbgTunnel.DisconectCount);
+
+			int timelimit = 5000;
+			while (dbgTunnel.DisposeCount==0)
+			{
+				if (timelimit <= 0)
+					throw new Exception("dbgTunnel.DisposeCount!=0 timed out!");
+				Thread.Sleep(250);
+				timelimit -= 250;
+			}
+			Assert.AreEqual(1, dbgTunnel.DisposeCount);
 		}
 	}
 }
