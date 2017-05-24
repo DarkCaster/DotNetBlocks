@@ -159,11 +159,10 @@ namespace DarkCaster.Events
 		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
 			raiseRwLock.EnterWriteLock();
-			if(preExec!=null)
+			try
 			{
-				try{ preExec(); }
-				finally{ raiseRwLock.ExitWriteLock(); }
-			}
+			if(preExec != null)
+				preExec();
 			if(exceptions != null && exceptions.IsReadOnly)
 				exceptions = null;
 			var len = UpdateInvListOnRise_Safe();
@@ -178,13 +177,14 @@ namespace DarkCaster.Events
 					result = false;
 				}
 			}
-			if(postExec!=null)
-			{
-				try{ postExec(); }
-				finally{ raiseRwLock.ExitWriteLock(); }
-			}
-			raiseRwLock.ExitWriteLock();
+			if(postExec != null)
+				postExec();
 			return result;
+			}
+			finally
+			{
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 		
 		public bool Raise(object sender, Func<T> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
