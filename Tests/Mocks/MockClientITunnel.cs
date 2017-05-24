@@ -31,6 +31,8 @@ namespace Tests.Mocks
 {
 	public class MockClientITunnel : ITunnel
 	{
+		public class MockClientException : Exception {}
+
 		private readonly int minDelay;
 		private readonly int maxDelay;
 		private readonly float failProbability;
@@ -104,7 +106,7 @@ namespace Tests.Mocks
 			else
 			{
 				if (GenFail())
-					throw new Exception("Fail!");
+					throw new MockClientException();
 				var delay = GenDelay();
 				if (delay > 0)
 					Thread.Sleep(delay);
@@ -126,7 +128,7 @@ namespace Tests.Mocks
 			else
 			{
 				if (GenFail())
-					throw new Exception("Fail!");
+					throw new MockClientException();
 				var delay = GenDelay();
 				if (delay > 0)
 					await Task.Delay(delay);
