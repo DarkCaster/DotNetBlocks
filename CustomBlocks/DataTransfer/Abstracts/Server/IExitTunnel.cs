@@ -25,7 +25,13 @@
 using System;
 namespace DarkCaster.DataTransfer.Server
 {
-	public interface IExitTunnel : ITunnel
-	{
-	}
+	/// <summary>
+	/// Server side exit-tunnel.
+	/// Object of this interface should be used to perform data transfer from user's code, instead of using INode directly.
+	/// Defined methods are thread-safe. Some methods combinations use locks to guarantee data consistency:
+	/// read and write methods may be executed at the same time concurrently,
+	/// but no two parallel read or write calls allowed.
+	/// Dispose must be called after all read\write jobs is terminated, and it will close and dispose all upstrean tunnels.
+	/// </summary>
+	public interface IExitTunnel : ITunnel { }
 }

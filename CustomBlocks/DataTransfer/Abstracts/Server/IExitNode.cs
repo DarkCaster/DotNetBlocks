@@ -30,6 +30,5 @@ namespace DarkCaster.DataTransfer.Server
 	public interface IExitNode : INode
 	{
 		ISafeEvent<NewTunnelEventArgs> IncomingConnectionEvent { get; }
-
 	}
 }
