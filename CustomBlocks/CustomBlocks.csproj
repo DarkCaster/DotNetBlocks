@@ -119,6 +119,7 @@
     <Compile Include="DataTransfer\Abstracts\Server\ITunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Server\IExitNode.cs" />
     <Compile Include="DataTransfer\Abstracts\Server\IExitTunnel.cs" />
+    <Compile Include="DataTransfer\Abstracts\Server\NewTunnelEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
