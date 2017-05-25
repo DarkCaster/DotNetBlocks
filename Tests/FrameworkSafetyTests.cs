@@ -100,5 +100,44 @@ namespace Tests
 		{
 			Assert.Throws(typeof(Exception),() => new ThreadSpawner());
 		}
+
+		private volatile bool asyncThreadIdTest_Stop = false;
+		private int asyncThreadIdTest_WorkersConut = 0;
+		private async Task<bool> ThreadIDTestWorker()
+		{
+			Interlocked.Increment(ref asyncThreadIdTest_WorkersConut);
+			var random = new Random();
+			var threadId = Thread.CurrentThread.ManagedThreadId;
+			var result = false;
+			do
+			{
+				await Task.Delay(random.Next(0, 50));
+				var newThreadId = Thread.CurrentThread.ManagedThreadId;
+				if (newThreadId != threadId)
+				{
+					result = true;
+					threadId = newThreadId;
+				}
+			} while (!asyncThreadIdTest_Stop);
+			return result;
+		}
+
+		[Test]
+		public void AsyncThreadIdTest()
+		{
+			asyncThreadIdTest_Stop = false;
+			asyncThreadIdTest_WorkersConut = 0;
+			const int workers = 500;
+			Task<bool>[] tasks = new Task<bool>[workers];
+			for (int i = 0; i < workers; ++i)
+				tasks[i] = Task.Run(async () => await ThreadIDTestWorker());
+			while(Interlocked.CompareExchange(ref asyncThreadIdTest_WorkersConut,0,0)<workers) {}
+			Thread.Sleep(500);
+			asyncThreadIdTest_Stop = true;
+			var result = false;
+			for (int i = 0; i < workers; ++i)
+				result |= tasks[i].Result;
+			Assert.True(result);
+		}
 	}
 }
