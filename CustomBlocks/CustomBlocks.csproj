@@ -115,6 +115,10 @@
     <Compile Include="DataTransfer\TunnelConfig\TunnelConfigFactory.cs" />
     <Compile Include="Serialization\SerializationHelperProxy.cs" />
     <Compile Include="DataTransfer\EntryTunnel\EntryNode.cs" />
+    <Compile Include="DataTransfer\Abstracts\Server\INode.cs" />
+    <Compile Include="DataTransfer\Abstracts\Server\ITunnel.cs" />
+    <Compile Include="DataTransfer\Abstracts\Server\IExitNode.cs" />
+    <Compile Include="DataTransfer\Abstracts\Server\IExitTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -137,6 +141,7 @@
     <Folder Include="DataTransfer\EntryTunnel\" />
     <Folder Include="DataTransfer\Abstracts\Config\" />
     <Folder Include="DataTransfer\TunnelConfig\" />
+    <Folder Include="DataTransfer\Abstracts\Server\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
