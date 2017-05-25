@@ -23,9 +23,24 @@
 // SOFTWARE.
 //
 using System;
+using System.Threading.Tasks;
+using DarkCaster.DataTransfer.Config;
 namespace DarkCaster.DataTransfer.Server
 {
 	public interface INode : IDisposable
 	{
+		/// <summary>
+		/// Perform init. May block while processing.
+		/// After init is complete it is ready to accept new connections and spawn new ITunnel instances.
+		/// </summary>
+		void Init();
+
+		/// <summary>
+		/// Open new tunnel. May be requested only by upstream node.
+		/// </summary>
+		/// <returns>Awaitable Task object, that represent tunnel open process.</returns>
+		/// <param name="config">Config object, that may be used to tune-up tunnel's params</param>
+		/// <param name="upstream">ITunnel object from upstream, will be used in read\write operations</param>
+		Task<ITunnel> OpenTunnelAsync(ITunnelConfig config, ITunnel upstream);
 	}
 }
