@@ -34,7 +34,6 @@ namespace DarkCaster.DataTransfer.Client
 	{
 		public TunnelState State { get; protected set; }
 		public Exception Ex { get; protected set; }
-		private TunnelStateEventArgs() { }
 		public TunnelStateEventArgs(TunnelState State, Exception Ex) { this.State = State; this.Ex = Ex; }
 	}
 }
