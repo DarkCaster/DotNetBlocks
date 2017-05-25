@@ -41,6 +41,6 @@ namespace DarkCaster.DataTransfer.Server
 		/// <returns>Awaitable Task object, that represent tunnel open process.</returns>
 		/// <param name="config">Config object, that may be used to tune-up tunnel's params</param>
 		/// <param name="upstream">ITunnel object from upstream, will be used in read\write operations</param>
-		Task<ITunnel> OpenTunnelAsync(ITunnelConfig config, ITunnel upstream);
+		Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream);
 	}
 }

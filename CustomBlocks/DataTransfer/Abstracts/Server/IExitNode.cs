@@ -23,9 +23,13 @@
 // SOFTWARE.
 //
 using System;
+using DarkCaster.Events;
+
 namespace DarkCaster.DataTransfer.Server
 {
 	public interface IExitNode : INode
 	{
+		ISafeEvent<NewTunnelEventArgs> IncomingConnectionEvent { get; }
+
 	}
 }
