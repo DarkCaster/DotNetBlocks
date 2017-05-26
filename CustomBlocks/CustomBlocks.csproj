@@ -121,6 +121,8 @@
     <Compile Include="DataTransfer\Abstracts\Server\IExitTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Server\NewTunnelEventArgs.cs" />
     <Compile Include="DataTransfer\Abstracts\Server\TunnelEofException.cs" />
+    <Compile Include="DataTransfer\ExitTunnel\ExitTunnel.cs" />
+    <Compile Include="DataTransfer\ExitTunnel\ExitNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -144,6 +146,7 @@
     <Folder Include="DataTransfer\Abstracts\Config\" />
     <Folder Include="DataTransfer\TunnelConfig\" />
     <Folder Include="DataTransfer\Abstracts\Server\" />
+    <Folder Include="DataTransfer\ExitTunnel\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
