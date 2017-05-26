@@ -32,8 +32,15 @@ namespace DarkCaster.DataTransfer.Server
 		/// <summary>
 		/// Perform init. May block while processing.
 		/// After init is complete it is ready to accept new connections and spawn new ITunnel instances.
+		/// Should be called by downstream node.
 		/// </summary>
 		void Init();
+
+		/// <summary>
+		/// Register upstream node, used by downstream to call Init and Dispose.
+		/// </summary>
+		/// <param name="upstream">Upstream INode</param>
+		void RegisterUpstream(INode upstream);
 
 		/// <summary>
 		/// Open new tunnel. May be requested only by upstream node.
