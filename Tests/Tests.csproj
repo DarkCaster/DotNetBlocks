@@ -65,6 +65,8 @@
     <Compile Include="Mocks\MockClientINode.cs" />
     <Compile Include="Mocks\MockITunnelConfig.cs" />
     <Compile Include="Mocks\MockITunnelConfigFactory.cs" />
+    <Compile Include="Mocks\MockServerINode.cs" />
+    <Compile Include="Mocks\MockServerITunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
