@@ -35,22 +35,16 @@ namespace Tests.Mocks
 		public int initCount = 0;
 		public int disposeCount = 0;
 
-		private readonly INode downstream;
-
-		public MockServerINode(INode downstream)
-		{
-			this.downstream = downstream;
-			downstream.RegisterUpstream(this);
-		}
+		private volatile INode downstream;
 
 		public void Init()
 		{
 			Interlocked.Increment(ref initCount);
 		}
 
-		public void RegisterUpstream(INode upstream)
+		public void RegisterDownstream(INode downstream)
 		{
-			throw new NotSupportedException("NOPE");
+			this.downstream = downstream;
 		}
 
 		public Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)

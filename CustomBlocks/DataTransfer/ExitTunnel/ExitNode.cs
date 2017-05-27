@@ -32,15 +32,17 @@ namespace DarkCaster.DataTransfer.Server
 {
 	public sealed class ExitNode : IExitNode
 	{
-		private INode upstreamNode = null;
 		private bool isDisposed = false;
 
+		private readonly INode upstreamNode = null;
 		private readonly AsyncRWLock upstreamLock = new AsyncRWLock();
 		private readonly ISafeEventCtrl<NewTunnelEventArgs> evCtl;
 		private readonly ISafeEvent<NewTunnelEventArgs> ev;
 
-		public ExitNode()
+		public ExitNode(INode upstream)
 		{
+			this.upstreamNode = upstream;
+			upstream.RegisterDownstream(this);
 #if DEBUG
 			evCtl = new SafeEventDbg<NewTunnelEventArgs>();
 			ev = (ISafeEvent<NewTunnelEventArgs>)evCtl;
@@ -55,15 +57,18 @@ namespace DarkCaster.DataTransfer.Server
 		public void Init()
 		{
 			upstreamLock.EnterReadLock();
-			try { upstreamNode.Init(); }
+			try
+			{
+				if (isDisposed)
+					return;
+				upstreamNode.Init();
+			}
 			finally { upstreamLock.ExitReadLock(); }
 		}
 
-		public void RegisterUpstream(INode upstream)
+		public void RegisterDownstream(INode downstream)
 		{
-			upstreamLock.EnterWriteLock();
-			upstreamNode = upstream;
-			upstreamLock.ExitWriteLock();
+			throw new NotSupportedException("ExitNode do not support communication with any downstream INode");
 		}
 
 		private void SpawnExitTunnel(ITunnelConfig config, ITunnel upstream)
