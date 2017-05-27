@@ -31,7 +31,7 @@ namespace Tests.Mocks
 {
 	public class MockServerITunnel : ITunnel
 	{
-		public class MockClientException : Exception { }
+		public class MockServerException : Exception { }
 
 		private readonly int minDelay;
 		private readonly int maxDelay;
@@ -105,7 +105,7 @@ namespace Tests.Mocks
 			else
 			{
 				if (GenFail())
-					throw new MockClientException();
+					throw new MockServerException();
 				var delay = GenDelay();
 				if (delay > 0)
 					Thread.Sleep(delay);
@@ -127,7 +127,7 @@ namespace Tests.Mocks
 			else
 			{
 				if (GenFail())
-					throw new MockClientException();
+					throw new MockServerException();
 				var delay = GenDelay();
 				if (delay > 0)
 					await Task.Delay(delay);
