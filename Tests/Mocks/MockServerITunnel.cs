@@ -48,7 +48,6 @@ namespace Tests.Mocks
 		private int writeCount = 0;
 		private int readAsyncCount = 0;
 		private int writeAsyncCount = 0;
-		private int disconnectCount = 0;
 		private int disposeCount = 0;
 
 		public MockServerITunnel(int minDelay, int maxDelay, float failProbability, float partialOpProbability, int noFailOpsCount)
@@ -177,7 +176,6 @@ namespace Tests.Mocks
 		public int WriteCount { get { return Interlocked.CompareExchange(ref writeCount, 0, 0); } }
 		public int ReadAsyncCount { get { return Interlocked.CompareExchange(ref readAsyncCount, 0, 0); } }
 		public int WriteAsyncCount { get { return Interlocked.CompareExchange(ref writeAsyncCount, 0, 0); } }
-		public int DisconectCount { get { return Interlocked.CompareExchange(ref disconnectCount, 0, 0); } }
 		public int DisposeCount { get { return Interlocked.CompareExchange(ref disposeCount, 0, 0); } }
 	}
 }

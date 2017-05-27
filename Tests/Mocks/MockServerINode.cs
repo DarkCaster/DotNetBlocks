@@ -35,7 +35,25 @@ namespace Tests.Mocks
 		public int initCount = 0;
 		public int disposeCount = 0;
 
+		private readonly int minDelay;
+		private readonly int maxDelay;
+		private readonly float failProbability;
+		private readonly float partialOpProbability;
+		private readonly int noFailOpsCount;
+
 		private volatile INode downstream;
+
+		public MockServerITunnel LastTunnel { get; set; }
+
+		public MockServerINode(int minDelay, int maxDelay, float failProbability, float partialOpProbability, int noFailOpsCount)
+		{
+			this.minDelay = minDelay;
+			this.maxDelay = maxDelay;
+			this.failProbability = failProbability;
+			this.partialOpProbability = partialOpProbability;
+			this.noFailOpsCount = noFailOpsCount;
+			LastTunnel = null;
+		}
 
 		public void Init()
 		{
@@ -52,9 +70,10 @@ namespace Tests.Mocks
 			throw new NotSupportedException("NOPE");
 		}
 
-		public void CreateTunnel(int minDelay, int maxDelay, float failProbability, float partialOpProbability, int noFailOpsCount)
+		public void CreateTunnel()
 		{
-			Task.Run(async () => await downstream.OpenTunnelAsync(null, new MockServerITunnel(minDelay,maxDelay,failProbability,partialOpProbability,noFailOpsCount)));
+			LastTunnel = new MockServerITunnel(minDelay, maxDelay, failProbability, partialOpProbability, noFailOpsCount);
+			Task.Run(async () => await downstream.OpenTunnelAsync(null, LastTunnel));
 		}
 
 		public void Dispose()
