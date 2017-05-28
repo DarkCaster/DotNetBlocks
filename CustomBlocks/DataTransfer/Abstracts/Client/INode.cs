@@ -23,12 +23,16 @@
 // SOFTWARE.
 //
 using System;
+using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Config;
 
 namespace DarkCaster.DataTransfer.Client
 {
 	public interface INode
 	{
+		///TODO: remove when finish porting to new OpenTunnelAsync
 		ITunnel OpenTunnel(ITunnelConfig config);
+
+		Task<ITunnel> OpenTunnelAsync(ITunnelConfig config);
 	}
 }

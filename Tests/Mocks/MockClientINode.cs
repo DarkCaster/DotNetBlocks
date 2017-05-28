@@ -23,6 +23,7 @@
 // SOFTWARE.
 //
 using System;
+using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Config;
 using DarkCaster.DataTransfer.Client;
 
@@ -54,6 +55,15 @@ namespace Tests.Mocks
 				throw new Exception("config parameter cannot be null!");
 			LastTunnel=new MockClientITunnel(minDelay, maxDelay, failProbability, partialOpProbability, noFailOpsCounter);
 			return LastTunnel;
+		}
+
+		public Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
+		{
+			var taskSource = new TaskCompletionSource<ITunnel>();
+			try { taskSource.SetResult(OpenTunnel(config)); }
+			catch (OperationCanceledException) { taskSource.SetCanceled(); }
+			catch (Exception ex) { taskSource.SetException(ex); }
+			return taskSource.Task;
 		}
 	}
 }
