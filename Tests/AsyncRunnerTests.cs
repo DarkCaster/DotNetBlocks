@@ -32,6 +32,12 @@ namespace Tests
 	[TestFixture]
 	public class AsyncRunnerTests
 	{
+		[Test]
+		public void Init()
+		{
+			var runner = new AsyncRunner();
+			Assert.DoesNotThrow(runner.Dispose);
+		}
 
 		public volatile int threadId = 0;
 
@@ -43,17 +49,16 @@ namespace Tests
 		}
 
 		[Test]
-		public void AddJobTest()
+		public void AddJob()
 		{
 			threadId = Thread.CurrentThread.ManagedThreadId;
 			bool result1 = false;
 			bool result2 = false;
-
 			var runner = new AsyncRunner();
 			runner.AddTask(ThreadTestAsync, res => result1 = res);
 			runner.AddTask(ThreadTestAsync, res => result2 = res);
 			runner.RunPendingTasks();
-
+			runner.Dispose();
 			Assert.True(result1);
 			Assert.True(result2);
 		}
@@ -68,7 +73,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void AddJobActionTest()
+		public void AddJob_Action()
 		{
 			threadId = Thread.CurrentThread.ManagedThreadId;
 			var runner = new AsyncRunner();
@@ -88,7 +93,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void AddJobFoldedAsyncRunnerTest()
+		public void AddJob_FoldedAsyncRunner()
 		{
 			threadId = Thread.CurrentThread.ManagedThreadId;
 			bool result1 = false;
@@ -96,27 +101,27 @@ namespace Tests
 			runner.AddTask(ThreadTestAsync, res => result1 = res);
 			runner.AddTask(Folded_AsyncRunner);
 			runner.RunPendingTasks();
+			runner.Dispose();
 			Assert.True(result1);
 		}
 
-		public async Task<bool> Folded_AddJob()
+		public async Task<bool> Folded_Job()
 		{
 			await Task.Delay(500);
 			return await ThreadTestAsync();
 		}
 
 		[Test]
-		public void AddJobFoldedTest()
+		public void AddJob_Folded()
 		{
 			threadId = Thread.CurrentThread.ManagedThreadId;
 			bool result1 = false;
 			bool result2 = false;
-
 			var runner = new AsyncRunner();
 			runner.AddTask(ThreadTestAsync, res => result1 = res);
-			runner.AddTask(Folded_AddJob, res => result2 = res);
+			runner.AddTask(Folded_Job, res => result2 = res);
 			runner.RunPendingTasks();
-
+			runner.Dispose();
 			Assert.True(result1);
 			Assert.True(result2);
 		}
@@ -124,37 +129,34 @@ namespace Tests
 		public async Task<bool> ThreadTestAsync_Param(int value)
 		{
 			if (value < 0)
-				throw new Exception("Expected");
+				throw new NotImplementedException("Expected");
 			var result = Thread.CurrentThread.ManagedThreadId == threadId;
 			await Task.Delay(1000);
 			return result && Thread.CurrentThread.ManagedThreadId == threadId;
 		}
 
 		[Test]
-		public void AddJobWithParamTest()
+		public void AddJob_WithParam()
 		{
 			threadId = Thread.CurrentThread.ManagedThreadId;
 			bool result1 = false;
 			bool result2 = false;
-
 			var runner = new AsyncRunner();
 			runner.AddTask(() => ThreadTestAsync_Param(10), res => result1 = res);
 			runner.AddTask(() => ThreadTestAsync_Param(10), res => result2 = res);
 			runner.RunPendingTasks();
-
 			Assert.True(result1);
 			Assert.True(result2);
 		}
 
 		[Test]
-		public void AddJobExceptionTest()
+		public void AddJob_Exception()
 		{
 			threadId = Thread.CurrentThread.ManagedThreadId;
 			bool result1 = false;
 			bool result2 = false;
 			bool result3 = false;
 			bool result4 = false;
-
 			var runner = new AsyncRunner();
 			runner.AddTask(() => ThreadTestAsync_Param(10), res => result1 = res);
 			runner.AddTask(() => ThreadTestAsync_Param(-1), res => result2 = res);
@@ -167,7 +169,7 @@ namespace Tests
 				Assert.True(ex is AggregateException);
 				rEx = (AggregateException)ex;
 			}
-
+			runner.Dispose();
 			Assert.NotNull(rEx);
 			Assert.True(result1);
 			Assert.False(result2);
@@ -188,7 +190,7 @@ namespace Tests
 		}
 
 		[Test]
-		public void RecursiveAddExceptionTest()
+		public void RecursiveAddJob_Exception()
 		{
 			var runner = new AsyncRunner();
 			runner.AddTask(() => ResucriveAddAsync(runner));
@@ -200,11 +202,60 @@ namespace Tests
 				Assert.True(ex is AggregateException);
 				rEx = (AggregateException)ex;
 			}
+			runner.Dispose();
 			Assert.NotNull(rEx);
 			Assert.NotNull(rEx.InnerException);
 			Assert.AreEqual(2,rEx.InnerExceptions.Count);
 			foreach(var ex in rEx.InnerExceptions)
 				Assert.True(ex is NotSupportedException);
 		}
+
+		[Test]
+		public void Execute()
+		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+			var runner = new AsyncRunner();
+			var result = runner.ExecuteTask(ThreadTestAsync);
+			runner.Dispose();
+			Assert.True(result);
+		}
+
+		[Test]
+		public void Execute_Action()
+		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+			var runner = new AsyncRunner();
+			runner.ExecuteTask(ThreadActionTestAsync);
+			runner.Dispose();
+		}
+
+		[Test]
+		public void Execute_Exception()
+		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+			var runner = new AsyncRunner();
+			NotImplementedException rEx = null;
+			try{ runner.ExecuteTask(() => ThreadTestAsync_Param(-1)); }
+			catch(Exception ex)
+			{
+				Assert.True(ex is NotImplementedException);
+				rEx = (NotImplementedException)ex;
+			}
+			Assert.NotNull(rEx);
+			var result = runner.ExecuteTask(ThreadTestAsync);
+			runner.Dispose();
+			Assert.True(result);
+		}
+
+		[Test]
+		public void RecursiveExecute_Exception()
+		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+			var runner = new AsyncRunner();
+			var result = runner.ExecuteTask(ThreadTestAsync);
+			runner.Dispose();
+			Assert.True(result);
+		}
+
 	}
 }
