@@ -174,5 +174,37 @@ namespace Tests
 			Assert.False(result3);
 			Assert.True(result4);
 		}
+
+		public async Task ResucriveAddAsync(AsyncRunner runner)
+		{
+			runner.AddTask(ThreadActionTestAsync);
+			await Task.Delay(1000);
+		}
+
+		public async Task ResucriveRunAsync(AsyncRunner runner)
+		{
+			runner.RunPendingTasks();
+			await Task.Delay(1000);
+		}
+
+		[Test]
+		public void RecursiveAddExceptionTest()
+		{
+			var runner = new AsyncRunner();
+			runner.AddTask(() => ResucriveAddAsync(runner));
+			runner.AddTask(() => ResucriveRunAsync(runner));
+			AggregateException rEx = null;
+			try { runner.RunPendingTasks(); }
+			catch (Exception ex)
+			{
+				Assert.True(ex is AggregateException);
+				rEx = (AggregateException)ex;
+			}
+			Assert.NotNull(rEx);
+			Assert.NotNull(rEx.InnerException);
+			Assert.AreEqual(2,rEx.InnerExceptions.Count);
+			foreach(var ex in rEx.InnerExceptions)
+				Assert.True(ex is NotSupportedException);
+		}
 	}
 }
