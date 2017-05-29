@@ -64,7 +64,7 @@ namespace DarkCaster.Async
 			public void AddTask<T>(Func<Task<T>> task, Action<T> callback = null)
 			{
 				if (taskCount > 0)
-					throw new Exception("Cannot add new task while already running async task queue, recursive approach is not supported!");
+					throw new NotSupportedException("Cannot add new task while already running async task queue, recursive approach is not supported!");
 				Post(async x =>
 				{
 					++taskCount;
@@ -106,7 +106,7 @@ namespace DarkCaster.Async
 			public void BeginMessageLoop()
 			{
 				if (taskCount > 0)
-					throw new Exception("Cannot start new task loop while already running async task queue, recursive approach is not supported!");
+					throw new NotSupportedException("Cannot start new task loop while already running async task queue, recursive approach is not supported!");
 				innerExceptions.Clear();
 				done = false;
 				while (!done)
