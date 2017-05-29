@@ -242,9 +242,7 @@ namespace Tests
 				rEx = (NotImplementedException)ex;
 			}
 			Assert.NotNull(rEx);
-			var result = runner.ExecuteTask(ThreadTestAsync);
 			runner.Dispose();
-			Assert.True(result);
 		}
 
 		[Test]
@@ -257,5 +255,50 @@ namespace Tests
 			Assert.True(result);
 		}
 
+		[Test]
+		public void Execute_Exception_Reuse()
+		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+			var runner = new AsyncRunner();
+			NotImplementedException rEx = null;
+			try { runner.ExecuteTask(() => ThreadTestAsync_Param(-1)); }
+			catch (Exception ex)
+			{
+				Assert.True(ex is NotImplementedException);
+				rEx = (NotImplementedException)ex;
+			}
+			Assert.NotNull(rEx);
+			var result = runner.ExecuteTask(ThreadTestAsync);
+			runner.Dispose();
+			Assert.True(result);
+		}
+
+		[Test]
+		public void AddJob_Exception_Reuse()
+		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+			bool result1 = false;
+			bool result2 = false;
+			var runner = new AsyncRunner();
+			runner.AddTask(() => ThreadTestAsync_Param(-1), res => result1 = res);
+			runner.AddTask(() => ThreadTestAsync_Param(-2), res => result2 = res);
+			AggregateException rEx = null;
+			try { runner.RunPendingTasks(); }
+			catch (Exception ex)
+			{
+				Assert.True(ex is AggregateException);
+				rEx = (AggregateException)ex;
+			}
+			Assert.NotNull(rEx);
+			Assert.True(rEx.InnerException is NotImplementedException);
+			Assert.False(result1);
+			Assert.False(result2);
+			runner.AddTask(() => ThreadTestAsync_Param(10), res => result1 = res);
+			runner.AddTask(() => ThreadTestAsync_Param(10), res => result2 = res);
+			runner.RunPendingTasks();
+			runner.Dispose();
+			Assert.True(result1);
+			Assert.True(result2);
+		}
 	}
 }
