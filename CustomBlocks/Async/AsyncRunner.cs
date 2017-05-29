@@ -51,21 +51,15 @@ namespace DarkCaster.Async
 				}
 			}
 
-			private int taskCount;
-			private bool done;
-			private readonly ConcurrentQueue<TaskChunk> items;
+			private int taskCount = 0;
+			private bool done = false;
+			private readonly ConcurrentQueue<TaskChunk> items = new ConcurrentQueue<TaskChunk>();
 			private readonly AutoResetEvent workItemsWaiting = new AutoResetEvent(false);
 			private readonly List<Exception> innerExceptions = new List<Exception>();
 
 			public int InnerExceptionsCount { get { return innerExceptions.Count; } }
 			public IEnumerable<Exception> InnerExceptions { get { return innerExceptions.ToArray(); } }
 			public Exception InnerException { get { return InnerExceptionsCount > 0 ? innerExceptions[0] : null; } }
-
-			public SingleThreadedContext()
-			{
-				this.items = new ConcurrentQueue<TaskChunk>();
-				this.taskCount = 0;
-			}
 
 			public void AddTask<T>(Func<Task<T>> task, Action<T> callback = null)
 			{
