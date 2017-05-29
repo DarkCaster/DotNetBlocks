@@ -52,7 +52,7 @@ namespace DarkCaster.Async
 			}
 
 			private int taskCount = 0;
-			private bool done = false;
+			private bool isRunning = false;
 			private readonly ConcurrentQueue<TaskChunk> items = new ConcurrentQueue<TaskChunk>();
 			private readonly AutoResetEvent workItemsWaiting = new AutoResetEvent(false);
 			private readonly List<Exception> innerExceptions = new List<Exception>();
@@ -63,11 +63,11 @@ namespace DarkCaster.Async
 
 			public void AddTask<T>(Func<Task<T>> task, Action<T> callback = null)
 			{
-				if (taskCount > 0)
+				if (isRunning)
 					throw new NotSupportedException("Cannot add new task while already running async task queue, recursive approach is not supported!");
+				++taskCount;
 				Post(async x =>
 				{
-					++taskCount;
 					try
 					{
 						T result=await task();
@@ -100,16 +100,16 @@ namespace DarkCaster.Async
 
 			private void EndMessageLoop()
 			{
-				Post(x => done = true, null);
+				Post(x => isRunning = false, null);
 			}
 
 			public void BeginMessageLoop()
 			{
-				if (taskCount > 0)
+				if (isRunning)
 					throw new NotSupportedException("Cannot start new task loop while already running async task queue, recursive approach is not supported!");
 				innerExceptions.Clear();
-				done = false;
-				while (!done)
+				isRunning = true;
+				while (isRunning)
 				{
 					if (items.TryDequeue(out TaskChunk task))
 						task.Execute();
