@@ -167,6 +167,42 @@ namespace DarkCaster.Async
 			}
 		}
 
+		public void ExecuteTask(Func<Task> task)
+		{
+			AddTask(task);
+			var previousContext = SynchronizationContext.Current;
+			try
+			{
+				SynchronizationContext.SetSynchronizationContext(context);
+				context.BeginMessageLoop();
+				if (context.InnerException != null)
+					throw context.InnerException;
+			}
+			finally
+			{
+				SynchronizationContext.SetSynchronizationContext(previousContext);
+			}
+		}
+
+		public T ExecuteTask<T>(Func<Task<T>> task)
+		{
+			T result = default(T);
+			AddTask(task, res => result = res);
+			var previousContext = SynchronizationContext.Current;
+			try
+			{
+				SynchronizationContext.SetSynchronizationContext(context);
+				context.BeginMessageLoop();
+				if (context.InnerException != null)
+					throw context.InnerException;
+				return result;
+			}
+			finally
+			{
+				SynchronizationContext.SetSynchronizationContext(previousContext);
+			}
+		}
+
 		public void Dispose()
 		{
 			context.Dispose();
