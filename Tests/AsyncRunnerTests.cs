@@ -50,12 +50,31 @@ namespace Tests
 			bool result2 = false;
 
 			var runner = new AsyncRunner();
-			runner.AddTask(ThreadTestAsync,res => result1 = res);
-			runner.AddTask(ThreadTestAsync,res => result2 = res);
+			runner.AddTask(ThreadTestAsync, res => result1 = res);
+			runner.AddTask(ThreadTestAsync, res => result2 = res);
 			runner.RunPendingTasks();
 
 			Assert.True(result1);
 			Assert.True(result2);
+		}
+
+		public async Task ThreadActionTestAsync()
+		{
+			if (Thread.CurrentThread.ManagedThreadId != threadId)
+				throw new Exception("Thread has been changed!");
+			await Task.Delay(1000);
+			if (Thread.CurrentThread.ManagedThreadId != threadId)
+				throw new Exception("Thread has been changed!");
+		}
+
+		[Test]
+		public void AddJobActionTest()
+		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+			var runner = new AsyncRunner();
+			runner.AddTask(ThreadActionTestAsync);
+			runner.AddTask(ThreadActionTestAsync);
+			Assert.DoesNotThrow(runner.RunPendingTasks);
 		}
 
 		public async Task Folded_AsyncRunner()
@@ -73,14 +92,12 @@ namespace Tests
 		{
 			threadId = Thread.CurrentThread.ManagedThreadId;
 			bool result1 = false;
-
 			var runner = new AsyncRunner();
 			runner.AddTask(ThreadTestAsync, res => result1 = res);
 			runner.AddTask(Folded_AsyncRunner);
 			runner.RunPendingTasks();
-
 			Assert.True(result1);
-}
+		}
 
 		public async Task<bool> Folded_AddJob()
 		{
