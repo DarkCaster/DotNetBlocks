@@ -54,6 +54,7 @@
       <Link>SafeEventTestsStuff.cs</Link>
     </Compile>
     <Compile Include="SafeEventSpeedTests.cs" />
+    <Compile Include="AsyncRunnerSpeedTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

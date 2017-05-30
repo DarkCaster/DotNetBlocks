@@ -1,4 +1,4 @@
-﻿// Program.cs
+﻿﻿// Program.cs
 //
 // The MIT License (MIT)
 //
@@ -31,6 +31,8 @@ namespace PerfTests
 	{
 		public static void Main(string[] args)
 		{
+			AsyncRunnerSpeedTests.DirectCalls();
+			AsyncRunnerSpeedTests.AsyncRunnerCalls();
 			MMHashSpeedTest.Test();
 			MsgPackSerHelperSpeedTest.TestSerialize(DarkCaster.Serialization.MsgPack.MsgPackMode.Storage);
 			MsgPackSerHelperSpeedTest.TestDeserialize(DarkCaster.Serialization.MsgPack.MsgPackMode.Storage);

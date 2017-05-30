@@ -24,6 +24,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
+// see tests and usage examples at AsyncRunnerTests.cs
+// see performance tests at AsyncRunnerSpeedTests.cs
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
