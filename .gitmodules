@@ -10,3 +10,6 @@
 [submodule "External/json.net"]
 	path = External/json.net
 	url = https://github.com/JamesNK/Newtonsoft.Json.git
+[submodule "External/YamlDotNet"]
+	path = External/YamlDotNet
+	url = https://github.com/aaubry/YamlDotNet.git
