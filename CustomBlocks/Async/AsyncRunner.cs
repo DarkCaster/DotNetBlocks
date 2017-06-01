@@ -115,7 +115,8 @@ namespace DarkCaster.Async
 				isRunning = true;
 				while (isRunning)
 				{
-					if (items.TryDequeue(out TaskChunk task))
+					TaskChunk task;
+					if (items.TryDequeue(out task))
 						task.Execute();
 					else
 						workItemsWaiting.WaitOne();

@@ -221,7 +221,8 @@ namespace DarkCaster.DataTransfer.Config
 
 		public T Get<T>(string key)
 		{
-			if(storage.TryGetValue(key.ToLower(), out StorageRecord record))
+			StorageRecord record=null;
+			if(storage.TryGetValue(key.ToLower(), out record))
 			{
 				if (record.PType == 0 && typeof(T) == typeof(byte[]))
 					return (T)(object)ReadByteRecord(record);
