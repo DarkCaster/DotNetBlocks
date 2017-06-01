@@ -37,28 +37,28 @@ private void SNSign(string assembly, string key)
 
 Task("Patch").Does(() =>
 {
-  //Patch("json.net","../json.net.custom.signkey.patch",1);
-  //Patch("json.net","../json.net.nuspec.patch",1);
+  Patch("YamlDotNet","../YamlDotNet.nuspec.patch",1);
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>
 {
-  if(IsRunningOnWindows())
-    MSBuild("YamlDotNet/YamlDotNet.sln", settings => 
+  MSBuild("YamlDotNet/YamlDotNet.sln", settings =>
 	{
 		settings.SetConfiguration(configuration).WithTarget("YamlDotNet:Rebuild");
 		if(IsRunningOnUnix())
             settings.ToolPath = "/usr/bin/msbuild";
 	});
+  if(IsRunningOnUnix() && SNTest("YamlDotNet/YamlDotNet/bin/Release-Signed/net35/YamlDotNet.dll"))
+    SNSign("YamlDotNet/YamlDotNet/bin/Release-Signed/net35/YamlDotNet.dll","YamlDotNet/YamlDotNet.snk");
 });
 
 Task("Pack").IsDependentOn("Build").Does(() =>
 {
   CreateDirectory("output");
-  CreateDirectory("output/net45");
-  CopyFiles("json.net/Src/Newtonsoft.Json/bin/Release/Net45/*","output/net45");
+  CreateDirectory("output/net35");
+  CopyFiles("YamlDotNet/YamlDotNet/bin/Release-Signed/net35/*","output/net35");
   var nuGetPackSettings = new NuGetPackSettings { BasePath = "output", };
-  NuGetPack("json.net/Build/Newtonsoft.Json.nuspec", nuGetPackSettings);
+  NuGetPack("YamlDotNet/YamlDotNet/YamlDotNet.Signed.nuspec", nuGetPackSettings);
 });
 
 Task("Default").IsDependentOn("Pack");
