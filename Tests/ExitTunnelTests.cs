@@ -205,7 +205,7 @@ namespace Tests
 			Task.Run(() => WriteTask(tunnel));
 
 			//after a while underlying mock itunnel will fail
-			Thread.Sleep(2000);
+			Thread.Sleep(4000);
 
 			Assert.AreEqual(1, Interlocked.CompareExchange(ref incomingEvCount, 0, 0));
 			Assert.AreEqual(true, readDone);
@@ -249,7 +249,7 @@ namespace Tests
 			Task.Run(async () => await WriteTaskAsync(tunnel));
 
 			//after a while underlying mock itunnel will fail
-			Thread.Sleep(2000);
+			Thread.Sleep(4000);
 
 			Assert.AreEqual(1, Interlocked.CompareExchange(ref incomingEvCount, 0, 0));
 			Assert.AreEqual(true, readDone);
