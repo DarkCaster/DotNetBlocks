@@ -125,6 +125,7 @@
     <Compile Include="DataTransfer\ExitTunnel\ExitNode.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\IEntryTunnelLite.cs" />
     <Compile Include="Async\AsyncRunner.cs" />
+    <Compile Include="Compression\IBlockCompressor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -149,6 +150,7 @@
     <Folder Include="DataTransfer\TunnelConfig\" />
     <Folder Include="DataTransfer\Abstracts\Server\" />
     <Folder Include="DataTransfer\ExitTunnel\" />
+    <Folder Include="Compression\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
