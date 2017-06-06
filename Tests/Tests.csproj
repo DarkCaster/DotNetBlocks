@@ -83,9 +83,19 @@
   <ItemGroup>
     <Folder Include="Shared\" />
     <Folder Include="Mocks" />
+    <Folder Include="FastLZSampleData\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="FastLZSampleData\input.data">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="FastLZSampleData\output.data.lv1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="FastLZSampleData\output.data.lv2">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
