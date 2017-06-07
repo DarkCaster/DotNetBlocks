@@ -27,7 +27,7 @@
 
 using System;
 
-namespace DarkCaster.Compression
+namespace DarkCaster.Compression.FastLZ
 {
 	public static class FastLZ
 	{
