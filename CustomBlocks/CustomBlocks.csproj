@@ -127,6 +127,7 @@
     <Compile Include="Async\AsyncRunner.cs" />
     <Compile Include="Compression\IBlockCompressor.cs" />
     <Compile Include="Compression\FastLZ\FastLZ.cs" />
+    <Compile Include="Compression\FastLZ\FastLZBlockCompressor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
