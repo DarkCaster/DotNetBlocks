@@ -69,6 +69,7 @@
     <Compile Include="Mocks\MockServerITunnel.cs" />
     <Compile Include="ExitTunnelTests.cs" />
     <Compile Include="AsyncRunnerTests.cs" />
+    <Compile Include="FastLZSampleData\FastLZData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
