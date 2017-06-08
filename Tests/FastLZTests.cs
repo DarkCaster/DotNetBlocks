@@ -41,8 +41,8 @@ namespace Tests
 			var output = new byte[FastLZData.SampleOutputLV1.Length];
 			var control = FastLZData.SampleOutputLV1;
 			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, true);
-			Assert.AreEqual(count, control.Length);
-			Assert.AreEqual(output, control);
+			Assert.AreEqual(control.Length,count);
+			Assert.AreEqual(control,output);
 		}
 
 		[Test]
@@ -50,9 +50,9 @@ namespace Tests
 		{
 			var output = new byte[FastLZData.SampleOutputLV2.Length];
 			var control = FastLZData.SampleOutputLV2;
-			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, true);
-			Assert.AreEqual(count, control.Length);
-			Assert.AreEqual(output, control);
+			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, false);
+			Assert.AreEqual(control.Length,count);
+			Assert.AreEqual(control,output);
 		}
 
 	}
