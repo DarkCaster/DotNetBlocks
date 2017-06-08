@@ -30,34 +30,43 @@ namespace Tests
 	public static class FastLZData
 	{
 		private static byte[] input=null;
-		public static byte[] GetSampleInput
+		public static byte[] SampleInput
 		{
 			get
 			{
 				if(input==null)
-					input=File.ReadAllBytes("input.data");
+				{
+					var dir = Path.GetDirectoryName(typeof(FastLZData).Assembly.Location);
+					input = File.ReadAllBytes(Path.Combine(dir,"FastLZSampleData","input.data"));
+				}
 				return input;
 			}
 		}
 
 		private static byte[] outputDataLV1 = null;
-		public static byte[] GetSampleOutputLV1
+		public static byte[] SampleOutputLV1
 		{
 			get
 			{
 				if (outputDataLV1 == null)
-					outputDataLV1 = File.ReadAllBytes("output.data.lv1");
+				{
+					var dir = Path.GetDirectoryName(typeof(FastLZData).Assembly.Location);
+					outputDataLV1 = File.ReadAllBytes(Path.Combine(dir,"FastLZSampleData","output.data.lv1"));
+				}
 				return outputDataLV1;
 			}
 		}
 
 		private static byte[] outputDataLV2 = null;
-		public static byte[] GetSampleOutputLV2
+		public static byte[] SampleOutputLV2
 		{
 			get
 			{
 				if (outputDataLV2 == null)
-					outputDataLV2 = File.ReadAllBytes("output.data.lv2");
+				{
+					var dir = Path.GetDirectoryName(typeof(FastLZData).Assembly.Location);
+					outputDataLV1 = File.ReadAllBytes(Path.Combine(dir,"FastLZSampleData","output.data.lv2"));
+				}
 				return outputDataLV2;
 			}
 		}
