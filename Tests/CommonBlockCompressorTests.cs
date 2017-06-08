@@ -34,13 +34,6 @@ namespace Tests
 {
 	public static class CommonBlockCompressorTests
 	{
-		public static void SampleDataCompress(IBlockCompressor compressor, byte[] input, int sz, int iOffset, byte[] output, int oOffset, byte[] control)
-		{
-			var count = compressor.Compress(input, sz, iOffset, output, oOffset);
-			Assert.AreEqual(count, control.Length);
-			var sample = new byte[control.Length];
-			Buffer.BlockCopy(output, oOffset, sample, 0, count);
-			Assert.AreEqual(sample, control);
-		}
+
 	}
 }

@@ -65,7 +65,7 @@ namespace Tests
 				if (outputDataLV2 == null)
 				{
 					var dir = Path.GetDirectoryName(typeof(FastLZData).Assembly.Location);
-					outputDataLV1 = File.ReadAllBytes(Path.Combine(dir,"FastLZSampleData","output.data.lv2"));
+					outputDataLV2 = File.ReadAllBytes(Path.Combine(dir,"FastLZSampleData","output.data.lv2"));
 				}
 				return outputDataLV2;
 			}

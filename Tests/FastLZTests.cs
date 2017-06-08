@@ -38,16 +38,22 @@ namespace Tests
 		[Test]
 		public void CompressSampleLV1()
 		{
-			IBlockCompressor compressor = new FastLZBlockCompressor(true);
 			var output = new byte[FastLZData.SampleOutputLV1.Length];
-			CommonBlockCompressorTests.SampleDataCompress(
-				compressor,
-			  FastLZData.SampleInput,
-				FastLZData.SampleInput.Length,
-				0,
-				output,
-				0,
-				FastLZData.SampleOutputLV1);
+			var control = FastLZData.SampleOutputLV1;
+			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, true);
+			Assert.AreEqual(count, control.Length);
+			Assert.AreEqual(output, control);
 		}
+
+		[Test]
+		public void CompressSampleLV2()
+		{
+			var output = new byte[FastLZData.SampleOutputLV2.Length];
+			var control = FastLZData.SampleOutputLV2;
+			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, true);
+			Assert.AreEqual(count, control.Length);
+			Assert.AreEqual(output, control);
+		}
+
 	}
 }
