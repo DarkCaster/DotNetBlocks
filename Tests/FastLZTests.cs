@@ -1,4 +1,4 @@
-﻿// CommonBlockCompressorTests.cs
+﻿// FastLZTests.cs
 //
 // The MIT License (MIT)
 //
@@ -22,25 +22,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using DarkCaster.Compression;
+using DarkCaster.Compression.FastLZ;
 using Tests.SafeEventStuff;
 
 namespace Tests
 {
-	public static class CommonBlockCompressorTests
+	[TestFixture]
+	public class FastLZTests
 	{
-		public static void SampleDataCompress(IBlockCompressor compressor, byte[] input, int sz, int iOffset, byte[] output, int oOffset, byte[] control)
+		[Test]
+		public void CompressSampleLV1()
 		{
-			var count = compressor.Compress(input, sz, iOffset, output, oOffset);
-			Assert.AreEqual(count, control.Length);
-			var sample = new byte[control.Length];
-			Buffer.BlockCopy(output, oOffset, sample, 0, count);
-			Assert.AreEqual(sample, control);
+			IBlockCompressor compressor = new FastLZBlockCompressor(true);
+			var output = new byte[FastLZData.SampleOutputLV1.Length];
+			CommonBlockCompressorTests.SampleDataCompress(
+				compressor,
+			  FastLZData.SampleInput,
+				FastLZData.SampleInput.Length,
+				0,
+				output,
+				0,
+				FastLZData.SampleOutputLV1);
 		}
 	}
 }

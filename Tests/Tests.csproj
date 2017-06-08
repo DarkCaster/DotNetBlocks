@@ -71,6 +71,7 @@
     <Compile Include="AsyncRunnerTests.cs" />
     <Compile Include="CommonBlockCompressorTests.cs" />
     <Compile Include="FastLZSampleData\FastLZData.cs" />
+    <Compile Include="FastLZTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
