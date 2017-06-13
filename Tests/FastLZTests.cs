@@ -55,5 +55,43 @@ namespace Tests
 			Assert.AreEqual(control,output);
 		}
 
+		/*public void FindMaxOverhead(bool fastSpeed)
+		{
+			int overhead = 0;
+			var maxBsz = (new FastLZBlockCompressor(fastSpeed)).MaxBlockSZ;
+			var random = new Random();
+			int ilen = 1;
+			while(ilen < maxBsz)
+			{
+				var input = new byte[ilen];
+				random.NextBytes(input);
+				var output = new byte[(int)(ilen * 2)];
+				var count = FastLZ.Compress(input, 0, ilen, output, 0, fastSpeed);
+				if (count - ilen > overhead)
+					overhead = count - ilen;
+				if (ilen > 8192)
+					ilen = maxBsz;
+				else
+					++ilen;
+			}
+			for (int i = 0; i < 10;++i)
+			{
+				var input = new byte[ilen];
+				random.NextBytes(input);
+				var output = new byte[(int)(ilen * 1.5)];
+				var count = FastLZ.Compress(input, 0, ilen, output, 0, fastSpeed);
+				if (count - ilen > overhead)
+					overhead = count - ilen;
+			}
+
+			Assert.Fail(overhead.ToString());
+		}
+
+		[Test]
+		public void FindMaxOverhead()
+		{
+			FindMaxOverhead(true);
+			FindMaxOverhead(false);
+		}*/
 	}
 }
