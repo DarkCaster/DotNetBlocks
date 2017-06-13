@@ -62,11 +62,10 @@ namespace DarkCaster.Compression
 		int MaxBlockSZ { get; }
 
 		/// <summary>
-		/// Gets the maximum overhead in bytes that may be applied to compressed data.
-		/// Maximum size of compressed data that may be produced by compressor must be equal to MaxBlockSZ+MaxOverhead.
+		/// Calculate maximum size in bytes needed for output buffer in order to succsesfull compress data for specified input buffer size.
 		/// You may use this information to tune output buffer size.
 		/// </summary>
-		/// <value>Maximum overhead value in bytes.</value>
-		int MaxOverhead { get; }
+		/// <returns>Size of output buffer in bytes</returns>
+		int GetOutBuffSZ(int inputSZ);
 	}
 }

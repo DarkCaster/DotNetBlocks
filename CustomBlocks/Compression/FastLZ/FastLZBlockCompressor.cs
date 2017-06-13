@@ -31,7 +31,6 @@ namespace DarkCaster.Compression.FastLZ
 	{
 		private readonly bool fastSpeed;
 		private const int MAX_BLOCK_SZ = 536870912; //2 ^ 29;
-		private const int MAX_OVERHEAD = 4; // Header size is dynamic, 4 byte header is applied at worst cases
 
 		private const int PAYLOAD_LEN1 = 32; //2 ^ 5;
 		private const int PAYLOAD_LEN2 = 8192; //2 ^ 13;
@@ -98,6 +97,9 @@ namespace DarkCaster.Compression.FastLZ
 
 		public int MaxBlockSZ { get { return MAX_BLOCK_SZ; } }
 
-		public int MaxOverhead { get { return MAX_OVERHEAD; } }
+		public int GetOutBuffSZ(int inputSZ)
+		{
+			return (int)Math.Ceiling(inputSZ * 1.0310624) + CalculateHeaderLength(inputSZ);
+		}
 	}
 }
