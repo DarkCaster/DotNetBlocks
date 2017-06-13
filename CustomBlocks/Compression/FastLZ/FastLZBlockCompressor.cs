@@ -30,13 +30,12 @@ namespace DarkCaster.Compression.FastLZ
 	public class FastLZBlockCompressor : IBlockCompressor
 	{
 		private readonly bool fastSpeed;
-		private const int MAX_BLOCK_SZ = 2 ^ 29;
+		private const int MAX_BLOCK_SZ = 536870912; //2 ^ 29;
 		private const int MAX_OVERHEAD = 4; // Header size is dynamic, 4 byte header is applied at worst cases
 
-		private const int PAYLOAD_LEN1 = 2 ^ 5;
-		private const int PAYLOAD_LEN2 = 2 ^ 13;
-		private const int PAYLOAD_LEN3 = 2 ^ 21;
-
+		private const int PAYLOAD_LEN1 = 32; //2 ^ 5;
+		private const int PAYLOAD_LEN2 = 8192; //2 ^ 13;
+		private const int PAYLOAD_LEN3 = 2097152; //2 ^ 21;
 
 		public FastLZBlockCompressor(bool fastSpeed)
 		{
