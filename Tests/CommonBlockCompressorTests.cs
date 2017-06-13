@@ -34,6 +34,49 @@ namespace Tests
 {
 	public static class CommonBlockCompressorTests
 	{
+		private const int CHUNKS_CNT = 128;
+		private const int MIN_CHUNK_SZ = 1;
+		private const int MAX_CHUNK_SZ = 32;
+		private static readonly byte[][] chunks;
+		static CommonBlockCompressorTests()
+		{
+			var random = new Random();
+			chunks = new byte[CHUNKS_CNT][];
+			for (int i = 0; i < CHUNKS_CNT; ++i)
+			{
+				chunks[i] = new byte[random.Next(MIN_CHUNK_SZ, MIN_CHUNK_SZ + 1)];
+				random.NextBytes(chunks[i]);
+			}
+		}
 
+		public static void GenerateComprData(byte[] buffer, int offset=0, int length=-1)
+		{
+			if (length < 0)
+				length = buffer.Length - offset;
+			int limit = offset + length;
+			var random = new Random();
+			while (offset < limit)
+			{
+				//select data chunk to copy
+				var chunk = chunks[random.Next(0, CHUNKS_CNT)];
+				//copy data chunk to buffer
+				for (int i = 0; i < chunk.Length; ++i)
+				{
+					buffer[offset++] = chunk[i];
+					if (offset >= limit)
+						break;
+				}
+			}
+		}
+
+		public static void GenerateNonComprData(byte[] buffer, int offset = 0, int length = -1)
+		{
+			if (length < 0)
+				length = buffer.Length - offset;
+			int limit = offset + length;
+			var random = new Random();
+			while (offset < limit)
+				buffer[offset++] = (byte)random.Next(0, 256);
+		}
 	}
 }
