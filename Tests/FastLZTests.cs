@@ -92,6 +92,34 @@ namespace Tests
 		{
 			FindMaxOverhead(true);
 			FindMaxOverhead(false);
+		}
+
+		public void FindMinOverhead(bool fastSpeed)
+		{
+			var maxBsz = (new FastLZBlockCompressor(fastSpeed)).MaxBlockSZ;
+			var random = new Random();
+			int ilen = 1;
+			int[] ovh = new int[512];
+			while (ilen < 512)
+			{
+				var input = new byte[ilen];
+				random.NextBytes(input);
+				var output = new byte[(int)(ilen * 2)];
+				var count = FastLZ.Compress(input, 0, ilen, output, 0, fastSpeed);
+				ovh[ilen] = count - ilen;
+				++ilen;
+			}
+			string result="";
+			for (int i = 0; i < 512; ++i)
+				result += i.ToString()+"+"+ovh[i] + ";";
+			Assert.Fail(result);
+		}
+
+		[Test]
+		public void FindMinOverhead()
+		{
+			FindMinOverhead(true);
+			FindMinOverhead(false);
 		}*/
 	}
 }
