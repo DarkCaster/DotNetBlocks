@@ -45,7 +45,7 @@ namespace DarkCaster.Compression
 
 		/// <summary>
 		/// Decompresses the data, previously compressed with Compress method.
-		/// Data length information should be stored in header within input data buffer. 
+		/// Data length information should be stored in metadata header within input data buffer.
 		/// </summary>
 		/// <param name="input">Reference to the data to decompress</param>
 		/// <param name="inOffset">Offset for input buffer</param>
@@ -62,7 +62,24 @@ namespace DarkCaster.Compression
 		int MaxBlockSZ { get; }
 
 		/// <summary>
-		/// Calculate maximum size in bytes needed for output buffer in order to succsesfull compress data for specified input buffer size.
+		/// Decodes full size of compressed data block, written to <paramref name="buffer"/> at selected <paramref name="offset"/> 
+		/// </summary>
+		/// <returns>Full size of compressed data block, including all service metadata</returns>
+		/// <param name="buffer">Buffer that contains full data block with compressed data</param>
+		/// <param name="offset">Offset</param>
+		int DecodeComprBlockSZ(byte[] buffer, int offset=0);
+
+		/// <summary>
+		/// Decodes the size of the service metadata from data block with compressed data.
+		/// </summary>
+		/// <returns>The metadata size.</returns>
+		/// <param name="buffer">Buffer.</param>
+		/// <param name="offset">Offset.</param>
+		int DecodeMetadataSZ(byte[] buffer, int offset=0);
+
+		/// <summary>
+		/// Calculate maximum size in bytes needed for output buffer in order to succsesfully compress data for specified input buffer size.
+		/// This value include metadata overhead + possible worst case compression algorhitm overhead.
 		/// You may use this information to tune output buffer size.
 		/// </summary>
 		/// <returns>Size of output buffer in bytes</returns>

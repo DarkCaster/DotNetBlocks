@@ -90,6 +90,26 @@ namespace DarkCaster.Compression.FastLZ
 			return comprSz;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int DecodeComprBlockSZ(byte[] buffer, int offset=0)
+		{
+			var hdrLen = DecodeMetadataSZ(buffer, offset);
+			int sz = buffer[offset] & 0x1F;
+			int shift_val = 5;
+			for (int shift = 1; shift < hdrLen; ++shift)
+			{
+				sz |= buffer[offset + shift] << shift_val;
+				shift_val += 8;
+			}
+			return sz;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int DecodeMetadataSZ(byte[] buffer, int offset=0)
+		{
+			return (buffer[offset] >> 5 & 0X3) + 1;
+		}
+
 		public int Decompress(byte[] input, int inOffset, byte[] output, int outOffset)
 		{
 			throw new NotImplementedException("TODO:");
