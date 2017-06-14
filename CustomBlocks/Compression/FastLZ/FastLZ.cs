@@ -67,7 +67,7 @@ namespace DarkCaster.Compression.FastLZ
 			}
 		}
 
-		public static int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos, bool fastSpeed=true)
+		public static int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
 			//TODO: input params check
 			int start = oPos;
@@ -117,49 +117,24 @@ namespace DarkCaster.Compression.FastLZ
 				// comparison starting-point
 				int anchor = iPos;
 
-				if (!fastSpeed)
-				{
-					// check for a run
-					if (input[iPos] == input[iPos - 1] && FASTLZ_READU16(input, iPos - 1) == FASTLZ_READU16(input, iPos + 1))
-					{
-						distance = 1;
-						iPos += 3;
-						refb = anchor - 1 + 3;
-						goto match;
-					}
-				}
-
-				/* find potential match */
+				// find potential match
 				HASH_FUNCTION(ref hval, input, iPos);
 				hslot = (int)hval;
 				refb = htab[hval];
 
-				/* calculate distance to the match */
+				// calculate distance to the match
 				distance = (uint)(anchor - refb);
 
-				/* update hash table */
+				// update hash table
 				htab[hslot] = anchor;
 
-				/* is this a match? check the first 3 bytes */
-
-
-
-
-				if (distance == 0 || (fastSpeed && distance >= MAX_DISTANCE1) || (!fastSpeed && distance >= MAX_FARDISTANCE) ||
-						input[refb++] != input[iPos++] || input[refb++] != input[iPos++] || input[refb++] != input[iPos++])
+				// is this a match? check the first 3 bytes
+				if (distance == 0 ||
+				    distance >= MAX_DISTANCE1 ||
+				    input[refb++] != input[iPos++] ||
+				    input[refb++] != input[iPos++] ||
+				    input[refb++] != input[iPos++])
 					goto literal;
-
-				if (!fastSpeed)
-				{
-					// far, needs at least 5-byte match
-					if (distance >= MAX_DISTANCE2)
-					{
-						if (input[iPos++] != input[refb++] || input[iPos++] != input[refb++])
-							goto literal;
-						len += 2;
-					}
-				}
-			match:
 
 				// last matched byte
 				iPos = (int)(anchor + len);
@@ -210,51 +185,6 @@ namespace DarkCaster.Compression.FastLZ
 				len = (uint)(iPos - anchor);
 
 				// encode the match
-				if (!fastSpeed)
-				{
-					if (distance < MAX_DISTANCE2)
-					{
-						if (len < 7)
-						{
-							output[oPos++] = (byte)((len << 5) + (distance >> 8));
-							output[oPos++] = (byte)(distance & 255);
-						}
-						else
-						{
-							output[oPos++] = (byte)((7 << 5) + (distance >> 8));
-							for (len -= 7; len >= 255; len -= 255)
-								output[oPos++] = 255;
-							output[oPos++] = (byte)len;
-							output[oPos++] = (byte)(distance & 255);
-						}
-					}
-					else
-					{
-						/* far away, but not yet in the another galaxy... */
-						if (len < 7)
-						{
-							distance -= MAX_DISTANCE2;
-							output[oPos++] = (byte)((len << 5) + 31);
-							output[oPos++] = 255;
-							output[oPos++] = (byte)(distance >> 8);
-							output[oPos++] = (byte)(distance & 255);
-						}
-						else
-						{
-							distance -= MAX_DISTANCE2;
-							output[oPos++] = (7 << 5) + 31;
-							for (len -= 7; len >= 255; len -= 255)
-								output[oPos++] = 255;
-							output[oPos++] = (byte)len;
-							output[oPos++] = 255;
-							output[oPos++] = (byte)(distance >> 8);
-							output[oPos++] = (byte)(distance & 255);
-						}
-					}
-
-				}
-				else
-				{
 					if (len > MAX_LEN - 2)
 						while (len > MAX_LEN - 2)
 						{
@@ -275,7 +205,6 @@ namespace DarkCaster.Compression.FastLZ
 						output[oPos++] = (byte)(len - 7);
 						output[oPos++] = (byte)(distance & 255);
 					}
-				}
 
 				// update the hash at match boundary
 				HASH_FUNCTION(ref hval, input, iPos);
@@ -317,10 +246,6 @@ namespace DarkCaster.Compression.FastLZ
 				output[oPos - copy - 1] = (byte)(copy - 1);
 			else
 				oPos--;
-
-			if (!fastSpeed)
-				/* marker for fastlz2 */
-				output[start] |= (1 << 5);
 
 			return oPos - start;
 		}

@@ -29,17 +29,10 @@ namespace DarkCaster.Compression.FastLZ
 {
 	public class FastLZBlockCompressor : IBlockCompressor
 	{
-		private readonly bool fastSpeed;
 		private const int MAX_BLOCK_SZ = 536870912; //2 ^ 29;
-
 		private const int PAYLOAD_LEN1 = 32; //2 ^ 5;
 		private const int PAYLOAD_LEN2 = 8192; //2 ^ 13;
 		private const int PAYLOAD_LEN3 = 2097152; //2 ^ 21;
-
-		public FastLZBlockCompressor(bool fastSpeed)
-		{
-			this.fastSpeed = fastSpeed;
-		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int CalculateHeaderLength(int payloadLen)
@@ -78,7 +71,7 @@ namespace DarkCaster.Compression.FastLZ
 		public int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset)
 		{
 			var hdrSz=CalculateHeaderLength(inSz);
-			var comprSz=FastLZ.Compress(input, inOffset, inSz, output, outOffset+hdrSz, fastSpeed);
+			var comprSz=FastLZ.Compress(input, inOffset, inSz, output, outOffset+hdrSz);
 			bool useCompr = true;
 			if (comprSz >= inSz)
 			{
