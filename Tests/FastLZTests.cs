@@ -121,5 +121,19 @@ namespace Tests
 			FindMinOverhead(true);
 			FindMinOverhead(false);
 		}*/
+
+		public void Compress_SmallSize(bool fastSpeed)
+		{
+			var compressor = new FastLZBlockCompressor(fastSpeed);
+			for (int i = 1; i < 96; ++i)
+				CommonBlockCompressorTests.Compress_HighComprData(compressor, i);
+		}
+
+		[Test]
+		public void Compress_SmallSize()
+		{
+			Compress_SmallSize(true);
+			Compress_SmallSize(false);
+		}
 	}
 }
