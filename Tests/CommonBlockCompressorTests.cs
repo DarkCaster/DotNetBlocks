@@ -55,25 +55,19 @@ namespace Tests
 				length = buffer.Length - offset;
 			int limit = offset + length;
 			var random = new Random();
-			var maxLen = 8;
+			var maxLen = 32;
 			if (maxLen > length / 2)
 				maxLen = length / 2;
-			if (maxLen < 1)
-				maxLen = 1;
+			if (maxLen < 8)
+				maxLen = 8;
 			while (offset < limit)
 			{
-				//select data chunk to copy
-				byte[] chunk = null;
-				while(chunk==null)
-				{
-					var test = random.Next(0,CHUNKS_CNT);
-					if (chunks[test].Length <= maxLen)
-						chunk = chunks[test];
-				}
+				byte val = (byte)random.Next(0, 256);
+				int len = (byte)random.Next(8, maxLen);
 				//copy data chunk to buffer
-				for (int i = 0; i < chunk.Length; ++i)
+				for (int i = 0; i < len; ++i)
 				{
-					buffer[offset++] = chunk[i];
+					buffer[offset++] = val;
 					if (offset >= limit)
 						break;
 				}
@@ -116,7 +110,7 @@ namespace Tests
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
 			GenerateHighComprData(input);
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
-			Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 
 		public static void Compress_LowComprData(IBlockCompressor compressor, int dataLen)
@@ -125,7 +119,7 @@ namespace Tests
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
 			GenerateComprData(input);
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
-			Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 	}
 }
