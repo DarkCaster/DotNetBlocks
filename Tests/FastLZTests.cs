@@ -40,12 +40,12 @@ namespace Tests
 		{
 			var output = new byte[FastLZData.SampleOutputLV1.Length];
 			var control = FastLZData.SampleOutputLV1;
-			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, true);
+			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0);
 			Assert.AreEqual(control.Length,count);
 			Assert.AreEqual(control,output);
 		}
 
-		[Test]
+		/*[Test]
 		public void CompressSampleLV2()
 		{
 			var output = new byte[FastLZData.SampleOutputLV2.Length];
@@ -53,7 +53,7 @@ namespace Tests
 			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, false);
 			Assert.AreEqual(control.Length,count);
 			Assert.AreEqual(control,output);
-		}
+		}*/
 
 		/*public void FindMaxOverhead(bool fastSpeed)
 		{
@@ -122,32 +122,36 @@ namespace Tests
 			FindMinOverhead(false);
 		}*/
 
-		public void Compress_SmallSize(bool fastSpeed)
+		[Test]
+		public void Compress_HiComprData()
 		{
-			var compressor = new FastLZBlockCompressor(fastSpeed);
+			var compressor = new FastLZBlockCompressor();
 			for (int i = 1; i < 16384; ++i)
 				CommonBlockCompressorTests.Compress_HighComprData(compressor, i, 15);
 		}
 
 		[Test]
-		public void Compress_SmallSize()
+		public void Compress_LowComprData()
 		{
-			Compress_SmallSize(true);
-			Compress_SmallSize(false);
-		}
-
-		public void Compress_SmallSize_Plane(bool fastSpeed)
-		{
-			var compressor = new FastLZBlockCompressor(fastSpeed);
-			for (int i = 15; i < 16384; ++i)
-				CommonBlockCompressorTests.Compress_PlaneData(compressor, i, 15);
+			var compressor = new FastLZBlockCompressor();
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_LowComprData(compressor, i, 512);
 		}
 
 		[Test]
-		public void Compress_SmallSize_Plane()
+		public void Compress_NonComprData()
 		{
-			Compress_SmallSize_Plane(true);
-			Compress_SmallSize_Plane(false);
+			var compressor = new FastLZBlockCompressor();
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_NonComprData(compressor, i);
+		}
+
+		[Test]
+		public void Compress_PlaneData()
+		{
+			var compressor = new FastLZBlockCompressor();
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_PlaneData(compressor, i, 15);
 		}
 	}
 }

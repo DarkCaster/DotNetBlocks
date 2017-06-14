@@ -33,15 +33,16 @@ namespace Tests
 	{
 		private const int CHUNKS_CNT = 128;
 		private const int MIN_CHUNK_SZ = 1;
-		private const int MAX_CHUNK_SZ = 32;
+		private const int MAX_CHUNK_SZ = 16;
 		private static readonly byte[][] chunks;
+
 		static CommonBlockCompressorTests()
 		{
 			var random = new Random();
 			chunks = new byte[CHUNKS_CNT][];
 			for (int i = 0; i < CHUNKS_CNT; ++i)
 			{
-				chunks[i] = new byte[random.Next(MIN_CHUNK_SZ, MIN_CHUNK_SZ + 1)];
+				chunks[i] = new byte[random.Next(MIN_CHUNK_SZ, MAX_CHUNK_SZ + 1)];
 				random.NextBytes(chunks[i]);
 			}
 		}
@@ -137,6 +138,15 @@ namespace Tests
 				Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 			else
 				Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+		}
+
+		public static void Compress_NonComprData(IBlockCompressor compressor, int dataLen)
+		{
+			var input = new byte[dataLen];
+			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
+			GenerateNonComprData(input);
+			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
+			Assert.AreEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 	}
 }
