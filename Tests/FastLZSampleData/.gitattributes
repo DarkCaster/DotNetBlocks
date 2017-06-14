@@ -1,3 +1,4 @@
 input.data binary
+input.data.bad binary
 output.data.lv1 binary
 output.data.lv2 binary
