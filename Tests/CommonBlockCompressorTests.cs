@@ -104,10 +104,13 @@ namespace Tests
 				buffer[offset++] = (byte)random.Next(0, 256);
 		}
 
-		public static void Compress_ZerosData(IBlockCompressor compressor, int dataLen)
+		public static void Compress_PlaneData(IBlockCompressor compressor, int dataLen)
 		{
 			var input = new byte[dataLen];
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
+			byte val = (byte)new Random().Next(0, 256);
+			for (int i = 0; i < input.Length; ++i)
+				input[i] = val;
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
 			Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}

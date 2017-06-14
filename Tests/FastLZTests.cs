@@ -1,4 +1,4 @@
-﻿﻿// FastLZTests.cs
+﻿﻿﻿// FastLZTests.cs
 //
 // The MIT License (MIT)
 //
@@ -134,6 +134,20 @@ namespace Tests
 		{
 			Compress_SmallSize(true);
 			Compress_SmallSize(false);
+		}
+
+		public void Compress_SmallSize_Plane(bool fastSpeed)
+		{
+			var compressor = new FastLZBlockCompressor(fastSpeed);
+			for (int i = 15; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_PlaneData(compressor, i);
+		}
+
+		[Test]
+		public void Compress_SmallSize_Plane()
+		{
+			Compress_SmallSize_Plane(true);
+			Compress_SmallSize_Plane(false);
 		}
 	}
 }
