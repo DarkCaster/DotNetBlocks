@@ -1,4 +1,4 @@
-﻿// CommonBlockCompressorTests.cs
+﻿﻿// CommonBlockCompressorTests.cs
 //
 // The MIT License (MIT)
 //
@@ -24,11 +24,8 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using NUnit.Framework;
 using DarkCaster.Compression;
-using Tests.SafeEventStuff;
 
 namespace Tests
 {
@@ -104,7 +101,7 @@ namespace Tests
 				buffer[offset++] = (byte)random.Next(0, 256);
 		}
 
-		public static void Compress_PlaneData(IBlockCompressor compressor, int dataLen)
+		public static void Compress_PlaneData(IBlockCompressor compressor, int dataLen, int minLenStrictCheck)
 		{
 			var input = new byte[dataLen];
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
@@ -112,25 +109,34 @@ namespace Tests
 			for (int i = 0; i < input.Length; ++i)
 				input[i] = val;
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
-			Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			if (dataLen < minLenStrictCheck)
+				Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			else
+				Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 
-		public static void Compress_HighComprData(IBlockCompressor compressor, int dataLen)
+		public static void Compress_HighComprData(IBlockCompressor compressor, int dataLen, int minLenStrictCheck)
 		{
 			var input = new byte[dataLen];
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
 			GenerateHighComprData(input);
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
-			Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			if(dataLen<minLenStrictCheck)
+				Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			else
+				Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 
-		public static void Compress_LowComprData(IBlockCompressor compressor, int dataLen)
+		public static void Compress_LowComprData(IBlockCompressor compressor, int dataLen, int minLenStrictCheck)
 		{
 			var input = new byte[dataLen];
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
 			GenerateComprData(input);
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
-			Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			if (dataLen < minLenStrictCheck)
+				Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+			else
+				Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 	}
 }

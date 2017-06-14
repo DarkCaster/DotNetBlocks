@@ -125,8 +125,8 @@ namespace Tests
 		public void Compress_SmallSize(bool fastSpeed)
 		{
 			var compressor = new FastLZBlockCompressor(fastSpeed);
-			for (int i = 15; i < 16384; ++i)
-				CommonBlockCompressorTests.Compress_HighComprData(compressor, i);
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_HighComprData(compressor, i, 15);
 		}
 
 		[Test]
@@ -140,7 +140,7 @@ namespace Tests
 		{
 			var compressor = new FastLZBlockCompressor(fastSpeed);
 			for (int i = 15; i < 16384; ++i)
-				CommonBlockCompressorTests.Compress_PlaneData(compressor, i);
+				CommonBlockCompressorTests.Compress_PlaneData(compressor, i, 15);
 		}
 
 		[Test]
