@@ -1,8 +1,19 @@
 ﻿// FastLZ.cs
 //
 // Copyright (c) 2017 DarkCaster <dark.caster@outlook.com>
-// This is a C# port of FastLZ library by (c) Ariya Hidayat, MIT License
+// This is a PARTIAL C# port of FastLZ library by (c) Ariya Hidayat, MIT License
 // See http://fastlz.org for more info.
+//
+// Only level 1 compression\decompression mode is currently implemented.
+// Level 2 compression mode cause out-of-bounds access to input data buffer on certain patterns.
+// (see Tests/FastLZSampleData/input.data.bad for example).
+// This problem can be also triggered with original project
+// (just feed sample input.data.bad contents to fastlz2_compress function,
+// and add bounds checks for data access at FASTLZ_READU16 macro).
+// So, level 2 compression is not ported for now.
+// It may be implemented in future, when I figure out how exactly compression algorithm works.
+//
+// ---
 //
 // The MIT License (MIT)
 //
