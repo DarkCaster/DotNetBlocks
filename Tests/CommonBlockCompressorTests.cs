@@ -116,7 +116,7 @@ namespace Tests
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
 			GenerateHighComprData(input);
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
-			Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output, 0));
+			Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 
 		public static void Compress_LowComprData(IBlockCompressor compressor, int dataLen)
@@ -125,7 +125,7 @@ namespace Tests
 			var output = new byte[compressor.GetOutBuffSZ(dataLen)];
 			GenerateComprData(input);
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
-			Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output, 0));
+			Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
 		}
 	}
 }
