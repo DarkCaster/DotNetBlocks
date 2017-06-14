@@ -87,7 +87,7 @@ namespace DarkCaster.Compression.FastLZ
 				Buffer.BlockCopy(input, inOffset, output, outOffset + hdrSz, inSz);
 			}
 			WriteHeader(output, outOffset, comprSz, hdrSz, useCompr);
-			return comprSz;
+			return comprSz + hdrSz;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -101,7 +101,7 @@ namespace DarkCaster.Compression.FastLZ
 				sz |= buffer[offset + shift] << shift_val;
 				shift_val += 8;
 			}
-			return sz;
+			return sz + hdrLen;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,7 +119,7 @@ namespace DarkCaster.Compression.FastLZ
 
 		public int GetOutBuffSZ(int inputSZ)
 		{
-			return (int)Math.Ceiling(inputSZ * 1.0310624) + CalculateHeaderLength(inputSZ);
+			return (int)Math.Ceiling(inputSZ * 1.0310624) + CalculateHeaderLength(inputSZ) + 1;
 		}
 	}
 }
