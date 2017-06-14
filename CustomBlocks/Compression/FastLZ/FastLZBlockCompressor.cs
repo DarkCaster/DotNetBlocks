@@ -68,11 +68,11 @@ namespace DarkCaster.Compression.FastLZ
 			buffer[offset + 2] = (byte)((lenValue >> 13) & 0xFF);
 			if (hdrsz == 3)
 			{
-				buffer[offset] &= 0xDF;
+				buffer[offset] |= 0x40;
 				return;
 			}
 			buffer[offset + 3] = (byte)((lenValue >> 21) & 0xFF);
-			buffer[offset] &= 0xFF;
+			buffer[offset] |= 0x60;
 		}
 
 		public int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset)
