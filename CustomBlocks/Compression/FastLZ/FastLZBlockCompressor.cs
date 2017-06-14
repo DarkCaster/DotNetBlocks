@@ -112,7 +112,7 @@ namespace DarkCaster.Compression.FastLZ
 
 		public int GetOutBuffSZ(int inputSZ)
 		{
-			return (int)Math.Ceiling(inputSZ * 1.0310624) + CalculateHeaderLength(inputSZ) + 1;
+			return inputSZ + inputSZ / 32 + CalculateHeaderLength(inputSZ) + 1;
 		}
 	}
 }
