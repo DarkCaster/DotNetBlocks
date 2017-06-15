@@ -189,5 +189,41 @@ namespace Tests
 			//test, that we have used all space in output-buffer (except for the last extra byte)
 			Assert.AreEqual(output.Length, outLen + 1);
 		}
+
+		[Test]
+		public void Compress_HighComprData_WithOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var random = new Random();
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_HighComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+		}
+
+		[Test]
+		public void Compress_LowComprData_WithOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var random = new Random();
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_LowComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+		}
+
+		[Test]
+		public void Compress_NonComprData_WithOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var random = new Random();
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_NonComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+		}
+
+		[Test]
+		public void Compress_PlaneData_WithOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var random = new Random();
+			for (int i = 1; i < 16384; ++i)
+				CommonBlockCompressorTests.Compress_PlaneData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+		}
 	}
 }

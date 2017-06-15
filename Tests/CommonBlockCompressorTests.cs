@@ -35,10 +35,10 @@ namespace Tests
 		private const int MIN_CHUNK_SZ = 1;
 		private const int MAX_CHUNK_SZ = 16;
 		private static readonly byte[][] chunks;
+		private static readonly Random random = new Random();
 
 		static CommonBlockCompressorTests()
 		{
-			var random = new Random();
 			chunks = new byte[CHUNKS_CNT][];
 			for (int i = 0; i < CHUNKS_CNT; ++i)
 			{
@@ -52,7 +52,6 @@ namespace Tests
 			if (length < 0)
 				length = buffer.Length - offset;
 			int limit = offset + length;
-			var random = new Random();
 			var maxLen = 32;
 			if (maxLen > length / 2)
 				maxLen = length / 2;
@@ -77,7 +76,6 @@ namespace Tests
 			if (length < 0)
 				length = buffer.Length - offset;
 			int limit = offset + length;
-			var random = new Random();
 			while (offset < limit)
 			{
 				//select data chunk to copy
@@ -97,7 +95,6 @@ namespace Tests
 			if (length < 0)
 				length = buffer.Length - offset;
 			int limit = offset + length;
-			var random = new Random();
 			while (offset < limit)
 				buffer[offset++] = (byte)random.Next(0, 256);
 		}
@@ -147,6 +144,54 @@ namespace Tests
 			GenerateNonComprData(input);
 			var outLen = compressor.Compress(input, dataLen, 0, output, 0);
 			Assert.AreEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output));
+		}
+
+		public static int Compress_WithOffset(IBlockCompressor compressor, byte[] input, int offset, int sz, byte[] output, int outOffset, int minLenStrictCheck)
+		{
+			var outLen = compressor.Compress(input, sz, offset, output, outOffset);
+			if (sz < minLenStrictCheck)
+				Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output,outOffset));
+			else
+				Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output,outOffset));
+			return outLen;
+		}
+
+		public static void Compress_HighComprData_WithOffset(IBlockCompressor compressor, int dataLen, int maxDataOffset, int minLenStrictCheck)
+		{
+			var input = new byte[dataLen+maxDataOffset];
+			var output = new byte[compressor.GetOutBuffSZ(dataLen)+maxDataOffset];
+			var dataOffset = random.Next(1, maxDataOffset + 1);
+			GenerateHighComprData(input,dataOffset);
+			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, minLenStrictCheck);
+		}
+
+		public static void Compress_LowComprData_WithOffset(IBlockCompressor compressor, int dataLen, int maxDataOffset, int minLenStrictCheck)
+		{
+			var input = new byte[dataLen + maxDataOffset];
+			var output = new byte[compressor.GetOutBuffSZ(dataLen) + maxDataOffset];
+			var dataOffset = random.Next(1, maxDataOffset + 1);
+			GenerateComprData(input, dataOffset);
+			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, minLenStrictCheck);
+		}
+
+		public static void Compress_NonComprData_WithOffset(IBlockCompressor compressor, int dataLen, int maxDataOffset, int minLenStrictCheck)
+		{
+			var input = new byte[dataLen + maxDataOffset];
+			var output = new byte[compressor.GetOutBuffSZ(dataLen) + maxDataOffset];
+			var dataOffset = random.Next(1, maxDataOffset + 1);
+			GenerateNonComprData(input, dataOffset);
+			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, minLenStrictCheck);
+		}
+
+		public static void Compress_PlaneData_WithOffset(IBlockCompressor compressor, int dataLen, int maxDataOffset, int minLenStrictCheck)
+		{
+			var input = new byte[dataLen + maxDataOffset];
+			var output = new byte[compressor.GetOutBuffSZ(dataLen) + maxDataOffset];
+			var dataOffset = random.Next(1, maxDataOffset + 1);
+			var val = (byte)random.Next(0, 256);
+			for (int i = dataOffset; i < dataOffset+dataLen; ++i)
+				input[i] = val;
+			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, minLenStrictCheck);
 		}
 	}
 }
