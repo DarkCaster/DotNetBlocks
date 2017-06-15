@@ -53,73 +53,28 @@ namespace Tests
 			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0, false);
 			Assert.AreEqual(control.Length,count);
 			Assert.AreEqual(control,output);
-		}*/
-
-		/*public void FindMaxOverhead(bool fastSpeed)
-		{
-			int overhead = 0;
-			var maxBsz = (new FastLZBlockCompressor(fastSpeed)).MaxBlockSZ;
-			var random = new Random();
-			int ilen = 1;
-			while(ilen < maxBsz)
-			{
-				var input = new byte[ilen];
-				random.NextBytes(input);
-				var output = new byte[(int)(ilen * 2)];
-				var count = FastLZ.Compress(input, 0, ilen, output, 0, fastSpeed);
-				if (count - ilen > overhead)
-					overhead = count - ilen;
-				if (ilen > 8192)
-					ilen = maxBsz;
-				else
-					++ilen;
-			}
-			for (int i = 0; i < 10;++i)
-			{
-				var input = new byte[ilen];
-				random.NextBytes(input);
-				var output = new byte[(int)(ilen * 1.5)];
-				var count = FastLZ.Compress(input, 0, ilen, output, 0, fastSpeed);
-				if (count - ilen > overhead)
-					overhead = count - ilen;
-			}
-
-			Assert.Fail(overhead.ToString());
-		}
-
-		[Test]
-		public void FindMaxOverhead()
-		{
-			FindMaxOverhead(true);
-			FindMaxOverhead(false);
-		}
-
-		public void FindMinOverhead(bool fastSpeed)
-		{
-			var maxBsz = (new FastLZBlockCompressor(fastSpeed)).MaxBlockSZ;
-			var random = new Random();
-			int ilen = 1;
-			int[] ovh = new int[512];
-			while (ilen < 512)
-			{
-				var input = new byte[ilen];
-				random.NextBytes(input);
-				var output = new byte[(int)(ilen * 2)];
-				var count = FastLZ.Compress(input, 0, ilen, output, 0, fastSpeed);
-				ovh[ilen] = count - ilen;
-				++ilen;
-			}
-			string result="";
-			for (int i = 0; i < 512; ++i)
-				result += i.ToString()+"+"+ovh[i] + ";";
-			Assert.Fail(result);
 		}
 
 		[Test]
 		public void FindMinOverhead()
 		{
-			FindMinOverhead(true);
-			FindMinOverhead(false);
+			var maxBsz = (new FastLZBlockCompressor()).MaxBlockSZ;
+			var random = new Random();
+			int ilen = 1;
+			int[] ovh = new int[16384];
+			while (ilen < 16384)
+			{
+				var input = new byte[ilen];
+				random.NextBytes(input);
+				var output = new byte[(int)(ilen * 2)];
+				var count = FastLZ.Compress(input, 0, ilen, output, 0);
+				ovh[ilen] = count - ilen;
+				++ilen;
+			}
+			string result="";
+			for (int i = 0; i < 16384; ++i)
+				result += i.ToString()+"+"+ovh[i] + ";";
+			Assert.Fail(result);
 		}*/
 
 		[Test]
@@ -153,5 +108,34 @@ namespace Tests
 			for (int i = 1; i < 16384; ++i)
 				CommonBlockCompressorTests.Compress_PlaneData(compressor, i, 15);
 		}
+
+		[Test]
+		public void Compress_HiComprData_MaxBlock()
+		{
+			var compressor = new FastLZBlockCompressor();
+			CommonBlockCompressorTests.Compress_HighComprData(compressor, compressor.MaxBlockSZ, 15);
+		}
+
+		[Test]
+		public void Compress_LowComprData_MaxBlock()
+		{
+			var compressor = new FastLZBlockCompressor();
+			CommonBlockCompressorTests.Compress_LowComprData(compressor, compressor.MaxBlockSZ, 512);
+		}
+
+		[Test]
+		public void Compress_NonComprData_MaxBlock()
+		{
+			var compressor = new FastLZBlockCompressor();
+			CommonBlockCompressorTests.Compress_NonComprData(compressor, compressor.MaxBlockSZ);
+		}
+
+		[Test]
+		public void Compress_PlaneData_MaxBlock()
+		{
+			var compressor = new FastLZBlockCompressor();
+			CommonBlockCompressorTests.Compress_PlaneData(compressor, compressor.MaxBlockSZ, 15);
+		}
+
 	}
 }
