@@ -130,10 +130,10 @@ namespace DarkCaster.Compression.FastLZ
 
 				// is this a match? check the first 3 bytes
 				if (distance == 0 ||
-				    distance >= MAX_DISTANCE1 ||
-				    input[refb++] != input[iPos++] ||
-				    input[refb++] != input[iPos++] ||
-				    input[refb++] != input[iPos++])
+						distance >= MAX_DISTANCE1 ||
+						input[refb++] != input[iPos++] ||
+						input[refb++] != input[iPos++] ||
+						input[refb++] != input[iPos++])
 					goto literal;
 
 				// last matched byte
@@ -185,26 +185,26 @@ namespace DarkCaster.Compression.FastLZ
 				len = (uint)(iPos - anchor);
 
 				// encode the match
-					if (len > MAX_LEN - 2)
-						while (len > MAX_LEN - 2)
-						{
-							output[oPos++] = (byte)((7 << 5) + (distance >> 8));
-							output[oPos++] = MAX_LEN - 2 - 7 - 2;
-							output[oPos++] = (byte)(distance & 255);
-							len -= MAX_LEN - 2;
-						}
-
-					if (len < 7)
-					{
-						output[oPos++] = (byte)((len << 5) + (distance >> 8));
-						output[oPos++] = (byte)(distance & 255);
-					}
-					else
+				if (len > MAX_LEN - 2)
+					while (len > MAX_LEN - 2)
 					{
 						output[oPos++] = (byte)((7 << 5) + (distance >> 8));
-						output[oPos++] = (byte)(len - 7);
+						output[oPos++] = MAX_LEN - 2 - 7 - 2;
 						output[oPos++] = (byte)(distance & 255);
+						len -= MAX_LEN - 2;
 					}
+
+				if (len < 7)
+				{
+					output[oPos++] = (byte)((len << 5) + (distance >> 8));
+					output[oPos++] = (byte)(distance & 255);
+				}
+				else
+				{
+					output[oPos++] = (byte)((7 << 5) + (distance >> 8));
+					output[oPos++] = (byte)(len - 7);
+					output[oPos++] = (byte)(distance & 255);
+				}
 
 				// update the hash at match boundary
 				HASH_FUNCTION(ref hval, input, iPos);
