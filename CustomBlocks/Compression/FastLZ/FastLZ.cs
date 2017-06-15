@@ -249,5 +249,87 @@ namespace DarkCaster.Compression.FastLZ
 
 			return oPos - start;
 		}
+
+		public static int Decompress(byte[] input, int ip, int length, byte[] output, int op, int maxout)
+		{
+			//TODO: check input params
+
+			int ip_limit = ip + length;
+			int op_limit = op + maxout;
+			int start = op;
+
+			int ctrl = input[ip++] & 31;
+			bool loop = true;
+
+			do
+			{
+				int refb = op;
+				int len = ctrl >> 5;
+				int ofs = (ctrl & 31) << 8;
+
+				if (ctrl >= 32)
+				{
+					len--;
+					refb -= ofs;
+					if (len == 7 - 1)
+						len += input[ip++];
+					refb -= input[ip++];
+
+					if (op + len + 3 > op_limit)
+						throw new Exception("Decompression failed! (op + len + 3 > op_limit)");
+
+					if (refb <= start)
+						throw new Exception("Decompression failed! (refb <= start)");
+
+					if (ip < ip_limit)
+						ctrl = input[ip++];
+					else
+						loop = false;
+
+					if (refb == op)
+					{
+						/* optimize copy for a run */
+						byte b = input[refb - 1];
+						output[op++] = b;
+						output[op++] = b;
+						output[op++] = b;
+						for (; len > 0; --len)
+							output[op++] = b;
+					}
+					else
+					{
+						/* copy from reference */
+						refb--;
+						output[op++] = input[refb++];
+						output[op++] = input[refb++];
+						output[op++] = input[refb++];
+
+						for (; len > 0; --len)
+							output[op++] = input[refb++];
+					}
+				}
+				else
+				{
+					ctrl++;
+
+					if (op + ctrl > op_limit)
+						throw new Exception("Decompression failed! (op + ctrl > op_limit)");
+
+					if (ip + ctrl > ip_limit)
+						throw new Exception("Decompression failed! (ip + ctrl > ip_limit)");
+
+					output[op++] = input[ip++];
+					for (--ctrl; ctrl > 0; ctrl--)
+						output[op++] = input[ip++];
+
+					loop = ip < ip_limit;
+					if (loop)
+						ctrl = input[ip++];
+				}
+			}
+			while (loop);
+
+			return op - start;
+		}
 	}
 }
