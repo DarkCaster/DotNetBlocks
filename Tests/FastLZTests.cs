@@ -137,5 +137,16 @@ namespace Tests
 			CommonBlockCompressorTests.Compress_PlaneData(compressor, compressor.MaxBlockSZ, 15);
 		}
 
+		[Test]
+		public void FastLZ_Compress_NonComprData_MaxBlock()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var dataLen = compressor.MaxBlockSZ;
+			var input = new byte[dataLen];
+			var output = new byte[dataLen + dataLen / 32 + 1];
+			CommonBlockCompressorTests.GenerateNonComprData(input);
+			var outLen = FastLZ.Compress(input, 0, dataLen, output, 0);
+			Assert.AreEqual(outLen, output.Length);
+		}
 	}
 }
