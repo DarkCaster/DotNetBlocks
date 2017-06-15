@@ -44,9 +44,7 @@ namespace DarkCaster.Compression.FastLZ
 	{
 		private const int MAX_COPY = 32;
 		private const int MAX_LEN = 264;
-		private const int MAX_DISTANCE1 = 8192;
-		private const int MAX_DISTANCE2 = MAX_DISTANCE1 - 1;
-		private const int MAX_FARDISTANCE = (65535 + MAX_DISTANCE2 - 1);
+		private const int MAX_DISTANCE = 8192;
 
 		private static uint FASTLZ_READU16(byte[] p, int offset)
 		{
@@ -130,7 +128,7 @@ namespace DarkCaster.Compression.FastLZ
 
 				// is this a match? check the first 3 bytes
 				if (distance == 0 ||
-						distance >= MAX_DISTANCE1 ||
+						distance >= MAX_DISTANCE ||
 						input[refb++] != input[iPos++] ||
 						input[refb++] != input[iPos++] ||
 						input[refb++] != input[iPos++])
