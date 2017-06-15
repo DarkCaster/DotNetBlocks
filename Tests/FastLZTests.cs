@@ -45,6 +45,16 @@ namespace Tests
 			Assert.AreEqual(control,output);
 		}
 
+		[Test]
+		public void DecompressSampleLV1()
+		{
+			var control = FastLZData.SampleInput;
+			var output = new byte[control.Length];
+			var count = FastLZ.Decompress(FastLZData.SampleOutputLV1, 0, FastLZData.SampleOutputLV1.Length, output, 0, control.Length);
+			Assert.AreEqual(control.Length, count);
+			Assert.AreEqual(control, output);
+		}
+
 		/*[Test]
 		public void CompressSampleLV2()
 		{
