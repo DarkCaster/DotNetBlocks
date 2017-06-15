@@ -102,25 +102,6 @@ namespace Tests
 				buffer[offset++] = (byte)random.Next(0, 256);
 		}
 
-		public static void GenerateNonComprData2(IBlockCompressor compressor, int uniqueBlockSz, byte[] buffer, int offset = 0, int length = -1)
-		{
-			//TODO: fillup unique block
-			var uniqueBlock = new byte[uniqueBlockSz];
-			//TODO: check that joined-together unique blocks still produces uncompressible data
-
-			//fillup target buffer with unique blocks.
-			if (length < 0)
-				length = buffer.Length - offset;
-			int limit = offset + length;
-			var ubPos = 0;
-			while (offset < limit)
-			{
-				buffer[offset++] = uniqueBlock[ubPos++];
-				if (ubPos >= uniqueBlockSz)
-					ubPos = 0;
-			}
-		}
-
 		public static void Compress_PlaneData(IBlockCompressor compressor, int dataLen, int minLenStrictCheck)
 		{
 			var input = new byte[dataLen];

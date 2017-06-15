@@ -137,16 +137,57 @@ namespace Tests
 			CommonBlockCompressorTests.Compress_PlaneData(compressor, compressor.MaxBlockSZ, 15);
 		}
 
+		public static void FastLZ_GenerateNonComprData(int uniqueBlockSz, byte[] buffer, int offset = 0, int length = -1)
+		{
+			var random = new Random();
+			var uniqueBlock = new byte[uniqueBlockSz];
+			bool checkOk = false;
+			while (!checkOk)
+			{
+				//fillup unique block
+				var testOutput = new byte[uniqueBlockSz + uniqueBlockSz / 32 + 1];
+				int testOutLen = 0;
+				while (testOutLen < testOutput.Length-1)
+				{
+					random.NextBytes(uniqueBlock);
+					testOutLen = FastLZ.Compress(uniqueBlock, 0, uniqueBlockSz, testOutput, 0);
+				}
+				//check that 2 joined-together unique blocks still produces uncompressible data for selected compressor
+				testOutput = new byte[uniqueBlockSz * 2 + (uniqueBlockSz * 2) / 32 + 1];
+				var testInput = new byte[uniqueBlockSz * 2];
+				Buffer.BlockCopy(uniqueBlock, 0, testInput, 0, uniqueBlockSz);
+				Buffer.BlockCopy(uniqueBlock, 0, testInput, uniqueBlockSz, uniqueBlockSz);
+				if (FastLZ.Compress(testInput, 0, uniqueBlockSz * 2, testOutput, 0) >= testOutput.Length-1)
+					checkOk = true;
+			}
+
+			//fillup target buffer with unique blocks.
+			if (length < 0)
+				length = buffer.Length - offset;
+			int limit = offset + length;
+			var ubPos = 0;
+			while (offset < limit)
+			{
+				buffer[offset++] = uniqueBlock[ubPos++];
+				if (ubPos >= uniqueBlockSz)
+					ubPos = 0;
+			}
+		}
+
+		//May fail sometimes.
+		//We need to generate thruly unique and uncompressible data (maybe pi digits array ?).
+		//For now we just fill-up input data with smaller uncompresssible block (dynamically generated)
+		//that is not multiple to 8192 bytes (so it will not allow compressor algorhitm to find any matches) 
 		[Test]
 		public void FastLZ_Compress_NonComprData_MaxBlock()
 		{
-			var compressor = new FastLZBlockCompressor();
-			var dataLen = compressor.MaxBlockSZ;
+			var dataLen = new FastLZBlockCompressor().MaxBlockSZ;
 			var input = new byte[dataLen];
 			var output = new byte[dataLen + dataLen / 32 + 1];
-			CommonBlockCompressorTests.GenerateNonComprData(input);
+			FastLZ_GenerateNonComprData(16000, input);
 			var outLen = FastLZ.Compress(input, 0, dataLen, output, 0);
-			Assert.AreEqual(outLen, output.Length);
+			//test, that we have used all space in output-buffer (except for the last extra byte)
+			Assert.AreEqual(output.Length, outLen + 1);
 		}
 	}
 }
