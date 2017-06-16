@@ -287,7 +287,7 @@ namespace DarkCaster.Compression.FastLZ
 					if (refb == op)
 					{
 						/* optimize copy for a run */
-						byte b = input[refb - 1];
+						byte b = output[refb - 1];
 						output[op++] = b;
 						output[op++] = b;
 						output[op++] = b;
@@ -298,12 +298,12 @@ namespace DarkCaster.Compression.FastLZ
 					{
 						/* copy from reference */
 						refb--;
-						output[op++] = input[refb++];
-						output[op++] = input[refb++];
-						output[op++] = input[refb++];
+						output[op++] = output[refb++];
+						output[op++] = output[refb++];
+						output[op++] = output[refb++];
 
 						for (; len > 0; --len)
-							output[op++] = input[refb++];
+							output[op++] = output[refb++];
 					}
 				}
 				else
