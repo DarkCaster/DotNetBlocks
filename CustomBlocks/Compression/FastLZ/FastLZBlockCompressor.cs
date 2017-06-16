@@ -83,18 +83,10 @@ namespace DarkCaster.Compression.FastLZ
 			return comprSz + hdrSz;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int DecodeComprBlockSZ(byte[] buffer, int offset=0)
 		{
 			var hdrLen = DecodeMetadataSZ(buffer, offset);
-			int sz = buffer[offset] & 0x1F;
-			int shift_val = 5;
-			for (int shift = 1; shift < hdrLen; ++shift)
-			{
-				sz |= buffer[offset + shift] << shift_val;
-				shift_val += 8;
-			}
-			return sz + hdrLen;
+			return DecodeComprDataSz(buffer, offset, hdrLen) + hdrLen;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -103,9 +95,29 @@ namespace DarkCaster.Compression.FastLZ
 			return (buffer[offset] >> 5 & 0X3) + 1;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int DecodeComprDataSz(byte[] buffer, int offset, int hdrLen)
+		{
+			int sz = buffer[offset] & 0x1F;
+			int shift_val = 5;
+			for (int shift = 1; shift < hdrLen; ++shift)
+			{
+				sz |= buffer[offset + shift] << shift_val;
+				shift_val += 8;
+			}
+			return sz;
+		}
+
 		public int Decompress(byte[] input, int inOffset, byte[] output, int outOffset)
 		{
-			throw new NotImplementedException("TODO:");
+			var headerSz = DecodeMetadataSZ(input, inOffset);
+			var comprSz = DecodeComprDataSz(input, inOffset, headerSz);
+			if (input[inOffset] >> 7 == 0)
+			{
+				Buffer.BlockCopy(input, inOffset + headerSz, output, outOffset, comprSz);
+				return comprSz;
+			}
+			return FastLZ.Decompress(input, inOffset + headerSz, comprSz, output, outOffset, output.Length - outOffset);
 		}
 
 		public int MaxBlockSZ { get { return MAX_BLOCK_SZ; } }
