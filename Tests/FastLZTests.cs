@@ -224,7 +224,7 @@ namespace Tests
 			var compressor = new FastLZBlockCompressor();
 			var random = new Random();
 			for (int i = 1; i < 16384; ++i)
-				CommonBlockCompressorTests.Compress_NonComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+				CommonBlockCompressorTests.Compress_NonComprData_WithOffset(compressor, i, random.Next(1, 16384));
 		}
 
 		[Test]
