@@ -29,10 +29,10 @@ namespace DarkCaster.Compression.FastLZ
 {
 	public class FastLZBlockCompressor : IBlockCompressor
 	{
-		private const int MAX_BLOCK_SZ = 536870912; //2 ^ 29;
-		private const int PAYLOAD_LEN1 = 32; //2 ^ 5;
-		private const int PAYLOAD_LEN2 = 8192; //2 ^ 13;
-		private const int PAYLOAD_LEN3 = 2097152; //2 ^ 21;
+		private const int PAYLOAD_LEN1 = 31; //2 ^ 5 - 1 = 5 bits / 8 bit-header;
+		private const int PAYLOAD_LEN2 = 8191; //2 ^ 13 - 1 = 13 bits / 16 bit-header;
+		private const int PAYLOAD_LEN3 = 2097151; //2 ^ 21 - 1 = 21 bits / 24 bit-header;
+		private const int MAX_BLOCK_SZ = 536870911; //2 ^ 29 - 1 = 29 bits / 32-bit header;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int CalculateHeaderLength(int payloadLen)
@@ -43,13 +43,15 @@ namespace DarkCaster.Compression.FastLZ
 				return 2;
 			if (payloadLen <= PAYLOAD_LEN3)
 				return 3;
-			return 4;
+			if (payloadLen <= MAX_BLOCK_SZ)
+				return 4;
+			throw new Exception(string.Format("Payload length > MAX_BLOCK_SZ: {0} > {1}", payloadLen, MAX_BLOCK_SZ));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void WriteHeader(byte[] buffer, int offset, int lenValue, int hdrsz, bool useCompr)
 		{
-			buffer[offset] = (byte)((useCompr ? 0x1 : 0x0) << 7 | lenValue & 0x1F);
+			buffer[offset] = (byte)( (useCompr ? 0x1 : 0x0) << 7 | (lenValue & 0x1F));
 			if (hdrsz == 1)
 				return;
 			buffer[offset + 1] = (byte)((lenValue >> 5) & 0xFF);
