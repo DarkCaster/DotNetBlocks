@@ -87,11 +87,15 @@ namespace Tests
 			Assert.Fail(result);
 		}*/
 
+		private static Random random = new Random();
+
 		[Test]
 		public void Compress_HiComprData()
 		{
 			var compressor = new FastLZBlockCompressor();
-			for (int i = 1; i < 16384; ++i)
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_HighComprData(compressor, i, 15);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
 				CommonBlockCompressorTests.Compress_HighComprData(compressor, i, 15);
 		}
 
@@ -99,15 +103,19 @@ namespace Tests
 		public void Compress_LowComprData()
 		{
 			var compressor = new FastLZBlockCompressor();
-			for (int i = 1; i < 16384; ++i)
-				CommonBlockCompressorTests.Compress_LowComprData(compressor, i, 512);
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_LowComprData(compressor, i, 768);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
+				CommonBlockCompressorTests.Compress_LowComprData(compressor, i, 768);
 		}
 
 		[Test]
 		public void Compress_NonComprData()
 		{
 			var compressor = new FastLZBlockCompressor();
-			for (int i = 1; i < 16384; ++i)
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_NonComprData(compressor, i);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
 				CommonBlockCompressorTests.Compress_NonComprData(compressor, i);
 		}
 
@@ -115,7 +123,9 @@ namespace Tests
 		public void Compress_PlaneData()
 		{
 			var compressor = new FastLZBlockCompressor();
-			for (int i = 1; i < 16384; ++i)
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_PlaneData(compressor, i, 15);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
 				CommonBlockCompressorTests.Compress_PlaneData(compressor, i, 15);
 		}
 
@@ -130,7 +140,7 @@ namespace Tests
 		public void Compress_LowComprData_MaxBlock()
 		{
 			var compressor = new FastLZBlockCompressor();
-			CommonBlockCompressorTests.Compress_LowComprData(compressor, compressor.MaxBlockSZ, 512);
+			CommonBlockCompressorTests.Compress_LowComprData(compressor, compressor.MaxBlockSZ, 768);
 		}
 
 		[Test]
@@ -149,7 +159,6 @@ namespace Tests
 
 		public static void FastLZ_GenerateNonComprData(int uniqueBlockSz, byte[] buffer, int offset = 0, int length = -1)
 		{
-			var random = new Random();
 			var uniqueBlock = new byte[uniqueBlockSz];
 			bool checkOk = false;
 			while (!checkOk)
@@ -196,16 +205,17 @@ namespace Tests
 			var output = new byte[dataLen + dataLen / 32 + 1];
 			FastLZ_GenerateNonComprData(16000, input);
 			var outLen = FastLZ.Compress(input, 0, dataLen, output, 0);
-			//test, that we have used all space in output-buffer (except for the last extra byte)
-			Assert.AreEqual(output.Length, outLen + 1);
+			//test, that we have used all space in output-buffer
+			Assert.AreEqual(output.Length, outLen, 2);
 		}
 
 		[Test]
 		public void Compress_HighComprData_WithOffset()
 		{
 			var compressor = new FastLZBlockCompressor();
-			var random = new Random();
-			for (int i = 1; i < 16384; ++i)
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_HighComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
 				CommonBlockCompressorTests.Compress_HighComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
 		}
 
@@ -213,17 +223,19 @@ namespace Tests
 		public void Compress_LowComprData_WithOffset()
 		{
 			var compressor = new FastLZBlockCompressor();
-			var random = new Random();
-			for (int i = 1; i < 16384; ++i)
-				CommonBlockCompressorTests.Compress_LowComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_LowComprData_WithOffset(compressor, i, random.Next(1, 16384), 768);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
+				CommonBlockCompressorTests.Compress_LowComprData_WithOffset(compressor, i, random.Next(1, 16384), 768);
 		}
 
 		[Test]
 		public void Compress_NonComprData_WithOffset()
 		{
 			var compressor = new FastLZBlockCompressor();
-			var random = new Random();
-			for (int i = 1; i < 16384; ++i)
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_NonComprData_WithOffset(compressor, i, random.Next(1, 16384));
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
 				CommonBlockCompressorTests.Compress_NonComprData_WithOffset(compressor, i, random.Next(1, 16384));
 		}
 
@@ -231,9 +243,10 @@ namespace Tests
 		public void Compress_PlaneData_WithOffset()
 		{
 			var compressor = new FastLZBlockCompressor();
-			var random = new Random();
-			for (int i = 1; i < 16384; ++i)
-				CommonBlockCompressorTests.Compress_PlaneData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Compress_PlaneData_WithOffset(compressor, i, random.Next(1, 16384),15);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
+				CommonBlockCompressorTests.Compress_PlaneData_WithOffset(compressor, i, random.Next(1, 16384),15);
 		}
 	}
 }

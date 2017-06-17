@@ -145,9 +145,9 @@ namespace Tests
 		{
 			var outLen = compressor.Compress(input, sz, offset, output, outOffset);
 			if (sz < minLenStrictCheck)
-				Assert.LessOrEqual(outLen, input.Length + compressor.DecodeMetadataSZ(output,outOffset));
+				Assert.LessOrEqual(outLen, sz + compressor.DecodeMetadataSZ(output,outOffset));
 			else
-				Assert.Less(outLen, input.Length + compressor.DecodeMetadataSZ(output,outOffset));
+				Assert.Less(outLen, sz + compressor.DecodeMetadataSZ(output,outOffset));
 			return outLen;
 		}
 
@@ -156,7 +156,8 @@ namespace Tests
 			var outLen = compressor.Decompress(input, offset, output, outOffset);
 			Assert.AreEqual(contolSZ, outLen);
 			for (int i = outOffset; i < outOffset + outLen; ++i)
-				Assert.AreEqual(output[i], control[i]);
+				if (output[i] != control[i])
+					throw new Exception(string.Format("Decompress_WithOffset: output[{0}]!=control[{0}]", i));
 		}
 
 		public static void Compress_HighComprData_WithOffset(IBlockCompressor compressor, int dataLen, int maxDataOffset, int minLenStrictCheck)
