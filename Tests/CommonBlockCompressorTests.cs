@@ -166,7 +166,7 @@ namespace Tests
 			var dataOffset = random.Next(1, maxDataOffset + 1);
 			GenerateHighComprData(input,dataOffset);
 			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, minLenStrictCheck);
-			var decOutput = new byte[dataLen];
+			var decOutput = new byte[dataLen + maxDataOffset];
 			Decompress_WithOffset(compressor, output, dataOffset, decOutput, dataOffset, input, dataLen);
 		}
 
@@ -177,7 +177,7 @@ namespace Tests
 			var dataOffset = random.Next(1, maxDataOffset + 1);
 			GenerateComprData(input, dataOffset);
 			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, minLenStrictCheck);
-			var decOutput = new byte[dataLen];
+			var decOutput = new byte[dataLen + maxDataOffset];
 			Decompress_WithOffset(compressor, output, dataOffset, decOutput, dataOffset, input, dataLen);
 		}
 
@@ -188,7 +188,7 @@ namespace Tests
 			var dataOffset = random.Next(1, maxDataOffset + 1);
 			GenerateNonComprData(input, dataOffset);
 			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, dataLen + 1);
-			var decOutput = new byte[dataLen];
+			var decOutput = new byte[dataLen + maxDataOffset];
 			Decompress_WithOffset(compressor, output, dataOffset, decOutput, dataOffset, input, dataLen);
 		}
 
@@ -201,7 +201,7 @@ namespace Tests
 			for (int i = dataOffset; i < dataOffset+dataLen; ++i)
 				input[i] = val;
 			var outLen = Compress_WithOffset(compressor, input, dataOffset, dataLen, output, dataOffset, minLenStrictCheck);
-			var decOutput = new byte[dataLen];
+			var decOutput = new byte[dataLen + maxDataOffset];
 			Decompress_WithOffset(compressor, output, dataOffset, decOutput, dataOffset, input, dataLen);
 		}
 	}
