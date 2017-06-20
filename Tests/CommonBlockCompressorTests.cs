@@ -205,5 +205,54 @@ namespace Tests
 			var decOutput = new byte[dataLen + maxDataOffset];
 			Decompress_WithOffset(compressor, output, dataOffset, decOutput, dataOffset, input, dataLen);
 		}
+
+		public static void Test_CompressWithOffsetEquality(IBlockCompressor compressor, byte[] input, int maxDataOffset, int iter)
+		{
+			var control = new byte[compressor.GetOutBuffSZ(input.Length)];
+			var controlLen = compressor.Compress(input, input.Length, 0, control, 0);
+			var source = new byte[input.Length + maxDataOffset];
+			var output = new byte[compressor.GetOutBuffSZ(input.Length) + maxDataOffset];
+			for (int i = 0; i < iter; ++i)
+			{
+				var sourceOffset = random.Next(0, maxDataOffset + 1);
+				Buffer.BlockCopy(input, 0, source, sourceOffset, input.Length);
+				var outputOffset=random.Next(0, maxDataOffset + 1);
+				var outputLen = compressor.Compress(source, input.Length, sourceOffset, output, outputOffset);
+				Assert.AreEqual(controlLen, outputLen);
+				for (int j = 0; j < controlLen; ++j)
+					if (control[j] != output[outputOffset + j])
+						throw new Exception(string.Format("control[{0}] != output[{1}+{0}]", j, outputOffset));
+			}
+		}
+
+		public static void Test_CompressWithOffsetEquality_NonComprData(IBlockCompressor compressor, int inputSz, int maxDataOffset, int iter)
+		{
+			var input = new byte[inputSz];
+			GenerateNonComprData(input);
+			Test_CompressWithOffsetEquality(compressor, input, maxDataOffset, iter);
+		}
+
+		public static void Test_CompressWithOffsetEquality_HighComprData(IBlockCompressor compressor, int inputSz, int maxDataOffset, int iter)
+		{
+			var input = new byte[inputSz];
+			GenerateHighComprData(input);
+			Test_CompressWithOffsetEquality(compressor, input, maxDataOffset, iter);
+		}
+
+		public static void Test_CompressWithOffsetEquality_LowComprData(IBlockCompressor compressor, int inputSz, int maxDataOffset, int iter)
+		{
+			var input = new byte[inputSz];
+			GenerateComprData(input);
+			Test_CompressWithOffsetEquality(compressor, input, maxDataOffset, iter);
+		}
+
+		public static void Test_CompressWithOffsetEquality_UniformData(IBlockCompressor compressor, int inputSz, int maxDataOffset, int iter)
+		{
+			var input = new byte[inputSz];
+			byte val = (byte)random.Next(0, 256);
+			for (int i = 0; i < input.Length; ++i)
+				input[i] = val;
+			Test_CompressWithOffsetEquality(compressor, input, maxDataOffset, iter);
+		}
 	}
 }

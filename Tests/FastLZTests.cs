@@ -255,5 +255,49 @@ namespace Tests
 			for (int i = 1024; i < 16384; i += random.Next(1, 65))
 				CommonBlockCompressorTests.Test_UniformData_WithOffset(compressor, i, random.Next(1, 16384),15);
 		}
+
+		[Test]
+		public void HighComprData_CompressWithRandomOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var iter = 100;
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_HighComprData(compressor, i, (int)(i * 1.5), iter);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_HighComprData(compressor, i, (int)(i * 1.5), iter);
+		}
+
+		[Test]
+		public void LowComprData_CompressWithRandomOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var iter = 100;
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_LowComprData(compressor, i, (int)(i * 1.5), iter);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_LowComprData(compressor, i, (int)(i * 1.5), iter);
+		}
+
+		[Test]
+		public void NonComprData_CompressWithRandomOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var iter = 100;
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_NonComprData(compressor, i, (int)(i * 1.5), iter);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_NonComprData(compressor, i, (int)(i * 1.5), iter);
+		}
+
+		[Test]
+		public void UniformData_CompressWithRandomOffset()
+		{
+			var compressor = new FastLZBlockCompressor();
+			var iter = 100;
+			for (int i = 1; i < 1024; ++i)
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_UniformData(compressor, i, (int)(i * 1.5), iter);
+			for (int i = 1024; i < 16384; i += random.Next(1, 65))
+				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_UniformData(compressor, i, (int)(i * 1.5), iter);
+		}
 	}
 }
