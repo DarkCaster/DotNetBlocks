@@ -152,7 +152,7 @@ namespace PerfTests
 		{
 			for (int mode = 0; mode < 5; ++mode)
 			{
-				int iter = 5000;
+				int iter = 16000;
 				int blockSz = 65536;
 
 				var input = new byte[blockSz];
