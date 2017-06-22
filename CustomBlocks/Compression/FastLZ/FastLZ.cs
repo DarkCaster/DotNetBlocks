@@ -248,20 +248,19 @@ namespace DarkCaster.Compression.FastLZ
 			return oPos - start;
 		}
 
-		public static int Decompress(byte[] input, int ip, int length, byte[] output, int op, int maxout)
+		public static int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
 			//TODO: check input params
 
-			int ip_limit = ip + length;
-			int op_limit = op + maxout;
-			int start = op;
+			int ip_limit = iPos + iSz;
+			int start = oPos;
 
-			int ctrl = input[ip++] & 31;
+			int ctrl = input[iPos++] & 31;
 			bool loop = true;
 
 			do
 			{
-				int refb = op;
+				int refb = oPos;
 				int len = ctrl >> 5;
 				int ofs = (ctrl & 31) << 8;
 
@@ -270,64 +269,56 @@ namespace DarkCaster.Compression.FastLZ
 					len--;
 					refb -= ofs;
 					if (len == 7 - 1)
-						len += input[ip++];
-					refb -= input[ip++];
-
-					if (op + len + 3 > op_limit)
-						throw new Exception("Decompression failed! (op + len + 3 > op_limit)");
+						len += input[iPos++];
+					refb -= input[iPos++];
 
 					if (refb <= start)
 						throw new Exception("Decompression failed! (refb <= start)");
 
-					if (ip < ip_limit)
-						ctrl = input[ip++];
+					if (iPos < ip_limit)
+						ctrl = input[iPos++];
 					else
 						loop = false;
 
-					if (refb == op)
+					if (refb == oPos)
 					{
 						/* optimize copy for a run */
 						byte b = output[refb - 1];
-						output[op++] = b;
-						output[op++] = b;
-						output[op++] = b;
+						output[oPos++] = b;
+						output[oPos++] = b;
+						output[oPos++] = b;
 						for (; len > 0; --len)
-							output[op++] = b;
+							output[oPos++] = b;
 					}
 					else
 					{
 						/* copy from reference */
 						refb--;
-						output[op++] = output[refb++];
-						output[op++] = output[refb++];
-						output[op++] = output[refb++];
+						output[oPos++] = output[refb++];
+						output[oPos++] = output[refb++];
+						output[oPos++] = output[refb++];
 
 						for (; len > 0; --len)
-							output[op++] = output[refb++];
+							output[oPos++] = output[refb++];
 					}
 				}
 				else
 				{
-					ctrl++;
+					if (iPos + ctrl >= ip_limit)
+						throw new Exception("Decompression failed! (ip + ctrl >= ip_limit)");
 
-					if (op + ctrl > op_limit)
-						throw new Exception("Decompression failed! (op + ctrl > op_limit)");
+					output[oPos++] = input[iPos++];
+					for (; ctrl > 0; ctrl--)
+						output[oPos++] = input[iPos++];
 
-					if (ip + ctrl > ip_limit)
-						throw new Exception("Decompression failed! (ip + ctrl > ip_limit)");
-
-					output[op++] = input[ip++];
-					for (--ctrl; ctrl > 0; ctrl--)
-						output[op++] = input[ip++];
-
-					loop = ip < ip_limit;
+					loop = iPos < ip_limit;
 					if (loop)
-						ctrl = input[ip++];
+						ctrl = input[iPos++];
 				}
 			}
 			while (loop);
 
-			return op - start;
+			return oPos - start;
 		}
 	}
 }

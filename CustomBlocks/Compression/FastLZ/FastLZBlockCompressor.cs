@@ -119,7 +119,7 @@ namespace DarkCaster.Compression.FastLZ
 				Buffer.BlockCopy(input, inOffset + headerSz, output, outOffset, comprSz);
 				return comprSz;
 			}
-			return FastLZ.Decompress(input, inOffset + headerSz, comprSz, output, outOffset, output.Length - outOffset);
+			return FastLZ.Decompress(input, inOffset + headerSz, comprSz, output, outOffset);
 		}
 
 		public int MaxBlockSZ { get { return MAX_BLOCK_SZ; } }

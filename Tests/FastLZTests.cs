@@ -50,7 +50,7 @@ namespace Tests
 		{
 			var control = FastLZData.SampleInput;
 			var output = new byte[control.Length];
-			var count = FastLZ.Decompress(FastLZData.SampleOutputLV1, 0, FastLZData.SampleOutputLV1.Length, output, 0, control.Length);
+			var count = FastLZ.Decompress(FastLZData.SampleOutputLV1, 0, FastLZData.SampleOutputLV1.Length, output, 0);
 			Assert.AreEqual(control.Length, count);
 			Assert.AreEqual(control, output);
 		}
@@ -209,7 +209,7 @@ namespace Tests
 			Assert.AreEqual(output.Length, outLen, 2);
 			//decompress and verify
 			var decOutput = new byte[dataLen];
-			var decLen = FastLZ.Decompress(output, 0, outLen, decOutput, 0, int.MaxValue);
+			var decLen = FastLZ.Decompress(output, 0, outLen, decOutput, 0);
 			Assert.AreEqual(dataLen, decLen);
 			for (int i = 0; i < decLen; ++i)
 				if (decOutput[i] != input[i])

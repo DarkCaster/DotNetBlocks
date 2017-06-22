@@ -172,7 +172,7 @@ namespace PerfTests
 				var startCpuTime = process.TotalProcessorTime;
 				sw.Start();
 				for (int i = 0; i < iter; ++i)
-					FastLZ.Decompress(output, 0, len, input, 0, blockSz);
+					FastLZ.Decompress(output, 0, len, input, 0);
 				sw.Stop();
 				var stopCpuTime = process.TotalProcessorTime;
 
