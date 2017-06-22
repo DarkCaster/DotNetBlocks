@@ -1,4 +1,4 @@
-﻿﻿// FastLZ.cs
+﻿﻿﻿// FastLZ.cs
 //
 // Copyright (c) 2017 DarkCaster <dark.caster@outlook.com>
 // This is a PARTIAL C# port of FastLZ library by (c) Ariya Hidayat, MIT License
@@ -313,9 +313,16 @@ namespace DarkCaster.Compression.FastLZ
 					if (iPos + ctrl >= ip_limit)
 						throw new Exception("Decompression failed! (ip + ctrl >= ip_limit)");
 
-					output[oPos++] = input[iPos++];
-					for (; ctrl > 0; ctrl--)
-						output[oPos++] = input[iPos++];
+					ctrl++;
+					if (ctrl > 8)
+					{
+						Buffer.BlockCopy(input, iPos, output, oPos, ctrl);
+						iPos += ctrl;
+						oPos += ctrl;
+					}
+					else
+						for (; ctrl > 0; ctrl--)
+							output[oPos++] = input[iPos++];
 
 					loop = iPos < ip_limit;
 					if (loop)
