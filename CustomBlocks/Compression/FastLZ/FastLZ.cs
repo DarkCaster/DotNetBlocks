@@ -1,4 +1,4 @@
-﻿// FastLZ.cs
+﻿﻿// FastLZ.cs
 //
 // Copyright (c) 2017 DarkCaster <dark.caster@outlook.com>
 // This is a PARTIAL C# port of FastLZ library by (c) Ariya Hidayat, MIT License
@@ -257,12 +257,13 @@ namespace DarkCaster.Compression.FastLZ
 
 			int ctrl = input[iPos++] & 31;
 			bool loop = true;
+			int refb, len, ofs;
 
 			do
 			{
-				int refb = oPos;
-				int len = ctrl >> 5;
-				int ofs = (ctrl & 31) << 8;
+				refb = oPos;
+				len = ctrl >> 5;
+				ofs = (ctrl & 31) << 8;
 
 				if (ctrl >= 32)
 				{
