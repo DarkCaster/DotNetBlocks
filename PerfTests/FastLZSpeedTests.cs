@@ -100,11 +100,11 @@ namespace PerfTests
 
 		public static void CompressionSpeed()
 		{
-			const int iter = 5000;
-			const int blockSz = 65536;
-
-			for (int mode = 0; mode < 4; ++mode)
+			for (int mode = 0; mode < 5; ++mode)
 			{
+				int iter = 5000;
+				int blockSz = 65536;
+
 				var input = new byte[blockSz];
 				var output = new byte[input.Length*2];
 
@@ -119,6 +119,13 @@ namespace PerfTests
 					var val = (byte)random.Next(0, 256);
 					for (int i = 0; i < input.Length; ++i)
 						input[i] = val;
+				}
+				else if (mode == 4)
+				{
+					input = Tests.FastLZData.SampleInput;
+					output = new byte[input.Length * 2];
+					blockSz = input.Length;
+					iter *= 2;
 				}
 
 				var sw = new Stopwatch();
@@ -143,13 +150,13 @@ namespace PerfTests
 
 		public static void DecompressionSpeed()
 		{
-			const int iter = 5000;
-			const int blockSz = 65536;
-	
-			for (int mode = 0; mode < 4; ++mode)
+			for (int mode = 0; mode < 5; ++mode)
 			{
+				int iter = 5000;
+				int blockSz = 65536;
+
 				var input = new byte[blockSz];
-				var output = new byte[input.Length*2];
+				var output = new byte[input.Length * 2];
 
 				if (mode == 0)
 					GenerateNonComprData(input);
@@ -162,6 +169,13 @@ namespace PerfTests
 					var val = (byte)random.Next(0, 256);
 					for (int i = 0; i < input.Length; ++i)
 						input[i] = val;
+				}
+				else if (mode == 4)
+				{
+					input = Tests.FastLZData.SampleInput;
+					output = new byte[input.Length * 2];
+					blockSz = input.Length;
+					iter *= 2;
 				}
 
 				var len=FastLZ.Compress(input, 0, input.Length, output, 0);
