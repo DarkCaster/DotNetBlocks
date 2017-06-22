@@ -56,9 +56,24 @@
     <Compile Include="SafeEventSpeedTests.cs" />
     <Compile Include="AsyncRunnerSpeedTests.cs" />
     <Compile Include="FastLZSpeedTests.cs" />
+    <Compile Include="..\Tests\FastLZSampleData\FastLZData.cs">
+      <Link>FastLZSampleData\FastLZData.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="..\Tests\FastLZSampleData\input.data">
+      <Link>FastLZSampleData\input.data</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Tests\FastLZSampleData\output.data.lv1">
+      <Link>FastLZSampleData\output.data.lv1</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Tests\FastLZSampleData\output.data.lv2">
+      <Link>FastLZSampleData\output.data.lv2</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
