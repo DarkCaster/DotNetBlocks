@@ -295,12 +295,17 @@ namespace DarkCaster.Compression.FastLZ
 					{
 						/* copy from reference */
 						refb--;
-						output[oPos++] = output[refb++];
-						output[oPos++] = output[refb++];
-						output[oPos++] = output[refb++];
-
-						for (; len > 0; --len)
-							output[oPos++] = output[refb++];
+						len += 3;
+						//check for positions overlaping
+						if (refb + len > oPos)
+							//copy manually, if source and target positions overlaps
+							for (; len > 0; --len)
+								output[oPos++] = output[refb++];
+						else
+						{
+							Buffer.BlockCopy(output, refb, output, oPos, len);
+							oPos += len;
+						}
 					}
 				}
 				else
