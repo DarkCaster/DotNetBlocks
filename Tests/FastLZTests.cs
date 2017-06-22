@@ -299,5 +299,17 @@ namespace Tests
 			for (int i = 1024; i < 16384; i += random.Next(1, 65))
 				CommonBlockCompressorTests.Test_CompressWithOffsetEquality_UniformData(compressor, i, (int)(i * 1.5), iter);
 		}
+
+		[Test]
+		public void FastLZ_PartialUncompress()
+		{
+			var dataLen = 65536;
+			var input = new byte[dataLen];
+			var output = new byte[dataLen + dataLen / 32 + 1];
+			CommonBlockCompressorTests.GenerateComprData(input);
+			var cl=FastLZ.Compress(input,0,dataLen,output,0);
+			var tooShortArray = new byte[dataLen/2];
+			Assert.Throws(typeof(IndexOutOfRangeException), () => FastLZ.Decompress(output, 0, cl, tooShortArray, 0));
+		}
 	}
 }
