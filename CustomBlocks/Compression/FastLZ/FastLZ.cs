@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿// FastLZ.cs
+﻿// FastLZ.cs
 //
 // Copyright (c) 2017 DarkCaster <dark.caster@outlook.com>
 // This is a PARTIAL C# port of FastLZ library by (c) Ariya Hidayat, MIT License
@@ -36,6 +36,14 @@
 // SOFTWARE.
 //
 
+#if DEBUG
+// You can manually manage following 2 defines in order to enable\disable some basic safety checks
+// even without checks, managed code will not allow to corrupt anything in case of bad input data on decompress,
+// or incorrect parameters on compress.
+#define PARAMS_CHECKS
+#define DECOMPRESS_SAFETY_CHECKS
+#endif
+
 using System;
 using System.Runtime.CompilerServices;
 
@@ -70,11 +78,12 @@ namespace DarkCaster.Compression.FastLZ
 
 		public int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
+#if PARAMS_CHECKS
 			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
 				throw new ArgumentException("Input parameters are incorrect!");
 			if (output == null || oPos < 0 || oPos >= output.Length)
 				throw new ArgumentException("Output parameters are incorrect!");
-
+#endif
 			//set and define limits
 			start = oPos;
 			ip_limit = iPos + iSz - 12;
@@ -223,11 +232,12 @@ namespace DarkCaster.Compression.FastLZ
 
 		public int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
+#if PARAMS_CHECKS
 			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
 				throw new ArgumentException("Input parameters are incorrect!");
 			if (output == null || oPos < 0 || oPos >= output.Length)
 				throw new ArgumentException("Output parameters are incorrect!");
-
+#endif
 			ip_limit = iPos + iSz;
 			start = oPos;
 
@@ -248,10 +258,10 @@ namespace DarkCaster.Compression.FastLZ
 					if (len == 7 - 1)
 						len += input[iPos++];
 					refb -= input[iPos++];
-
+#if DECOMPRESS_SAFETY_CHECKS
 					if (refb <= start)
 						throw new Exception("Decompression failed! (refb <= start)");
-
+#endif
 					if (iPos < ip_limit)
 						ctrl = input[iPos++];
 					else
@@ -286,9 +296,10 @@ namespace DarkCaster.Compression.FastLZ
 				}
 				else
 				{
+#if DECOMPRESS_SAFETY_CHECKS
 					if (iPos + ctrl >= ip_limit)
 						throw new Exception("Decompression failed! (ip + ctrl >= ip_limit)");
-
+#endif
 					ctrl++;
 					if (ctrl > 8)
 					{
