@@ -55,13 +55,14 @@ namespace DarkCaster.Compression.FastLZ
 		private const int HASH_SIZE = (1 << HASH_LOG);
 		private const uint HASH_MASK = (HASH_SIZE - 1);
 
-		private static void HASH_FUNCTION(ref uint v, byte[] p, int offset)
+		private static uint HASH_FUNCTION(byte[] p, int offset)
 		{
 			unchecked
 			{
-				v = FASTLZ_READU16(p, offset);
-				v ^= FASTLZ_READU16(p, offset + 1) ^ (v >> (16 - HASH_LOG));
-				v &= HASH_MASK;
+				uint result = FASTLZ_READU16(p, offset);
+				result ^= FASTLZ_READU16(p, offset + 1) ^ (result >> (16 - HASH_LOG));
+				result &= HASH_MASK;
+				return result;
 			}
 		}
 
@@ -71,12 +72,6 @@ namespace DarkCaster.Compression.FastLZ
 			int start = oPos;
 			int ip_bound = iPos + iSz - 2;
 			int ip_limit = iPos + iSz - 12;
-
-			int[] htab = new int[HASH_SIZE];
-			int hslot;
-			uint hval = 0;
-
-			uint copy;
 
 			// sanity check
 			if (iSz < 4)
@@ -93,12 +88,14 @@ namespace DarkCaster.Compression.FastLZ
 				throw new ArgumentException("length param is not valid", nameof(iSz));
 			}
 
-			// initializes hash table
+			// initialize hash table
+			int hslot;
+			int[] htab = new int[HASH_SIZE];
 			for (hslot = 0; hslot < HASH_SIZE; ++hslot)
 				htab[hslot] = iPos;
 
-			// we start with literal copy
-			copy = 2;
+			// starting with literal copy
+			uint copy = 2;
 			output[oPos++] = MAX_COPY - 1;
 			output[oPos++] = input[iPos++];
 			output[oPos++] = input[iPos++];
@@ -113,9 +110,10 @@ namespace DarkCaster.Compression.FastLZ
 				// comparison starting-point
 				anchor = iPos;
 				// find potential match
-				HASH_FUNCTION(ref hval, input, iPos);
+				uint hval = HASH_FUNCTION(input, iPos);
 				hslot = (int)hval;
 				refb = htab[hval];
+
 				// calculate distance to the match
 				distance = anchor - refb;
 				// update hash table
@@ -209,10 +207,8 @@ namespace DarkCaster.Compression.FastLZ
 				}
 
 				// update the hash at match boundary
-				HASH_FUNCTION(ref hval, input, iPos);
-				htab[hval] = iPos++;
-				HASH_FUNCTION(ref hval, input, iPos);
-				htab[hval] = iPos++;
+				htab[HASH_FUNCTION(input, iPos)] = iPos++;
+				htab[HASH_FUNCTION(input, iPos)] = iPos++;
 
 				// assuming literal copy
 				output[oPos++] = MAX_COPY - 1;
