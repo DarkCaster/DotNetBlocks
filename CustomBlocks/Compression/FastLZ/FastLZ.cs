@@ -46,21 +46,16 @@ namespace DarkCaster.Compression.FastLZ
 		private const int MAX_LEN = 264;
 		private const int MAX_DISTANCE = 8192;
 
-		private static uint FASTLZ_READU16(byte[] p, int offset)
-		{
-			return (uint)(p[offset] | (p[offset + 1] << 8));
-		}
-
 		private const int HASH_LOG = 13;
 		private const int HASH_SIZE = (1 << HASH_LOG);
-		private const uint HASH_MASK = (HASH_SIZE - 1);
+		private const int HASH_MASK = (HASH_SIZE - 1);
 
-		private static uint HASH_FUNCTION(byte[] p, int offset)
+		private static int HASH_FUNCTION(byte[] p, int offset)
 		{
 			unchecked
 			{
-				uint result = FASTLZ_READU16(p, offset);
-				result ^= FASTLZ_READU16(p, offset + 1) ^ (result >> (16 - HASH_LOG));
+				int result = p[offset] | p[offset + 1] << 8;
+				result ^= (p[offset + 1] | p[offset + 2] << 8) ^ (result >> (16 - HASH_LOG));
 				result &= HASH_MASK;
 				return result;
 			}
@@ -95,7 +90,7 @@ namespace DarkCaster.Compression.FastLZ
 				htab[hslot] = iPos;
 
 			// starting with literal copy
-			uint copy = 2;
+			int copy = 2;
 			output[oPos++] = MAX_COPY - 1;
 			output[oPos++] = input[iPos++];
 			output[oPos++] = input[iPos++];
@@ -110,8 +105,8 @@ namespace DarkCaster.Compression.FastLZ
 				// comparison starting-point
 				anchor = iPos;
 				// find potential match
-				uint hval = HASH_FUNCTION(input, iPos);
-				hslot = (int)hval;
+				int hval = HASH_FUNCTION(input, iPos);
+				hslot = hval;
 				refb = htab[hval];
 
 				// calculate distance to the match
@@ -179,7 +174,7 @@ namespace DarkCaster.Compression.FastLZ
 					oPos--;
 
 				// reset literal counter
-				copy = 0u;
+				copy = 0;
 
 				// length is biased, '1' means a match of 3 bytes
 				iPos -= 3;
