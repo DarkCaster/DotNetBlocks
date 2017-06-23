@@ -95,9 +95,9 @@ namespace Tests
 		{
 			var compressor = new FastLZBlockCompressor();
 			for (int i = 1; i < 1024; ++i)
-				CommonBlockCompressorTests.Test_HighComprData(compressor, i, 15);
+				CommonBlockCompressorTests.Test_HighComprData(compressor, i, 16);
 			for (int i = 1024; i < 16384; i += random.Next(1, 65))
-				CommonBlockCompressorTests.Test_HighComprData(compressor, i, 15);
+				CommonBlockCompressorTests.Test_HighComprData(compressor, i, 16);
 		}
 
 		[Test]
@@ -125,16 +125,16 @@ namespace Tests
 		{
 			var compressor = new FastLZBlockCompressor();
 			for (int i = 1; i < 1024; ++i)
-				CommonBlockCompressorTests.Test_UniformData(compressor, i, 15);
+				CommonBlockCompressorTests.Test_UniformData(compressor, i, 16);
 			for (int i = 1024; i < 16384; i += random.Next(1, 65))
-				CommonBlockCompressorTests.Test_UniformData(compressor, i, 15);
+				CommonBlockCompressorTests.Test_UniformData(compressor, i, 16);
 		}
 
 		[Test]
 		public void HighComprData_MaxBlock()
 		{
 			var compressor = new FastLZBlockCompressor();
-			CommonBlockCompressorTests.Test_HighComprData(compressor, compressor.MaxBlockSZ, 15);
+			CommonBlockCompressorTests.Test_HighComprData(compressor, compressor.MaxBlockSZ, 16);
 		}
 
 		[Test]
@@ -155,7 +155,7 @@ namespace Tests
 		public void UniformData_MaxBlock()
 		{
 			var compressor = new FastLZBlockCompressor();
-			CommonBlockCompressorTests.Test_UniformData(compressor, compressor.MaxBlockSZ, 15);
+			CommonBlockCompressorTests.Test_UniformData(compressor, compressor.MaxBlockSZ, 16);
 		}
 
 		public static void FastLZ_GenerateNonComprData(int uniqueBlockSz, byte[] buffer, int offset = 0, int length = -1)
@@ -222,9 +222,9 @@ namespace Tests
 		{
 			var compressor = new FastLZBlockCompressor();
 			for (int i = 1; i < 1024; ++i)
-				CommonBlockCompressorTests.Test_HighComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+				CommonBlockCompressorTests.Test_HighComprData_WithOffset(compressor, i, random.Next(1, 16384), 16);
 			for (int i = 1024; i < 16384; i += random.Next(1, 65))
-				CommonBlockCompressorTests.Test_HighComprData_WithOffset(compressor, i, random.Next(1, 16384), 15);
+				CommonBlockCompressorTests.Test_HighComprData_WithOffset(compressor, i, random.Next(1, 16384), 16);
 		}
 
 		[Test]
@@ -252,9 +252,9 @@ namespace Tests
 		{
 			var compressor = new FastLZBlockCompressor();
 			for (int i = 1; i < 1024; ++i)
-				CommonBlockCompressorTests.Test_UniformData_WithOffset(compressor, i, random.Next(1, 16384),15);
+				CommonBlockCompressorTests.Test_UniformData_WithOffset(compressor, i, random.Next(1, 16384),16);
 			for (int i = 1024; i < 16384; i += random.Next(1, 65))
-				CommonBlockCompressorTests.Test_UniformData_WithOffset(compressor, i, random.Next(1, 16384),15);
+				CommonBlockCompressorTests.Test_UniformData_WithOffset(compressor, i, random.Next(1, 16384),16);
 		}
 
 		[Test]
@@ -310,7 +310,17 @@ namespace Tests
 			CommonBlockCompressorTests.GenerateComprData(input);
 			var cl=new FastLZ().Compress(input,0,dataLen,output,0);
 			var tooShortArray = new byte[dataLen/2];
-			Assert.Throws(typeof(IndexOutOfRangeException), () => new FastLZ().Decompress(output, 0, cl, tooShortArray, 0));
+			Exception dEx = null;
+			try
+			{
+				new FastLZ().Decompress(output, 0, cl, tooShortArray, 0);
+			}
+			catch(Exception ex)
+			{
+				dEx = ex;
+			}
+			Assert.NotNull(dEx);
+			Assert.True(dEx is ArgumentException || dEx is IndexOutOfRangeException);
 		}
 	}
 }
