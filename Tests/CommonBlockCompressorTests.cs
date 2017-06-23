@@ -254,5 +254,25 @@ namespace Tests
 				input[i] = val;
 			Test_CompressWithOffsetEquality(compressor, input, maxDataOffset, iter);
 		}
+
+		public static void Test_IncorrectParams(IBlockCompressor compressor)
+		{
+			var bsz = compressor.MaxBlockSZ;
+			var input = new byte[bsz];
+			var output = new byte[compressor.GetOutBuffSZ(bsz)];
+			Assert.Throws(typeof(ArgumentException), () => compressor.Compress(null, bsz, 0, output, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Compress(input, -1, 0, output, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Compress(input, bsz+1, 0, output, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Compress(input, 0, bsz+1, output, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Compress(input, bsz, 0, null, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Compress(input, bsz, 0, output, output.Length));
+
+			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(null, 0, input, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(output, -1, input, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(output, output.Length, input, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(output, 0, null, 0));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(output, 0, input, bsz));
+			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(output, 0, input, -1));
+		}
 	}
 }

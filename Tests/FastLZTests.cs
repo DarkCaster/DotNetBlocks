@@ -322,5 +322,12 @@ namespace Tests
 			Assert.NotNull(dEx);
 			Assert.True(dEx is ArgumentException || dEx is IndexOutOfRangeException);
 		}
+
+		[Test]
+		public void IncorrectParams()
+		{
+			var compressor = new FastLZBlockCompressor(8192);
+			CommonBlockCompressorTests.Test_IncorrectParams(compressor);
+		}
 	}
 }
