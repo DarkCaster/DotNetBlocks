@@ -65,7 +65,10 @@ namespace DarkCaster.Compression.FastLZ
 
 		public static int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
-			//TODO: input params check
+			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
+				throw new ArgumentException("Input parameters are incorrect!");
+			if (output == null || oPos < 0 || oPos >= output.Length)
+				throw new ArgumentException("Output parameters are incorrect!");
 			int start = oPos;
 			int ip_bound = iPos + iSz - 2;
 			int ip_limit = iPos + iSz - 12;
@@ -220,7 +223,10 @@ namespace DarkCaster.Compression.FastLZ
 
 		public static int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
-			//TODO: check input params
+			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
+				throw new ArgumentException("Input parameters are incorrect!");
+			if (output == null || oPos < 0 || oPos >= output.Length)
+				throw new ArgumentException("Output parameters are incorrect!");
 
 			int ip_limit = iPos + iSz;
 			int start = oPos;
