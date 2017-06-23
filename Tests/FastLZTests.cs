@@ -40,7 +40,7 @@ namespace Tests
 		{
 			var output = new byte[FastLZData.SampleOutputLV1.Length];
 			var control = FastLZData.SampleOutputLV1;
-			var count = FastLZ.Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0);
+			var count = new FastLZ().Compress(FastLZData.SampleInput, 0, FastLZData.SampleInput.Length, output, 0);
 			Assert.AreEqual(control.Length,count);
 			Assert.AreEqual(control,output);
 		}
@@ -50,7 +50,7 @@ namespace Tests
 		{
 			var control = FastLZData.SampleInput;
 			var output = new byte[control.Length];
-			var count = FastLZ.Decompress(FastLZData.SampleOutputLV1, 0, FastLZData.SampleOutputLV1.Length, output, 0);
+			var count = new FastLZ().Decompress(FastLZData.SampleOutputLV1, 0, FastLZData.SampleOutputLV1.Length, output, 0);
 			Assert.AreEqual(control.Length, count);
 			Assert.AreEqual(control, output);
 		}
@@ -88,6 +88,7 @@ namespace Tests
 		}*/
 
 		private static Random random = new Random();
+		private static FastLZ fastLz = new FastLZ();
 
 		[Test]
 		public void HighComprData()
@@ -169,14 +170,14 @@ namespace Tests
 				while (testOutLen < testOutput.Length-1)
 				{
 					random.NextBytes(uniqueBlock);
-					testOutLen = FastLZ.Compress(uniqueBlock, 0, uniqueBlockSz, testOutput, 0);
+					testOutLen = fastLz.Compress(uniqueBlock, 0, uniqueBlockSz, testOutput, 0);
 				}
 				//check that 2 joined-together unique blocks still produces uncompressible data for selected compressor
 				testOutput = new byte[uniqueBlockSz * 2 + (uniqueBlockSz * 2) / 32 + 1];
 				var testInput = new byte[uniqueBlockSz * 2];
 				Buffer.BlockCopy(uniqueBlock, 0, testInput, 0, uniqueBlockSz);
 				Buffer.BlockCopy(uniqueBlock, 0, testInput, uniqueBlockSz, uniqueBlockSz);
-				if (FastLZ.Compress(testInput, 0, uniqueBlockSz * 2, testOutput, 0) >= testOutput.Length-1)
+				if (fastLz.Compress(testInput, 0, uniqueBlockSz * 2, testOutput, 0) >= testOutput.Length-1)
 					checkOk = true;
 			}
 
@@ -204,12 +205,12 @@ namespace Tests
 			var input = new byte[dataLen];
 			var output = new byte[dataLen + dataLen / 32 + 1];
 			FastLZ_GenerateNonComprData(16000, input);
-			var outLen = FastLZ.Compress(input, 0, dataLen, output, 0);
+			var outLen = fastLz.Compress(input, 0, dataLen, output, 0);
 			//test, that we have used all space in output-buffer
 			Assert.AreEqual(output.Length, outLen, 2);
 			//decompress and verify
 			var decOutput = new byte[dataLen];
-			var decLen = FastLZ.Decompress(output, 0, outLen, decOutput, 0);
+			var decLen = fastLz.Decompress(output, 0, outLen, decOutput, 0);
 			Assert.AreEqual(dataLen, decLen);
 			for (int i = 0; i < decLen; ++i)
 				if (decOutput[i] != input[i])
@@ -307,9 +308,9 @@ namespace Tests
 			var input = new byte[dataLen];
 			var output = new byte[dataLen + dataLen / 32 + 1];
 			CommonBlockCompressorTests.GenerateComprData(input);
-			var cl=FastLZ.Compress(input,0,dataLen,output,0);
+			var cl=new FastLZ().Compress(input,0,dataLen,output,0);
 			var tooShortArray = new byte[dataLen/2];
-			Assert.Throws(typeof(IndexOutOfRangeException), () => FastLZ.Decompress(output, 0, cl, tooShortArray, 0));
+			Assert.Throws(typeof(IndexOutOfRangeException), () => new FastLZ().Decompress(output, 0, cl, tooShortArray, 0));
 		}
 	}
 }

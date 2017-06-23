@@ -41,7 +41,7 @@ using System.Runtime.CompilerServices;
 
 namespace DarkCaster.Compression.FastLZ
 {
-	public static class FastLZ
+	public sealed class FastLZ
 	{
 		private const int MAX_COPY = 32;
 		private const int MAX_LEN = 264;
@@ -63,7 +63,7 @@ namespace DarkCaster.Compression.FastLZ
 			}
 		}
 
-		public static int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
+		public int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
 			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
 				throw new ArgumentException("Input parameters are incorrect!");
@@ -221,7 +221,7 @@ namespace DarkCaster.Compression.FastLZ
 			return oPos - start;
 		}
 
-		public static int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
+		public int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
 			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
 				throw new ArgumentException("Input parameters are incorrect!");

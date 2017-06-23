@@ -102,6 +102,7 @@ namespace PerfTests
 		{
 			for (int mode = 0; mode < 5; ++mode)
 			{
+				var fastLz = new FastLZ();
 				int iter = 5000;
 				int blockSz = 65536;
 
@@ -134,7 +135,7 @@ namespace PerfTests
 				var startCpuTime = process.TotalProcessorTime;
 				sw.Start();
 				for (int i = 0; i < iter; ++i)
-					FastLZ.Compress(input, 0, input.Length, output, 0);
+					fastLz.Compress(input, 0, input.Length, output, 0);
 				sw.Stop();
 				var stopCpuTime = process.TotalProcessorTime;
 
@@ -152,6 +153,7 @@ namespace PerfTests
 		{
 			for (int mode = 0; mode < 5; ++mode)
 			{
+				var fastLz = new FastLZ();
 				int iter = 16000;
 				int blockSz = 65536;
 
@@ -178,7 +180,7 @@ namespace PerfTests
 					iter *= 2;
 				}
 
-				var len=FastLZ.Compress(input, 0, input.Length, output, 0);
+				var len=fastLz.Compress(input, 0, input.Length, output, 0);
 
 				var sw = new Stopwatch();
 				var process = Process.GetCurrentProcess();
@@ -186,7 +188,7 @@ namespace PerfTests
 				var startCpuTime = process.TotalProcessorTime;
 				sw.Start();
 				for (int i = 0; i < iter; ++i)
-					FastLZ.Decompress(output, 0, len, input, 0);
+					fastLz.Decompress(output, 0, len, input, 0);
 				sw.Stop();
 				var stopCpuTime = process.TotalProcessorTime;
 

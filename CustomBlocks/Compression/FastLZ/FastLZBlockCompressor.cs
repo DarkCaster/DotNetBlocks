@@ -33,6 +33,7 @@ namespace DarkCaster.Compression.FastLZ
 		private const int PAYLOAD_LEN2 = 8191; //2 ^ 13 - 1 = 13 bits / 16 bit-header;
 		private const int PAYLOAD_LEN3 = 2097151; //2 ^ 21 - 1 = 21 bits / 24 bit-header;
 		private const int MAX_BLOCK_SZ = 536870911; //2 ^ 29 - 1 = 29 bits / 32-bit header;
+		private readonly FastLZ fastLZ = new FastLZ();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int CalculateHeaderLength(int payloadLen)
@@ -73,7 +74,7 @@ namespace DarkCaster.Compression.FastLZ
 		public int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset)
 		{
 			var hdrSz=CalculateHeaderLength(inSz);
-			var comprSz=FastLZ.Compress(input, inOffset, inSz, output, outOffset+hdrSz);
+			var comprSz=fastLZ.Compress(input, inOffset, inSz, output, outOffset+hdrSz);
 			bool useCompr = true;
 			if (comprSz >= inSz)
 			{
@@ -119,7 +120,7 @@ namespace DarkCaster.Compression.FastLZ
 				Buffer.BlockCopy(input, inOffset + headerSz, output, outOffset, comprSz);
 				return comprSz;
 			}
-			return FastLZ.Decompress(input, inOffset + headerSz, comprSz, output, outOffset);
+			return fastLZ.Decompress(input, inOffset + headerSz, comprSz, output, outOffset);
 		}
 
 		public int MaxBlockSZ { get { return MAX_BLOCK_SZ; } }
