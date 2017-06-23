@@ -1,4 +1,4 @@
-﻿﻿﻿// FastLZ.cs
+﻿﻿﻿﻿// FastLZ.cs
 //
 // Copyright (c) 2017 DarkCaster <dark.caster@outlook.com>
 // This is a PARTIAL C# port of FastLZ library by (c) Ariya Hidayat, MIT License
@@ -103,26 +103,21 @@ namespace DarkCaster.Compression.FastLZ
 			output[oPos++] = input[iPos++];
 			output[oPos++] = input[iPos++];
 
+			int refb, distance, len, anchor;
+
 			// main loop
 			while (iPos < ip_limit)
 			{
-				int refb;
-				uint distance;
-
 				// minimum match length
-				uint len = 3;
-
+				len = 3;
 				// comparison starting-point
-				int anchor = iPos;
-
+				anchor = iPos;
 				// find potential match
 				HASH_FUNCTION(ref hval, input, iPos);
 				hslot = (int)hval;
 				refb = htab[hval];
-
 				// calculate distance to the match
-				distance = (uint)(anchor - refb);
-
+				distance = anchor - refb;
 				// update hash table
 				htab[hslot] = anchor;
 
@@ -190,8 +185,7 @@ namespace DarkCaster.Compression.FastLZ
 
 				// length is biased, '1' means a match of 3 bytes
 				iPos -= 3;
-				len = (uint)(iPos - anchor);
-
+				len = iPos - anchor;
 				// encode the match
 				if (len > MAX_LEN - 2)
 					while (len > MAX_LEN - 2)
