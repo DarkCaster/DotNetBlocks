@@ -1,4 +1,4 @@
-﻿﻿﻿﻿// FastLZ.cs
+﻿﻿﻿﻿﻿// FastLZ.cs
 //
 // Copyright (c) 2017 DarkCaster <dark.caster@outlook.com>
 // This is a PARTIAL C# port of FastLZ library by (c) Ariya Hidayat, MIT License
@@ -74,22 +74,21 @@ namespace DarkCaster.Compression.FastLZ
 				throw new ArgumentException("Input parameters are incorrect!");
 			if (output == null || oPos < 0 || oPos >= output.Length)
 				throw new ArgumentException("Output parameters are incorrect!");
+
+			//set and define limits
 			start = oPos;
 			ip_limit = iPos + iSz - 12;
 			int ip_bound = iPos + iSz - 2;
+
 			// sanity check
 			if (iSz < 4)
 			{
-				if (iSz > 0)
-				{
-					// create literal copy only
-					output[oPos++] = (byte)(iSz - 1);
-					ip_bound++;
-					while (iPos <= ip_bound)
-						output[oPos++] = input[iPos++];
-					return iSz + 1;
-				}
-				throw new ArgumentException("length param is not valid", nameof(iSz));
+				// create literal copy only
+				output[oPos++] = (byte)(iSz - 1);
+				ip_bound++;
+				while (iPos <= ip_bound)
+					output[oPos++] = input[iPos++];
+				return iSz + 1;
 			}
 
 			// initialize hash table
