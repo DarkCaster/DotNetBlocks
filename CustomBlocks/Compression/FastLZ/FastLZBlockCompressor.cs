@@ -34,6 +34,14 @@ namespace DarkCaster.Compression.FastLZ
 		private const int PAYLOAD_LEN3 = 2097151; //2 ^ 21 - 1 = 21 bits / 24 bit-header;
 		private const int MAX_BLOCK_SZ = 536870911; //2 ^ 29 - 1 = 29 bits / 32-bit header;
 		private readonly FastLZ fastLZ = new FastLZ();
+		private readonly int maxBlockSz;
+
+		public FastLZBlockCompressor(int maxBlockSz=MAX_BLOCK_SZ)
+		{
+			if (maxBlockSz > MAX_BLOCK_SZ || maxBlockSz < 0)
+				throw new ArgumentException("maxBlockSz is too big or < 0 ! Upper limit is " + MAX_BLOCK_SZ.ToString(), nameof(maxBlockSz));
+			this.maxBlockSz = maxBlockSz;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int CalculateHeaderLength(int payloadLen)
@@ -73,8 +81,14 @@ namespace DarkCaster.Compression.FastLZ
 
 		public int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset)
 		{
+			if (input == null || inOffset < 0 || inSz < 0 || inOffset + inSz > input.Length)
+				throw new ArgumentException("Input buffer parameters are incorrect!");
+			if (output == null || outOffset < 0 || outOffset >= output.Length)
+				throw new ArgumentException("Output buffer parameters are incorrect!");
+			if (inSz > maxBlockSz)
+				throw new ArgumentException("inSz parameter too big, maximum supported input block size is " + maxBlockSz.ToString(), nameof(inSz));
 			var hdrSz=CalculateHeaderLength(inSz);
-			var comprSz=fastLZ.Compress(input, inOffset, inSz, output, outOffset+hdrSz);
+			var comprSz = inSz > 15 ? fastLZ.Compress(input, inOffset, inSz, output, outOffset + hdrSz) : inSz;
 			bool useCompr = true;
 			if (comprSz >= inSz)
 			{
@@ -113,6 +127,10 @@ namespace DarkCaster.Compression.FastLZ
 
 		public int Decompress(byte[] input, int inOffset, byte[] output, int outOffset)
 		{
+			if (input == null || inOffset < 0 || inOffset >= input.Length)
+				throw new ArgumentException("Input parameters are incorrect!");
+			if (output == null || outOffset >= output.Length)
+				throw new ArgumentException("Output parameters are incorrect!");
 			var headerSz = DecodeMetadataSZ(input, inOffset);
 			var comprSz = DecodeComprDataSz(input, inOffset, headerSz);
 			if (input[inOffset] >> 7 == 0)
@@ -123,7 +141,7 @@ namespace DarkCaster.Compression.FastLZ
 			return fastLZ.Decompress(input, inOffset + headerSz, comprSz, output, outOffset);
 		}
 
-		public int MaxBlockSZ { get { return MAX_BLOCK_SZ; } }
+		public int MaxBlockSZ { get { return maxBlockSz; } }
 
 		public int GetOutBuffSZ(int inputSZ)
 		{
