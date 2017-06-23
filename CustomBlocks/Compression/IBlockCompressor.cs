@@ -57,6 +57,8 @@ namespace DarkCaster.Compression
 		/// <summary>
 		/// Gets the maximum size of uncompressed data block that may be processed by this compressor at once.
 		/// You may use this information to tune input buffer size.
+		/// This value is set when creating instance of IBlockCompressor.
+		/// Additional memmory requirements for IBlockCompressor instance may also depend on this value.
 		/// </summary>
 		/// <value>Maximum size of the block.</value>
 		int MaxBlockSZ { get; }
@@ -71,6 +73,7 @@ namespace DarkCaster.Compression
 
 		/// <summary>
 		/// Decodes the size of the service metadata from data block with compressed data.
+		/// Mainly used in debug.
 		/// </summary>
 		/// <returns>The metadata size.</returns>
 		/// <param name="buffer">Buffer.</param>

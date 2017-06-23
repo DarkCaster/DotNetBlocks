@@ -13,16 +13,16 @@
 // So, level 2 compression is not ported for now.
 // It may be implemented in future, when I figure out how exactly compression algorithm works.
 //
-// Most of the safety checks from original code was removed, in order to improve performance,
+// Most of the safety checks from original code was removed in order to improve performance,
 // because this code intended to run in managed environment.
-// Im case of wrong input parameters (on compress) of bad input data (on decompress),
+// In case of wrong input parameters (on compress) of bad input data (on decompress),
 // it should not corrupt input buffer even without this safety checks.
 // Some most basic checks still may be enabled at compile time manually.
 //
-// In order to improve compression speed, it using normal non-static class
+// In order to improve compression speed, it using non-static class
 // to define and reuse some internal stuff as class fields.
-// So, in order to perform compression\decompression you must create a class instance first (object).
-// Each instance will consume ~8KiB of heap.
+// So, in order to perform compression\decompression you must create an instance first.
+// Each instance will consume about 8KiB of heap.
 // Class instances are NOT THREAD SAFE, you cannot use compress or decompress from different threads.
 // However, you can continue to use the same instance after any exception is thrown during compression or decompression.
 //
