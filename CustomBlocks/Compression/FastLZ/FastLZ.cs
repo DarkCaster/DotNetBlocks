@@ -37,6 +37,7 @@
 //
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace DarkCaster.Compression.FastLZ
 {
@@ -50,6 +51,7 @@ namespace DarkCaster.Compression.FastLZ
 		private const int HASH_SIZE = (1 << HASH_LOG);
 		private const int HASH_MASK = (HASH_SIZE - 1);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int HASH_FUNCTION(byte[] p, int offset)
 		{
 			unchecked
@@ -73,7 +75,7 @@ namespace DarkCaster.Compression.FastLZ
 			{
 				if (iSz > 0)
 				{
-					/* create literal copy only */
+					// create literal copy only
 					output[oPos++] = (byte)(iSz - 1);
 					ip_bound++;
 					while (iPos <= ip_bound)
@@ -133,7 +135,7 @@ namespace DarkCaster.Compression.FastLZ
 				}
 
 				// last matched byte
-				iPos = (int)(anchor + len);
+				iPos = anchor + len;
 
 				// distance is biased
 				distance--;
@@ -142,28 +144,14 @@ namespace DarkCaster.Compression.FastLZ
 				{
 					// zero distance means a run
 					byte x = input[iPos - 1];
-					while (iPos < ip_bound)
+					for (; iPos < ip_bound; ++iPos)
 						if (input[refb++] != x)
 							break;
-						else
-							iPos++;
 				}
 				else
-					for (;;)
-					{
-						// safe because the outer check against ip limit
-						if (input[refb++] != input[iPos++]) break;
-						if (input[refb++] != input[iPos++]) break;
-						if (input[refb++] != input[iPos++]) break;
-						if (input[refb++] != input[iPos++]) break;
-						if (input[refb++] != input[iPos++]) break;
-						if (input[refb++] != input[iPos++]) break;
-						if (input[refb++] != input[iPos++]) break;
-						if (input[refb++] != input[iPos++]) break;
-						while (iPos < ip_bound)
-							if (input[refb++] != input[iPos++]) break;
-						break;
-					}
+					while (iPos < ip_bound)
+						if (input[refb++] != input[iPos++])
+							break;
 
 				// if we have copied something, adjust the copy count
 				if (copy != 0)
@@ -180,14 +168,13 @@ namespace DarkCaster.Compression.FastLZ
 				iPos -= 3;
 				len = iPos - anchor;
 				// encode the match
-				if (len > MAX_LEN - 2)
-					while (len > MAX_LEN - 2)
-					{
-						output[oPos++] = (byte)((7 << 5) + (distance >> 8));
-						output[oPos++] = MAX_LEN - 2 - 7 - 2;
-						output[oPos++] = (byte)(distance & 255);
-						len -= MAX_LEN - 2;
-					}
+				while (len > MAX_LEN - 2)
+				{
+					output[oPos++] = (byte)((7 << 5) + (distance >> 8));
+					output[oPos++] = MAX_LEN - 11; /* 2 - 7 - 2 */
+					output[oPos++] = (byte)(distance & 255);
+					len -= MAX_LEN - 2;
+				}
 
 				if (len < 7)
 				{
