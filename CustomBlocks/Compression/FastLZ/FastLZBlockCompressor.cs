@@ -27,7 +27,7 @@ using System.Runtime.CompilerServices;
 
 namespace DarkCaster.Compression.FastLZ
 {
-	public class FastLZBlockCompressor : IBlockCompressor
+	public sealed class FastLZBlockCompressor : IBlockCompressor
 	{
 		private const int PAYLOAD_LEN1 = 31; //2 ^ 5 - 1 = 5 bits / 8 bit-header;
 		private const int PAYLOAD_LEN2 = 8191; //2 ^ 13 - 1 = 13 bits / 16 bit-header;
