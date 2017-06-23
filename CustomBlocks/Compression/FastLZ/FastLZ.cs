@@ -51,6 +51,11 @@ namespace DarkCaster.Compression.FastLZ
 		private const int HASH_SIZE = (1 << HASH_LOG);
 		private const int HASH_MASK = (HASH_SIZE - 1);
 
+		private readonly int[] htab = new int[HASH_SIZE];
+
+		//values, used both by compress and decompress routines
+		private int start, ip_limit;
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int HASH_FUNCTION(byte[] p, int offset)
 		{
@@ -69,10 +74,9 @@ namespace DarkCaster.Compression.FastLZ
 				throw new ArgumentException("Input parameters are incorrect!");
 			if (output == null || oPos < 0 || oPos >= output.Length)
 				throw new ArgumentException("Output parameters are incorrect!");
-			int start = oPos;
+			start = oPos;
+			ip_limit = iPos + iSz - 12;
 			int ip_bound = iPos + iSz - 2;
-			int ip_limit = iPos + iSz - 12;
-
 			// sanity check
 			if (iSz < 4)
 			{
@@ -89,10 +93,8 @@ namespace DarkCaster.Compression.FastLZ
 			}
 
 			// initialize hash table
-			int hslot;
-			int[] htab = new int[HASH_SIZE];
-			for (hslot = 0; hslot < HASH_SIZE; ++hslot)
-				htab[hslot] = iPos;
+			for (int i = 0; i < HASH_SIZE; ++i)
+				htab[i] = iPos;
 
 			// starting with literal copy
 			int copy = 2;
@@ -111,13 +113,12 @@ namespace DarkCaster.Compression.FastLZ
 				anchor = iPos;
 				// find potential match
 				int hval = HASH_FUNCTION(input, iPos);
-				hslot = hval;
 				refb = htab[hval];
 
 				// calculate distance to the match
 				distance = anchor - refb;
 				// update hash table
-				htab[hslot] = anchor;
+				htab[hval] = anchor;
 
 				// is this a match? check the first 3 bytes
 				if (distance == 0 ||
@@ -228,8 +229,8 @@ namespace DarkCaster.Compression.FastLZ
 			if (output == null || oPos < 0 || oPos >= output.Length)
 				throw new ArgumentException("Output parameters are incorrect!");
 
-			int ip_limit = iPos + iSz;
-			int start = oPos;
+			ip_limit = iPos + iSz;
+			start = oPos;
 
 			int ctrl = input[iPos++] & 31;
 			bool loop = true;
