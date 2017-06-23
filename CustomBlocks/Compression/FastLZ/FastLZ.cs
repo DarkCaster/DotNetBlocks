@@ -132,7 +132,17 @@ namespace DarkCaster.Compression.FastLZ
 						input[refb++] != input[iPos++] ||
 						input[refb++] != input[iPos++] ||
 						input[refb++] != input[iPos++])
-					goto literal;
+				{
+					output[oPos++] = input[anchor++];
+					iPos = anchor;
+					copy++;
+					if (copy == MAX_COPY)
+					{
+						copy = 0;
+						output[oPos++] = MAX_COPY - 1;
+					}
+					continue;
+				}
 
 				// last matched byte
 				iPos = (int)(anchor + len);
@@ -212,18 +222,6 @@ namespace DarkCaster.Compression.FastLZ
 
 				// assuming literal copy
 				output[oPos++] = MAX_COPY - 1;
-
-				continue;
-
-			literal:
-				output[oPos++] = input[anchor++];
-				iPos = anchor;
-				copy++;
-				if (copy == MAX_COPY)
-				{
-					copy = 0;
-					output[oPos++] = MAX_COPY - 1;
-				}
 			}
 
 			// left-over as literal copy
