@@ -129,7 +129,7 @@ namespace DarkCaster.Compression.FastLZ
 		{
 			if (input == null || inOffset < 0 || inOffset >= input.Length)
 				throw new ArgumentException("Input parameters are incorrect!");
-			if (output == null || outOffset >= output.Length)
+			if (output == null || outOffset < 0 || outOffset >= output.Length)
 				throw new ArgumentException("Output parameters are incorrect!");
 			var headerSz = DecodeMetadataSZ(input, inOffset);
 			var comprSz = DecodeComprDataSz(input, inOffset, headerSz);
