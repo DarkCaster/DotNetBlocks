@@ -37,21 +37,20 @@ private void SNSign(string assembly, string key)
 
 Task("Patch").Does(() =>
 {
-  Patch("json.net","../json.net.custom.signkey.patch",1);
-  Patch("json.net","../json.net.nuspec.patch",1);
+  //Patch("json.net","../json.net.custom.signkey.patch",1);
+  //Patch("json.net","../json.net.nuspec.patch",1);
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>
 {
-  if(IsRunningOnWindows())
-    MSBuild("json.net/Src/Newtonsoft.Json.sln", settings => settings.SetConfiguration(configuration).WithTarget("Newtonsoft_Json:Rebuild"));
-  else
-  {
-    XBuild("json.net/Src/Newtonsoft.Json.sln", settings => settings.SetConfiguration(configuration).WithTarget("Newtonsoft_Json:Rebuild"));
-    //perform full-sign
-    if(SNTest("json.net/Src/Newtonsoft.Json/bin/Release/Net45/Newtonsoft.Json.dll"))
-      SNSign("json.net/Src/Newtonsoft.Json/bin/Release/Net45/Newtonsoft.Json.dll","json.net.custom.signkey.snk");
-  }
+	MSBuild("json.net/Src/Newtonsoft.Json.sln", settings =>
+	{
+		settings.SetConfiguration(configuration).WithTarget("Newtonsoft_Json:Rebuild");
+		if(IsRunningOnUnix())
+			settings.ToolPath = "/usr/bin/msbuild";
+	});
+	if(SNTest("json.net/Src/Newtonsoft.Json/bin/Release/Net45/Newtonsoft.Json.dll"))
+		SNSign("json.net/Src/Newtonsoft.Json/bin/Release/Net45/Newtonsoft.Json.dll","json.net.custom.signkey.snk");
 });
 
 Task("Pack").IsDependentOn("Build").Does(() =>
