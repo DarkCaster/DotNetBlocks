@@ -1,3 +1,0 @@
-sources="YamlDotNet"
-targets="YamlDotNet.Signed.4.2.1.nupkg"
-files="YamlDotNet.nuspec.patch"
