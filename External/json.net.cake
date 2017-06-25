@@ -37,8 +37,7 @@ private void SNSign(string assembly, string key)
 
 Task("Patch").Does(() =>
 {
-  //Patch("json.net","../json.net.custom.signkey.patch",1);
-  //Patch("json.net","../json.net.nuspec.patch",1);
+  Patch("json.net","../json.net.build_and_sign.patch",1);
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>
@@ -49,17 +48,17 @@ Task("Build").IsDependentOn("Patch").Does(() =>
 		if(IsRunningOnUnix())
 			settings.ToolPath = "/usr/bin/msbuild";
 	});
-	if(SNTest("json.net/Src/Newtonsoft.Json/bin/Release/Net45/Newtonsoft.Json.dll"))
-		SNSign("json.net/Src/Newtonsoft.Json/bin/Release/Net45/Newtonsoft.Json.dll","json.net.custom.signkey.snk");
+	if(SNTest("json.net/Src/Newtonsoft.Json/bin/Release/net45/Newtonsoft.Json.dll"))
+		SNSign("json.net/Src/Newtonsoft.Json/bin/Release/net45/Newtonsoft.Json.dll","json.net.custom.signkey.snk");
 });
 
 Task("Pack").IsDependentOn("Build").Does(() =>
 {
   CreateDirectory("output");
   CreateDirectory("output/net45");
-  CopyFiles("json.net/Src/Newtonsoft.Json/bin/Release/Net45/*","output/net45");
+  CopyFiles("json.net/Src/Newtonsoft.Json/bin/Release/net45/*","output/net45");
   var nuGetPackSettings = new NuGetPackSettings { BasePath = "output", };
-  NuGetPack("json.net/Build/Newtonsoft.Json.nuspec", nuGetPackSettings);
+  NuGetPack("json.net.nuspec", nuGetPackSettings);
 });
 
 Task("Default").IsDependentOn("Pack");

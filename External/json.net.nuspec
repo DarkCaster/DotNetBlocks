@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>Newtonsoft.Json</id>
+    <version>10.0.3</version>
+    <title>Json.NET</title>
+    <description>Json.NET is a popular high-performance JSON framework for .NET</description>
+    <authors>James Newton-King</authors>
+    <language>en-US</language>
+    <projectUrl>http://www.newtonsoft.com/json</projectUrl>
+    <iconUrl>http://www.newtonsoft.com/content/images/nugeticon.png</iconUrl>
+    <licenseUrl>https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md</licenseUrl>
+    <tags>json</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.5" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="**/*.dll" target="lib" exclude="**/System.*;**/Microsoft.*;**/Mono.*;**/mscorlib.*" />
+    <file src="**/*.xml" target="lib" exclude="**/System.*;**/Microsoft.*;**/Mono.*;**/mscorlib.*" />
+  </files>
+</package>
