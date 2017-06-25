@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Runtime.Serialization;
 
 namespace DarkCaster.Serialization.Yaml
 {
@@ -36,6 +37,8 @@ namespace DarkCaster.Serialization.Yaml
 		{
 			try
 			{
+				if (typeof(T) is ISerializable)
+					throw new NotSupportedException("TODO");
 				return new YamlSerializationHelper<T>();
 			}
 			catch(Exception ex)
@@ -48,6 +51,8 @@ namespace DarkCaster.Serialization.Yaml
 		{
 			try
 			{
+				if (type is ISerializable)
+					throw new NotSupportedException("TODO");
 				return (ISerializationHelper)Activator.CreateInstance(typeof(YamlSerializationHelper<>).MakeGenericType(new Type[] { type }));
 			}
 			catch(Exception ex)

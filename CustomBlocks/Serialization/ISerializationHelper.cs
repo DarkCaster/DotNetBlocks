@@ -28,6 +28,7 @@ namespace DarkCaster.Serialization
 	/// <summary>
 	/// Generic interface for helper classes that performs serialization.
 	/// For use with IOC.
+	/// Support normal user-classes and classes that implements ISerializable interface (TODO).
 	/// </summary>
 	public interface ISerializationHelper<T>
 	{

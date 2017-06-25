@@ -31,6 +31,7 @@ namespace DarkCaster.Serialization
 	/// Interface for factory object that used for on-demand generation of SerializationHelper objects for various types.
 	/// Newly created SerializationHelper objects returned as ISerializationHelper instances.
 	/// For use with IOC and such techniques.
+	/// Support normal user-classes and classes that implements ISerializable interface (TODO).
 	/// </summary>
 	public interface ISerializationHelperFactory
 	{

@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Runtime.Serialization;
 
 namespace DarkCaster.Serialization.MsgPack
 {
@@ -40,6 +41,8 @@ namespace DarkCaster.Serialization.MsgPack
 		{
 			try
 			{
+				if (typeof(T) is ISerializable)
+					throw new NotSupportedException("TODO");
 				return new MsgPackSerializationHelper<T>(mode);
 			}
 			catch(Exception ex)
@@ -52,6 +55,8 @@ namespace DarkCaster.Serialization.MsgPack
 		{
 			try
 			{
+				if (type is ISerializable)
+					throw new NotSupportedException("TODO");
 				return (ISerializationHelper)Activator.CreateInstance(typeof(MsgPackSerializationHelper<>).MakeGenericType(new Type[] { type }), new object[] { mode });
 			}
 			catch(Exception ex)

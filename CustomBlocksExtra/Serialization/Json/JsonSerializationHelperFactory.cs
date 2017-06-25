@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Runtime.Serialization;
 
 namespace DarkCaster.Serialization.Json
 {
@@ -36,6 +37,8 @@ namespace DarkCaster.Serialization.Json
 		{
 			try
 			{
+				if (typeof(T) is ISerializable)
+					throw new NotSupportedException("TODO");
 				return new JsonSerializationHelper<T>();
 			}
 			catch(Exception ex)
@@ -48,6 +51,8 @@ namespace DarkCaster.Serialization.Json
 		{
 			try
 			{
+				if (type is ISerializable)
+					throw new NotSupportedException("TODO");
 				return (ISerializationHelper)Activator.CreateInstance(typeof(JsonSerializationHelper<>).MakeGenericType(new Type[] { type }));
 			}
 			catch(Exception ex)

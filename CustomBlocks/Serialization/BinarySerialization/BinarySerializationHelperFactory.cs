@@ -24,6 +24,7 @@
 //
 
 using System;
+using System.Runtime.Serialization;
 
 namespace DarkCaster.Serialization.Binary
 {
@@ -36,6 +37,8 @@ namespace DarkCaster.Serialization.Binary
 		{
 			try
 			{
+				if (typeof(T) is ISerializable)
+					throw new NotSupportedException("TODO");
 				return new BinarySerializationHelper<T>();
 			}
 			catch(Exception ex)
@@ -48,6 +51,8 @@ namespace DarkCaster.Serialization.Binary
 		{
 			try
 			{
+				if (type is ISerializable)
+					throw new NotSupportedException("TODO");
 				return (ISerializationHelper)Activator.CreateInstance(typeof(BinarySerializationHelper<>).MakeGenericType(new Type[] { type }));
 			}
 			catch(Exception ex)
