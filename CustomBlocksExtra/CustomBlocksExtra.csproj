@@ -43,6 +43,9 @@
     <Reference Include="MsgPack">
       <HintPath>..\packages\MsgPack.Cli.0.9.0-beta2\lib\net45\MsgPack.dll</HintPath>
     </Reference>
+    <Reference Include="YamlDotNet">
+      <HintPath>..\packages\YamlDotNet.Signed.4.2.1\lib\net35\YamlDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -57,6 +60,11 @@
     <Compile Include="Serialization\Json\JsonSerializationHelperFactory.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationFactoryException.cs" />
     <Compile Include="Serialization\MsgPack\MsgPackSerializationHelperFactory.cs" />
+    <Compile Include="Serialization\Yaml\YamlSerializationHelper.cs" />
+    <Compile Include="Serialization\Yaml\YamlDeserializationException.cs" />
+    <Compile Include="Serialization\Yaml\YamlSerializationException.cs" />
+    <Compile Include="Serialization\Yaml\YamlSerializationFactoryException.cs" />
+    <Compile Include="Serialization\Yaml\YamlSerializationHelperFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocks\CustomBlocks.csproj">
@@ -71,6 +79,7 @@
     <Folder Include="Serialization" />
     <Folder Include="Serialization\Json" />
     <Folder Include="Serialization\MsgPack" />
+    <Folder Include="Serialization\Yaml\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
