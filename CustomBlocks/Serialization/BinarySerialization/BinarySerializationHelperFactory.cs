@@ -37,7 +37,7 @@ namespace DarkCaster.Serialization.Binary
 		{
 			try
 			{
-				if (typeof(T) is ISerializable)
+				if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
 					throw new NotSupportedException("TODO");
 				return new BinarySerializationHelper<T>();
 			}
@@ -51,7 +51,7 @@ namespace DarkCaster.Serialization.Binary
 		{
 			try
 			{
-				if (type is ISerializable)
+				if (typeof(ISerializable).IsAssignableFrom(type))
 					throw new NotSupportedException("TODO");
 				return (ISerializationHelper)Activator.CreateInstance(typeof(BinarySerializationHelper<>).MakeGenericType(new Type[] { type }));
 			}

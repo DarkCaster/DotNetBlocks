@@ -41,7 +41,7 @@ namespace DarkCaster.Serialization.MsgPack
 		{
 			try
 			{
-				if (typeof(T) is ISerializable)
+				if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
 					throw new NotSupportedException("TODO");
 				return new MsgPackSerializationHelper<T>(mode);
 			}
@@ -55,7 +55,7 @@ namespace DarkCaster.Serialization.MsgPack
 		{
 			try
 			{
-				if (type is ISerializable)
+				if (typeof(ISerializable).IsAssignableFrom(type))
 					throw new NotSupportedException("TODO");
 				return (ISerializationHelper)Activator.CreateInstance(typeof(MsgPackSerializationHelper<>).MakeGenericType(new Type[] { type }), new object[] { mode });
 			}

@@ -37,7 +37,7 @@ namespace DarkCaster.Serialization.Json
 		{
 			try
 			{
-				if (typeof(T) is ISerializable)
+				if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
 					throw new NotSupportedException("TODO");
 				return new JsonSerializationHelper<T>();
 			}
@@ -51,7 +51,7 @@ namespace DarkCaster.Serialization.Json
 		{
 			try
 			{
-				if (type is ISerializable)
+				if (typeof(ISerializable).IsAssignableFrom(type))
 					throw new NotSupportedException("TODO");
 				return (ISerializationHelper)Activator.CreateInstance(typeof(JsonSerializationHelper<>).MakeGenericType(new Type[] { type }));
 			}
