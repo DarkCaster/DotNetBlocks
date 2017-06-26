@@ -1,4 +1,4 @@
-﻿// FastLZ.cs
+﻿﻿// FastLZ.cs
 //
 // Copyright (c) 2017 DarkCaster <dark.caster@outlook.com>
 // This is a PARTIAL C# port of FastLZ library by (c) Ariya Hidayat, MIT License
@@ -62,20 +62,39 @@ using System.Runtime.CompilerServices;
 
 namespace DarkCaster.Compression.FastLZ
 {
+	/// <summary>
+	/// FastLZ compressor. Not thread safe.
+	/// Keep some internall stuff between runs in order to improve performance.
+	/// Each class instance consume ~8KiB of heap.
+	/// </summary>
 	public sealed class FastLZ
+	{
+		private readonly int[] htab = new int[FastLZStatic.HASH_SIZE];
+
+		public int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
+		{
+			return FastLZStatic.Compress(input, iPos, iSz, output, oPos, htab);
+		}
+
+		public int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
+		{
+			return FastLZStatic.Decompress(input, iPos, iSz, output, oPos);
+		}
+	}
+
+	/// <summary>
+	/// Thread safe static version of FastLZ class.
+	/// Run a little bit slower than FastLZ class, and with more pressure on heap and GC.
+	/// </summary>
+	public static class FastLZStatic
 	{
 		private const int MAX_COPY = 32;
 		private const int MAX_LEN = 264;
 		private const int MAX_DISTANCE = 8192;
 
 		private const int HASH_LOG = 13;
-		private const int HASH_SIZE = (1 << HASH_LOG);
+		internal const int HASH_SIZE = (1 << HASH_LOG);
 		private const int HASH_MASK = (HASH_SIZE - 1);
-
-		private readonly int[] htab = new int[HASH_SIZE];
-
-		//values, used both by compress and decompress routines
-		private int start, ip_limit;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int HASH_FUNCTION(byte[] p, int offset)
@@ -89,7 +108,14 @@ namespace DarkCaster.Compression.FastLZ
 			}
 		}
 
-		public int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
+		public static int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
+		{
+			var htab = new int[HASH_SIZE];
+			return Compress(input, iPos, iSz, output, oPos, htab);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static int Compress(byte[] input, int iPos, int iSz, byte[] output, int oPos, int[] htab)
 		{
 #if PARAMS_CHECKS
 			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
@@ -98,8 +124,8 @@ namespace DarkCaster.Compression.FastLZ
 				throw new ArgumentException("Output parameters are incorrect!");
 #endif
 			//set and define limits
-			start = oPos;
-			ip_limit = iPos + iSz - 12;
+			int start = oPos;
+			int ip_limit = iPos + iSz - 12;
 			int ip_bound = iPos + iSz - 2;
 
 			// sanity check
@@ -243,7 +269,8 @@ namespace DarkCaster.Compression.FastLZ
 			return oPos - start;
 		}
 
-		public int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Decompress(byte[] input, int iPos, int iSz, byte[] output, int oPos)
 		{
 #if PARAMS_CHECKS
 			if (input == null || iPos < 0 || iSz < 0 || iPos + iSz > input.Length)
@@ -251,8 +278,8 @@ namespace DarkCaster.Compression.FastLZ
 			if (output == null || oPos < 0 || oPos >= output.Length)
 				throw new ArgumentException("Output parameters are incorrect!");
 #endif
-			ip_limit = iPos + iSz;
-			start = oPos;
+			int ip_limit = iPos + iSz;
+			int start = oPos;
 
 			int ctrl = input[iPos++] & 31;
 			bool loop = true;
