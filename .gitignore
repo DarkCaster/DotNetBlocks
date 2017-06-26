@@ -10,4 +10,4 @@ _ReSharper*/
 **/[Pp]ackages/*
 /NuGet.Config
 /External/dist/
-
+/.vs/
