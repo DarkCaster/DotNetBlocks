@@ -1,4 +1,4 @@
-﻿// FastLZBlockCompressor.cs
+﻿﻿// FastLZBlockCompressor.cs
 //
 // The MIT License (MIT)
 //
@@ -27,20 +27,33 @@ using System.Runtime.CompilerServices;
 
 namespace DarkCaster.Compression.FastLZ
 {
-	public sealed class FastLZBlockCompressor : IBlockCompressor
+	public sealed class FastLZBlockCompressor : IBlockCompressor, IThreadSafeBlockCompressor
 	{
 		private const int PAYLOAD_LEN1 = 31; //2 ^ 5 - 1 = 5 bits / 8 bit-header;
 		private const int PAYLOAD_LEN2 = 8191; //2 ^ 13 - 1 = 13 bits / 16 bit-header;
 		private const int PAYLOAD_LEN3 = 2097151; //2 ^ 21 - 1 = 21 bits / 24 bit-header;
 		private const int MAX_BLOCK_SZ = 536870911; //2 ^ 29 - 1 = 29 bits / 32-bit header;
-		private readonly FastLZ fastLZ = new FastLZ();
 		private readonly int maxBlockSz;
 
-		public FastLZBlockCompressor(int maxBlockSz=MAX_BLOCK_SZ)
+		private readonly Func<byte[], int, int, byte[], int, int> fastLZDecompress;
+		private readonly Func<byte[], int, int, byte[], int, int> fastLZCompress;
+
+		public FastLZBlockCompressor(int maxBlockSz = MAX_BLOCK_SZ, bool useThreadSafeApproach = false)
 		{
 			if (maxBlockSz > MAX_BLOCK_SZ || maxBlockSz < 0)
 				throw new ArgumentException("maxBlockSz is too big or < 0 ! Upper limit is " + MAX_BLOCK_SZ.ToString(), nameof(maxBlockSz));
 			this.maxBlockSz = maxBlockSz;
+			if(useThreadSafeApproach)
+			{
+				fastLZCompress = FastLZStatic.Compress;
+				fastLZDecompress = FastLZStatic.Decompress;
+			}
+			else
+			{
+				var fastLZ = new FastLZ();
+				fastLZCompress = fastLZ.Compress;
+				fastLZDecompress = fastLZ.Decompress;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,7 +101,7 @@ namespace DarkCaster.Compression.FastLZ
 			if (inSz > maxBlockSz)
 				throw new ArgumentException("inSz parameter too big, maximum supported input block size is " + maxBlockSz.ToString(), nameof(inSz));
 			var hdrSz=CalculateHeaderLength(inSz);
-			var comprSz = inSz > 15 ? fastLZ.Compress(input, inOffset, inSz, output, outOffset + hdrSz) : inSz;
+			var comprSz = inSz > 15 ? fastLZCompress(input, inOffset, inSz, output, outOffset + hdrSz) : inSz;
 			bool useCompr = true;
 			if (comprSz >= inSz)
 			{
@@ -100,16 +113,21 @@ namespace DarkCaster.Compression.FastLZ
 			return comprSz + hdrSz;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int ReadMetadataSZ(byte[] buffer, int offset = 0)
+		{
+			return (buffer[offset] >> 5 & 0X3) + 1;
+		}
+
 		public int DecodeComprBlockSZ(byte[] buffer, int offset=0)
 		{
-			var hdrLen = DecodeMetadataSZ(buffer, offset);
+			var hdrLen = ReadMetadataSZ(buffer, offset);
 			return DecodeComprDataSz(buffer, offset, hdrLen) + hdrLen;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int DecodeMetadataSZ(byte[] buffer, int offset=0)
 		{
-			return (buffer[offset] >> 5 & 0X3) + 1;
+			return ReadMetadataSZ(buffer, offset);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,7 +156,7 @@ namespace DarkCaster.Compression.FastLZ
 				Buffer.BlockCopy(input, inOffset + headerSz, output, outOffset, comprSz);
 				return comprSz;
 			}
-			return fastLZ.Decompress(input, inOffset + headerSz, comprSz, output, outOffset);
+			return fastLZDecompress(input, inOffset + headerSz, comprSz, output, outOffset);
 		}
 
 		public int MaxBlockSZ { get { return maxBlockSz; } }
