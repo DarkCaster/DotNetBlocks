@@ -1,4 +1,4 @@
-﻿// IBlockCompressor.cs
+﻿// IThreadSafeBlockCompressor.cs
 //
 // The MIT License (MIT)
 //
@@ -28,10 +28,10 @@ namespace DarkCaster.Compression
 	/// <summary>
 	/// Interface for data compression class.
 	/// Works with independend blocks of data.
-	/// Not thread safe, class instance may keep internall buffers to improve performance.
-	/// Total memory consumption by clas instance may vary for different compression algorhitms and settings.
+	/// Thread safe (should allocate all internall buffers dynamycally)
+	/// May cause higher heap and GC pressure than non thread safe IBlockCompressor.
 	/// </summary>
-	public interface IBlockCompressor
+	public interface IThreadSafeBlockCompressor
 	{
 		/// <summary>
 		/// Compess specified amount of data from input buffer, and saves compressed data to output buffer.
@@ -66,12 +66,12 @@ namespace DarkCaster.Compression
 		int MaxBlockSZ { get; }
 
 		/// <summary>
-		/// Decodes full size of compressed data block, written to <paramref name="buffer"/> at selected <paramref name="offset"/> 
+		/// Decodes full size of compressed data block, written to <paramref name="buffer"/> at selected <paramref name="offset"/>
 		/// </summary>
 		/// <returns>Full size of compressed data block, including all service metadata</returns>
 		/// <param name="buffer">Buffer that contains full data block with compressed data</param>
 		/// <param name="offset">Offset</param>
-		int DecodeComprBlockSZ(byte[] buffer, int offset=0);
+		int DecodeComprBlockSZ(byte[] buffer, int offset = 0);
 
 		/// <summary>
 		/// Decodes the size of the service metadata from data block with compressed data.
@@ -80,7 +80,7 @@ namespace DarkCaster.Compression
 		/// <returns>The metadata size.</returns>
 		/// <param name="buffer">Buffer.</param>
 		/// <param name="offset">Offset.</param>
-		int DecodeMetadataSZ(byte[] buffer, int offset=0);
+		int DecodeMetadataSZ(byte[] buffer, int offset = 0);
 
 		/// <summary>
 		/// Calculate maximum size in bytes needed for output buffer in order to succsesfully compress data for specified input buffer size.
