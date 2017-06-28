@@ -131,6 +131,7 @@
     <Compile Include="Compression\IBlockCompressorFactory.cs" />
     <Compile Include="Compression\FastLZ\FastLZBlockCompressorFactory.cs" />
     <Compile Include="Compression\IThreadSafeBlockCompressor.cs" />
+    <Compile Include="Compression\MultiblockCompressionHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
