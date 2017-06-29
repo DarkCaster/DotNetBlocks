@@ -182,5 +182,14 @@ namespace Tests
 			objSerializer=(ISerializationHelper)genSerializer;
 			SerializationHelpersThreadSafetyTests.ThreadSafetyTest(testObjects,objSerializer,genSerializer,iterationsCount);
 		}
+
+		[Test]
+		public void BinaryLargeObjectWithOffset()
+		{
+			SerializationHelpersTests.LargeObjectSerializaionTests(new MsgPackSerializationHelperFactory(MsgPackMode.Storage), 16384 * 1024, 8192);
+			SerializationHelpersTests.LargeObjectSerializaionTests(new MsgPackSerializationHelperFactory(MsgPackMode.StorageCheckSum), 16384 * 1024, 8192);
+			SerializationHelpersTests.LargeObjectSerializaionTests(new MsgPackSerializationHelperFactory(MsgPackMode.Transfer), 16384 * 1024, 8192);
+			SerializationHelpersTests.LargeObjectSerializaionTests(new MsgPackSerializationHelperFactory(MsgPackMode.TransferCheckSum), 16384 * 1024, 8192);
+		}
 	}
 }

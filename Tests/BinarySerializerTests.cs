@@ -141,5 +141,11 @@ namespace Tests
 			var objSerializer=(ISerializationHelper)genSerializer;
 			SerializationHelpersThreadSafetyTests.ThreadSafetyTest(testObjects,objSerializer,genSerializer,iterationsCount);
 		}
+
+		[Test]
+		public void BinaryLargeObjectWithOffset()
+		{
+			SerializationHelpersTests.LargeObjectSerializaionTests(new BinarySerializationHelperFactory(), 16384 * 1024, 8192);
+		}
 	}
 }
