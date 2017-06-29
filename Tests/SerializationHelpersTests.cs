@@ -168,6 +168,47 @@ namespace Tests
 			Assert.Throws(expectedException, () => factory.GetHelper<PSFTestClass>());
 			Assert.Throws(expectedException, () => factory.GetHelper(typeof(PSFTestClass)));
 		}
+
+		[Serializable]
+		public class LargeDataContainer
+		{
+			public byte[] data = null;
+		}
+
+		public static void LargeObjectSerializaionTests(ISerializationHelperFactory factory, int testDataSize, int maxOffset)
+		{
+			var test = new LargeDataContainer();
+			test.data = new byte[testDataSize];
+			CommonBlockCompressorTests.GenerateComprData(test.data);
+
+			var serializer = factory.GetHelper<LargeDataContainer>();
+			var deserializer = factory.GetHelper<LargeDataContainer>();
+			var data = serializer.Serialize(test);
+			var restore = deserializer.Deserialize(data);
+
+			Assert.AreEqual(test.data, restore.data);
+			var serializer2 = factory.GetHelper(typeof(LargeDataContainer));
+			var deserializer2 = factory.GetHelper(typeof(LargeDataContainer));
+			var data2 = serializer2.SerializeObj(test);
+
+			Assert.AreEqual(data, data2);
+			var restore2 = deserializer2.DeserializeObj(data);
+			Assert.AreEqual(test.data, ((LargeDataContainer)restore2).data);
+
+			var dataWithOffset1 = new byte[data.Length + maxOffset];
+			var dataWithOffset2 = new byte[data.Length + maxOffset];
+
+			var offset = new Random().Next(0, maxOffset);
+			var len1 = serializer.Serialize(test, dataWithOffset1, offset);
+			var len2 = serializer2.SerializeObj(test,dataWithOffset2, offset);
+			Assert.AreEqual(dataWithOffset1, dataWithOffset2);
+
+			var restoreWithOffset1 = serializer.Deserialize(dataWithOffset1, offset, len1);
+			var restoreWithOffset2 = (LargeDataContainer)serializer2.DeserializeObj(dataWithOffset1, offset, len1);
+
+			Assert.AreEqual(test.data, restoreWithOffset1.data);
+			Assert.AreEqual(test.data, restoreWithOffset2.data);
+		}
 	}
 	
 	public static class SerializationHelpersThreadSafetyTests
