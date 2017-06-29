@@ -31,21 +31,78 @@ namespace DarkCaster.Compression
 		private delegate int CompressDelegate(byte[] input, int inSz, int inOffset, byte[] output, int outOffset);
 		private delegate int DecompressDelegate(byte[] input, int inOffset, byte[] output, int outOffset);
 		private delegate int GetOutBufSZDelegate(int inputSZ);
+		private delegate int DecodeComprBlockSZ(byte[] buffer, int offset);
+
+		private const int PAYLOAD_LEN1 = 63; //2 ^ 6 - 1 = 6 bits / 8 bit-header;
+		private const int PAYLOAD_LEN2 = 16383; //2 ^ 14 - 1 = 14 bits / 16 bit-header;
+		private const int PAYLOAD_LEN3 = 4194303; //2 ^ 22 - 1 = 22 bits / 24 bit-header;
+		private const int PAYLOAD_LEN4 = 1073741823; //2 ^ 30 - 1 = 30 bits / 32-bit header;
 
 		public static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, IThreadSafeBlockCompressor compressor)
 		{
-			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress);
+			var maxBlockSZ = compressor.MaxBlockSZ;
+			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress, maxBlockSZ, compressor.GetOutBuffSZ(maxBlockSZ));
 		}
 
 		public static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, IBlockCompressor compressor)
 		{
-			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress);
+			var maxBlockSZ = compressor.MaxBlockSZ;
+			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress, maxBlockSZ, compressor.GetOutBuffSZ(maxBlockSZ));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, CompressDelegate compress)
+		private static int CalculateHeaderSz(int blockCount)
 		{
-			throw new NotImplementedException("TODO");
+			if(blockCount <= PAYLOAD_LEN1)
+				return 1;
+			if(blockCount <= PAYLOAD_LEN2)
+				return 2;
+			if(blockCount <= PAYLOAD_LEN3)
+				return 3;
+			if(blockCount <= PAYLOAD_LEN4)
+				return 4;
+			throw new Exception(string.Format("blockCount > PAYLOAD_LEN4: {0} > {1}", blockCount, PAYLOAD_LEN4));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void WriteHeader(byte[] buffer, int offset, int blocksNumber, int hdrsz)
+		{
+			buffer[offset] = (byte)(blocksNumber & 0x3F);
+			if(hdrsz == 1)
+				return;
+			buffer[offset + 1] = (byte)((blocksNumber >> 6) & 0xFF);
+			if(hdrsz == 2)
+			{
+				buffer[offset] |= 0x40;
+				return;
+			}
+			buffer[offset + 2] = (byte)((blocksNumber >> 14) & 0xFF);
+			if(hdrsz == 3)
+			{
+				buffer[offset] |= 0x80;
+				return;
+			}
+			buffer[offset + 3] = (byte)((blocksNumber >> 22) & 0xFF);
+			buffer[offset] |= 0xC0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, CompressDelegate compress, int maxBlockSZ, int maxBlockOutSZ)
+		{
+			//calculate how many blocks do we need
+			int fullBlocksCnt = inSz / maxBlockSZ;
+			int remain = inSz % maxBlockSZ;
+			var hdrSize = CalculateHeaderSz(fullBlocksCnt + 1);
+			//calculate total maximum size of output
+			int maxOutSz = maxBlockOutSZ * (fullBlocksCnt + 1);
+			var outSz = hdrSize;
+			//compress data, block by block
+			for(int i = 0; i < fullBlocksCnt; ++i)
+				outSz += compress(input, maxBlockSZ, inOffset + i * maxBlockSZ, output, outOffset + outSz);
+			outSz += compress(input, remain, inOffset + fullBlocksCnt * maxBlockSZ, output, outOffset + outSz);
+			//write header to outSz
+			WriteHeader(output, outOffset, fullBlocksCnt + 1, hdrSize);
+			return outSz;
 		}
 
 		public static int Decompress(byte[] input, int inOffset, byte[] output, int outOffset, IThreadSafeBlockCompressor compressor)
@@ -64,9 +121,31 @@ namespace DarkCaster.Compression
 			throw new NotImplementedException("TODO");
 		}
 
-		public static int DecodeComprBlockSZ(byte[] buffer, int offset = 0)
+		public static int DecodeComprPayloadSZ(byte[] buffer, int offset, IThreadSafeBlockCompressor compressor)
 		{
-			throw new NotImplementedException("TODO");
+			return DecodeComprPayloadSZ(buffer, offset, compressor.DecodeComprBlockSZ);
+		}
+
+		public static int DecodeComprPayloadSZ(byte[] buffer, int offset, IBlockCompressor compressor)
+		{
+			return DecodeComprPayloadSZ(buffer, offset, compressor.DecodeComprBlockSZ);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int DecodeComprPayloadSZ(byte[] buffer, int offset, DecodeComprBlockSZ decodeBSZ)
+		{
+			var hdrLen =(buffer[offset] >> 6 & 0X3) + 1;
+			int bcnt = buffer[offset] & 0x3F;
+			int shift_val = 6;
+			for(int shift = 1; shift < hdrLen; ++shift)
+			{
+				bcnt |= buffer[offset + shift] << shift_val;
+				shift_val += 8;
+			}
+			int payloadLen = hdrLen;
+			for(int b = 0; b < bcnt; ++b)
+				payloadLen += decodeBSZ(buffer, offset + payloadLen);
+			return payloadLen;
 		}
 
 		public static int GetOutBuffSZ(int inputSZ, IThreadSafeBlockCompressor compressor)
