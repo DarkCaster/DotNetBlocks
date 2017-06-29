@@ -92,16 +92,17 @@ namespace DarkCaster.Compression
 			//calculate how many blocks do we need
 			int fullBlocksCnt = inSz / maxBlockSZ;
 			int remain = inSz % maxBlockSZ;
-			var hdrSize = CalculateHeaderSz(fullBlocksCnt + 1);
-			//calculate total maximum size of output
-			int maxOutSz = maxBlockOutSZ * (fullBlocksCnt + 1);
+			int remainBlocks = remain > 0 ? 1 : 0;
+			var hdrSize = CalculateHeaderSz(fullBlocksCnt + remainBlocks);
+			//setup output counter
 			var outSz = hdrSize;
 			//compress data, block by block
 			for(int i = 0; i < fullBlocksCnt; ++i)
 				outSz += compress(input, maxBlockSZ, inOffset + i * maxBlockSZ, output, outOffset + outSz);
-			outSz += compress(input, remain, inOffset + fullBlocksCnt * maxBlockSZ, output, outOffset + outSz);
+			if(remain > 0)
+				outSz += compress(input, remain, inOffset + fullBlocksCnt * maxBlockSZ, output, outOffset + outSz);
 			//write header to outSz
-			WriteHeader(output, outOffset, fullBlocksCnt + 1, hdrSize);
+			WriteHeader(output, outOffset, fullBlocksCnt + remainBlocks, hdrSize);
 			return outSz;
 		}
 
@@ -134,7 +135,7 @@ namespace DarkCaster.Compression
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int DecodeComprPayloadSZ(byte[] buffer, int offset, DecodeComprBlockSZ decodeBSZ)
 		{
-			var hdrLen =(buffer[offset] >> 6 & 0X3) + 1;
+			var hdrLen = (buffer[offset] >> 6 & 0X3) + 1;
 			int bcnt = buffer[offset] & 0x3F;
 			int shift_val = 6;
 			for(int shift = 1; shift < hdrLen; ++shift)
@@ -150,18 +151,25 @@ namespace DarkCaster.Compression
 
 		public static int GetOutBuffSZ(int inputSZ, IThreadSafeBlockCompressor compressor)
 		{
-			return GetOutBuffSZ(inputSZ, compressor.GetOutBuffSZ);
+			int maxBlockSZ = compressor.MaxBlockSZ;
+			return GetOutBuffSZ(inputSZ, maxBlockSZ, compressor.GetOutBuffSZ(maxBlockSZ));
 		}
 
 		public static int GetOutBuffSZ(int inputSZ, IBlockCompressor compressor)
 		{
-			return GetOutBuffSZ(inputSZ, compressor.GetOutBuffSZ);
+			int maxBlockSZ = compressor.MaxBlockSZ;
+			return GetOutBuffSZ(inputSZ, maxBlockSZ, compressor.GetOutBuffSZ(maxBlockSZ));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int GetOutBuffSZ(int inputSZ, GetOutBufSZDelegate getOutBufSZ)
+		private static int GetOutBuffSZ(int inputSZ, int maxBlockSZ, int maxOutBlockSZ)
 		{
-			throw new NotImplementedException("TODO");
+			//calculate how many blocks do we need
+			int fullBlocksCnt = inputSZ / maxBlockSZ;
+			int remain = inputSZ % maxBlockSZ;
+			int remainBlocks = remain > 0 ? 1 : 0;
+			var hdrSize = CalculateHeaderSz(fullBlocksCnt + remainBlocks);
+			return hdrSize + maxOutBlockSZ * (fullBlocksCnt + remainBlocks);
 		}
 	}
 }
