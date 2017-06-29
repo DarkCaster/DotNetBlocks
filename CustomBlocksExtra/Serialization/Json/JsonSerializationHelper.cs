@@ -24,30 +24,40 @@
 //
 
 using System;
-using System.IO;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 using DarkCaster.Serialization.Private;
+using DarkCaster.Compression;
+using DarkCaster.Compression.FastLZ;
 
 namespace DarkCaster.Serialization.Json
 {
 	public sealed class JsonSerializationHelper<T> : ISerializationHelper, ISerializationHelper<T>
 	{
+		private readonly IThreadSafeBlockCompressor compressor;
+
+		public JsonSerializationHelper()
+		{
+			this.compressor = new FastLZBlockCompressor(16384, true);
+		}
+
+		public JsonSerializationHelper(IBlockCompressorFactory compFactory, int blockSz=16384)
+		{
+			throw new NotImplementedException("TODO");
+		}
+
 		public byte[] SerializeObj(object target)
 		{
+			var str = SerializeObjToString(target);
 			try
 			{
-				if(!(target is T))
-					throw new ArgumentException("Cannot serialize object with wrong type", "target");
-				using(var stream = new MemoryStream())
-				{
-					using(var writer = new BsonWriter(stream))
-					{
-						var serializer = new JsonSerializer();
-						serializer.Serialize(writer, target);
-						return stream.ToArray();
-					}
-				}
+				var data = Encoding.UTF8.GetBytes(str);
+				var output = new byte[MultiblockCompressionHelper.GetOutBuffSZ(data.Length, compressor)];
+				var outLen = MultiblockCompressionHelper.Compress(data, data.Length, 0, output, 0, compressor);
+				var result = new byte[outLen];
+				Buffer.BlockCopy(output, 0, result, 0, outLen);
+				return result;
 			}
 			catch(Exception ex)
 			{
@@ -57,19 +67,11 @@ namespace DarkCaster.Serialization.Json
 
 		public int SerializeObj(object target, byte[] dest, int offset = 0)
 		{
+			var str = SerializeObjToString(target);
 			try
 			{
-				if(!(target is T))
-					throw new ArgumentException("Cannot serialize object with wrong type", "target");
-				using(var stream = new ByteWriterStream(dest, offset))
-				{
-					using(var writer = new BsonWriter(stream))
-					{
-						var serializer = new JsonSerializer();
-						serializer.Serialize(writer, target);
-						return (int)stream.Length;
-					}
-				}
+				var data = Encoding.UTF8.GetBytes(str);
+				return MultiblockCompressionHelper.Compress(data, data.Length, 0, dest, offset, compressor);
 			}
 			catch(Exception ex)
 			{
@@ -91,12 +93,7 @@ namespace DarkCaster.Serialization.Json
 		{
 			try
 			{
-				using(var stream = new ByteReaderStream(data, offset, len))
-				using(var reader = new BsonReader(stream))
-				{
-					var serializer = new JsonSerializer();
-					return serializer.Deserialize<T>(reader);
-				}
+				throw new NotImplementedException("TODO");
 			}
 			catch(Exception ex)
 			{
@@ -131,7 +128,7 @@ namespace DarkCaster.Serialization.Json
 			try
 			{
 				if(!(target is T))
-					throw new ArgumentException("Cannot serialize object with wrong type", "target");
+					throw new ArgumentException("Cannot serialize object with wrong type", nameof(target));
 				return JsonConvert.SerializeObject(target, Formatting.Indented);
 			}
 			catch(Exception ex)
