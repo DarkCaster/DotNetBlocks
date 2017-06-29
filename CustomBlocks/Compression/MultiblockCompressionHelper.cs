@@ -1,4 +1,4 @@
-﻿// MultiblockCompressionHelper.cs
+﻿﻿// MultiblockCompressionHelper.cs
 //
 // The MIT License (MIT)
 //
@@ -93,16 +93,20 @@ namespace DarkCaster.Compression
 			int fullBlocksCnt = inSz / maxBlockSZ;
 			int remain = inSz % maxBlockSZ;
 			int remainBlocks = remain > 0 ? 1 : 0;
-			var hdrSize = CalculateHeaderSz(fullBlocksCnt + remainBlocks);
+			//calculate size of the headers - block count and last block length
+			var blkCountHdrSize = CalculateHeaderSz(fullBlocksCnt + remainBlocks);
+			var lastBlkLenHdrSize = CalculateHeaderSz(remain);
 			//setup output counter
-			var outSz = hdrSize;
+			var outSz = blkCountHdrSize + lastBlkLenHdrSize;
 			//compress data, block by block
 			for(int i = 0; i < fullBlocksCnt; ++i)
 				outSz += compress(input, maxBlockSZ, inOffset + i * maxBlockSZ, output, outOffset + outSz);
 			if(remain > 0)
 				outSz += compress(input, remain, inOffset + fullBlocksCnt * maxBlockSZ, output, outOffset + outSz);
-			//write header to outSz
-			WriteHeader(output, outOffset, fullBlocksCnt + remainBlocks, hdrSize);
+			//write block count header to outSz
+			WriteHeader(output, outOffset, fullBlocksCnt + remainBlocks, blkCountHdrSize);
+			//write last block length header
+			WriteHeader(output, outOffset + blkCountHdrSize, remain, lastBlkLenHdrSize);
 			return outSz;
 		}
 
@@ -119,7 +123,7 @@ namespace DarkCaster.Compression
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int Decompress(byte[] input, int inOffset, byte[] output, int outOffset, DecompressDelegate decompress, DecodeComprBlockSZ decodeBSZ)
 		{
-			//read header length
+			//read blocks count length
 			var hdrLen = (input[inOffset] >> 6 & 0X3) + 1;
 			//read compressed blocks count
 			int bcnt = input[inOffset] & 0x3F;
@@ -129,6 +133,8 @@ namespace DarkCaster.Compression
 				bcnt |= input[inOffset + shift] << shift_val;
 				shift_val += 8;
 			}
+			//read length of the header with uncompressed last block size
+			hdrLen += (input[inOffset + hdrLen] >> 6 & 0X3) + 1;
 			//setup counters
 			int decLen = 0;
 			int inPos = inOffset + hdrLen;
@@ -154,15 +160,19 @@ namespace DarkCaster.Compression
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int DecodeComprPayloadSZ(byte[] buffer, int offset, DecodeComprBlockSZ decodeBSZ)
 		{
-			var hdrLen = (buffer[offset] >> 6 & 0X3) + 1;
+			//decode 1-st header size
+			var payloadLen = (buffer[offset] >> 6 & 0X3) + 1;
+			//decode block count from 1-st header
 			int bcnt = buffer[offset] & 0x3F;
 			int shift_val = 6;
-			for(int shift = 1; shift < hdrLen; ++shift)
+			for(int shift = 1; shift < payloadLen; ++shift)
 			{
 				bcnt |= buffer[offset + shift] << shift_val;
 				shift_val += 8;
 			}
-			int payloadLen = hdrLen;
+			//append 2-nd header size
+			payloadLen += (buffer[offset + payloadLen] >> 6 & 0X3) + 1;
+			//append compressed sizes of all data blocks
 			for(int b = 0; b < bcnt; ++b)
 				payloadLen += decodeBSZ(buffer, offset + payloadLen);
 			return payloadLen;
@@ -187,6 +197,7 @@ namespace DarkCaster.Compression
 			int remain = inputSZ % maxBlockSZ;
 			int remainBlocks = remain > 0 ? 1 : 0;
 			var hdrSize = CalculateHeaderSz(fullBlocksCnt + remainBlocks);
+			hdrSize += CalculateHeaderSz(remain);
 			return hdrSize + maxOutBlockSZ * (fullBlocksCnt + remainBlocks);
 		}
 	}
