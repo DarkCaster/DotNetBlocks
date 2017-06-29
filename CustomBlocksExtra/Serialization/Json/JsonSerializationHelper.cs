@@ -91,14 +91,18 @@ namespace DarkCaster.Serialization.Json
 
 		public T Deserialize(byte[] data, int offset = 0, int len = 0)
 		{
+			string str=null;
 			try
 			{
-				throw new NotImplementedException("TODO");
+				var bytes = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(data, offset, compressor)];
+				MultiblockCompressionHelper.Decompress(data, offset, bytes, 0, compressor);
+				str=Encoding.UTF8.GetString(bytes);
 			}
 			catch(Exception ex)
 			{
 				throw new JsonDeserializationException(typeof(T), ex);
 			}
+			return Deserialize(str);
 		}
 
 		public object DeserializeObj(byte[] data, int offset = 0, int len = 0)
