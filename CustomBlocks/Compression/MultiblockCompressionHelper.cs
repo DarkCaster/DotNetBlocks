@@ -108,18 +108,37 @@ namespace DarkCaster.Compression
 
 		public static int Decompress(byte[] input, int inOffset, byte[] output, int outOffset, IThreadSafeBlockCompressor compressor)
 		{
-			return Decompress(input, inOffset, output, outOffset, compressor.Decompress);
+			return Decompress(input, inOffset, output, outOffset, compressor.Decompress, compressor.DecodeComprBlockSZ);
 		}
 
 		public static int Decompress(byte[] input, int inOffset, byte[] output, int outOffset, IBlockCompressor compressor)
 		{
-			return Decompress(input, inOffset, output, outOffset, compressor.Decompress);
+			return Decompress(input, inOffset, output, outOffset, compressor.Decompress, compressor.DecodeComprBlockSZ);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int Decompress(byte[] input, int inOffset, byte[] output, int outOffset, DecompressDelegate decompress)
+		private static int Decompress(byte[] input, int inOffset, byte[] output, int outOffset, DecompressDelegate decompress, DecodeComprBlockSZ decodeBSZ)
 		{
-			throw new NotImplementedException("TODO");
+			//read header length
+			var hdrLen = (input[inOffset] >> 6 & 0X3) + 1;
+			//read compressed blocks count
+			int bcnt = input[inOffset] & 0x3F;
+			int shift_val = 6;
+			for(int shift = 1; shift < hdrLen; ++shift)
+			{
+				bcnt |= input[inOffset + shift] << shift_val;
+				shift_val += 8;
+			}
+			//setup counters
+			int decLen = 0;
+			int inPos = inOffset + hdrLen;
+			//decompress data block by block
+			for(int b = 0; b < bcnt; ++b)
+			{
+				decLen += decompress(input, inPos, output, outOffset + decLen);
+				inPos += decodeBSZ(input, inPos);
+			}
+			return decLen;
 		}
 
 		public static int DecodeComprPayloadSZ(byte[] buffer, int offset, IThreadSafeBlockCompressor compressor)
@@ -164,7 +183,6 @@ namespace DarkCaster.Compression
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int GetOutBuffSZ(int inputSZ, int maxBlockSZ, int maxOutBlockSZ)
 		{
-			//calculate how many blocks do we need
 			int fullBlocksCnt = inputSZ / maxBlockSZ;
 			int remain = inputSZ % maxBlockSZ;
 			int remainBlocks = remain > 0 ? 1 : 0;
