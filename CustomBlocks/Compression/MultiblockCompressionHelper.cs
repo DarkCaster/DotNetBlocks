@@ -41,13 +41,13 @@ namespace DarkCaster.Compression
 		public static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, IThreadSafeBlockCompressor compressor)
 		{
 			var maxBlockSZ = compressor.MaxBlockSZ;
-			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress, maxBlockSZ, compressor.GetOutBuffSZ(maxBlockSZ));
+			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress, maxBlockSZ);
 		}
 
 		public static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, IBlockCompressor compressor)
 		{
 			var maxBlockSZ = compressor.MaxBlockSZ;
-			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress, maxBlockSZ, compressor.GetOutBuffSZ(maxBlockSZ));
+			return Compress(input, inSz, inOffset, output, outOffset, compressor.Compress, maxBlockSZ);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -87,7 +87,7 @@ namespace DarkCaster.Compression
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, CompressDelegate compress, int maxBlockSZ, int maxBlockOutSZ)
+		private static int Compress(byte[] input, int inSz, int inOffset, byte[] output, int outOffset, CompressDelegate compress, int maxBlockSZ)
 		{
 			//calculate how many blocks do we need
 			int fullBlocksCnt = inSz / maxBlockSZ;
@@ -176,6 +176,42 @@ namespace DarkCaster.Compression
 			for(int b = 0; b < bcnt; ++b)
 				payloadLen += decodeBSZ(buffer, offset + payloadLen);
 			return payloadLen;
+		}
+
+		public static int DecodeDecomprSZ(byte[] buffer, int offset,IThreadSafeBlockCompressor compressor)
+		{
+			return DecodeDecomprSZ(buffer, offset, compressor.MaxBlockSZ);
+		}
+
+		public static int DecodeDecomprSZ(byte[] buffer, int offset,IBlockCompressor compressor)
+		{
+			return DecodeDecomprSZ(buffer, offset, compressor.MaxBlockSZ);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int DecodeDecomprSZ(byte[] buffer, int offset, int maxBSZ)
+		{
+			//decode 1-st header size
+			var hdr1Len = (buffer[offset] >> 6 & 0X3) + 1;
+			//decode block count from 1-st header
+			int bcnt = buffer[offset] & 0x3F;
+			int shift_val = 6;
+			for(int shift = 1; shift < hdr1Len; ++shift)
+			{
+				bcnt |= buffer[offset + shift] << shift_val;
+				shift_val += 8;
+			}
+			//append 2-nd header size
+			var hdr2Len = (buffer[offset + hdr1Len] >> 6 & 0X3) + 1;
+			//decode last block length from 2-nd header
+			int blen = buffer[offset + hdr1Len] & 0x3F;
+			shift_val = 6;
+			for(int shift = 1; shift < hdr2Len; ++shift)
+			{
+				blen |= buffer[offset + hdr1Len + shift] << shift_val;
+				shift_val += 8;
+			}
+			return bcnt * maxBSZ + blen;
 		}
 
 		public static int GetOutBuffSZ(int inputSZ, IThreadSafeBlockCompressor compressor)
