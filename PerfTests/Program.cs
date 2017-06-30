@@ -33,6 +33,8 @@ namespace PerfTests
 		{
 			FastLZSpeedTests.CompressionSpeed();
 			FastLZSpeedTests.DecompressionSpeed();
+			FastLZSpeedTests.RelativeCompressSpeed();
+			FastLZSpeedTests.RelativeDecompressSpeed();
 			AsyncRunnerSpeedTests.DirectCalls();
 			AsyncRunnerSpeedTests.AsyncRunnerCalls();
 			MMHashSpeedTest.Test();
