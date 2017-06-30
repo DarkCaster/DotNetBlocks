@@ -24,6 +24,7 @@
 //
 using System;
 using System.Diagnostics;
+using DarkCaster.Compression;
 using DarkCaster.Compression.FastLZ;
 
 namespace PerfTests
@@ -322,6 +323,129 @@ namespace PerfTests
 				var speed2 = total / diff;
 				double ratio = speed2 / speed;
 				Console.WriteLine(string.Format("Decompress (mode={0}): FastLZBlockCompressor/FastLZ speed ratio=={1:0.#########}", mode, ratio));
+			}
+		}
+
+		public static void MultiblockRelativeCompressSpeed()
+		{
+			var sw = new Stopwatch();
+			sw.Start();
+			sw.Stop();
+
+			for(int mode = 0; mode < 5; ++mode)
+			{
+				var fastLz = new FastLZ();
+				int iter = 2000;
+				int blockSz = 262144;
+
+				var input = new byte[blockSz];
+				var output = new byte[input.Length * 2];
+
+				if(mode == 0)
+					GenerateNonComprData(input);
+				else if(mode == 1)
+					GenerateComprData(input);
+				else if(mode == 2)
+					GenerateHighComprData(input);
+				else if(mode == 3)
+				{
+					var val = (byte)random.Next(0, 256);
+					for(int i = 0; i < input.Length; ++i)
+						input[i] = val;
+				}
+				else if(mode == 4)
+				{
+					input = Tests.FastLZData.SampleInput;
+					output = new byte[input.Length * 2];
+					blockSz = input.Length;
+				}
+
+				sw.Reset();
+				sw.Start();
+				for(int i = 0; i < iter; ++i)
+					fastLz.Compress(input, 0, input.Length, output, 0);
+				sw.Stop();
+
+				var diff = sw.Elapsed.TotalSeconds;
+				var total = (long)iter * blockSz;
+				var speed = total / diff;
+
+				IBlockCompressor compressor = new FastLZBlockCompressor(1024, false);
+
+				sw.Reset();
+				sw.Start();
+				for(int i = 0; i < iter; ++i)
+					MultiblockCompressionHelper.Compress(input, input.Length, 0, output, 0, compressor);
+				sw.Stop();
+
+				diff = sw.Elapsed.TotalSeconds;
+				total = (long)iter * blockSz;
+				var speed2 = total / diff;
+				double ratio = speed2 / speed;
+				Console.WriteLine(string.Format("Compress (mode={0}): MultiblockCompressionHelper/FastLZ speed ratio=={1:0.#########}", mode, ratio));
+			}
+		}
+
+		public static void MultiblockRelativeDecompressSpeed()
+		{
+			var sw = new Stopwatch();
+			sw.Start();
+			sw.Stop();
+
+			for(int mode = 0; mode < 5; ++mode)
+			{
+				var fastLz = new FastLZ();
+				int iter = 8000;
+				int blockSz = 262144;
+
+				var input = new byte[blockSz];
+				var output = new byte[input.Length * 2];
+
+				if(mode == 0)
+					GenerateNonComprData(input);
+				else if(mode == 1)
+					GenerateComprData(input);
+				else if(mode == 2)
+					GenerateHighComprData(input);
+				else if(mode == 3)
+				{
+					var val = (byte)random.Next(0, 256);
+					for(int i = 0; i < input.Length; ++i)
+						input[i] = val;
+				}
+				else if(mode == 4)
+				{
+					input = Tests.FastLZData.SampleInput;
+					output = new byte[input.Length * 2];
+					blockSz = input.Length;
+				}
+
+				var len = fastLz.Compress(input, 0, input.Length, output, 0);
+
+				sw.Reset();
+				sw.Start();
+				for(int i = 0; i < iter; ++i)
+					fastLz.Decompress(output, 0, len, input, 0);
+				sw.Stop();
+
+				var diff = sw.Elapsed.TotalSeconds;
+				var total = (long)iter * blockSz;
+				var speed = total / diff;
+
+				IBlockCompressor compressor = new FastLZBlockCompressor(1024, false);
+				MultiblockCompressionHelper.Compress(input, input.Length, 0, output, 0, compressor);
+
+				sw.Reset();
+				sw.Start();
+				for(int i = 0; i < iter; ++i)
+					MultiblockCompressionHelper.Decompress(output, 0, input, 0, compressor);
+				sw.Stop();
+
+				diff = sw.Elapsed.TotalSeconds;
+				total = (long)iter * blockSz;
+				var speed2 = total / diff;
+				double ratio = speed2 / speed;
+				Console.WriteLine(string.Format("Decompress (mode={0}): MultiblockCompressionHelper/FastLZ speed ratio=={1:0.#########}", mode, ratio));
 			}
 		}
 	}
