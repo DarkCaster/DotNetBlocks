@@ -274,5 +274,23 @@ namespace Tests
 			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(output, 0, input, bsz));
 			Assert.Throws(typeof(ArgumentException), () => compressor.Decompress(output, 0, input, -1));
 		}
+
+		public static void Test_MultiblockHelper(IBlockCompressor compressor, int dataLen)
+		{
+			var input = new byte[dataLen];
+			GenerateComprData(input);
+			var outputLen = MultiblockCompressionHelper.GetOutBuffSZ(dataLen, compressor);
+			Assert.Greater(outputLen, dataLen);
+			Assert.Greater(outputLen, compressor.GetOutBuffSZ(dataLen));
+			var output = new byte[outputLen];
+			var comprLen = MultiblockCompressionHelper.Compress(input, dataLen, 0, output, 0, compressor);
+			Assert.Less(comprLen, outputLen);
+			Assert.Less(comprLen, dataLen);
+			var decOutput = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(output, 0, compressor)];
+			Assert.AreEqual(decOutput.Length, dataLen);
+			var decLen=MultiblockCompressionHelper.Decompress(output,0,decOutput,0,compressor);
+			Assert.AreEqual(dataLen, decLen);
+			Assert.AreEqual(input, decOutput);
+		}
 	}
 }

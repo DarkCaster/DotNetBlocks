@@ -329,5 +329,12 @@ namespace Tests
 			var compressor = new FastLZBlockCompressor(8192);
 			CommonBlockCompressorTests.Test_IncorrectParams(compressor);
 		}
+
+		[Test]
+		public void MultiblockHelper()
+		{
+			var compressor = new FastLZBlockCompressor(1024);
+			CommonBlockCompressorTests.Test_MultiblockHelper(compressor, 262144);
+		}
 	}
 }
