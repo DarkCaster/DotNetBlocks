@@ -204,11 +204,15 @@ namespace PerfTests
 
 		public static void RelativeCompressSpeed()
 		{
+			var sw = new Stopwatch();
+			sw.Start();
+			sw.Stop();
+
 			for(int mode = 0; mode < 5; ++mode)
 			{
 				var fastLz = new FastLZ();
-				int iter = 5000;
-				int blockSz = 16384;
+				int iter = 20000;
+				int blockSz = 4096;
 
 				var input = new byte[blockSz];
 				var output = new byte[input.Length * 2];
@@ -230,49 +234,45 @@ namespace PerfTests
 					input = Tests.FastLZData.SampleInput;
 					output = new byte[input.Length * 2];
 					blockSz = input.Length;
-					iter *= 2;
 				}
 
-				var sw = new Stopwatch();
-				var process = Process.GetCurrentProcess();
-
-				var startCpuTime = process.TotalProcessorTime;
+				sw.Reset();
 				sw.Start();
 				for(int i = 0; i < iter; ++i)
 					fastLz.Compress(input, 0, input.Length, output, 0);
 				sw.Stop();
-				var stopCpuTime = process.TotalProcessorTime;
 
-				var cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
 				var diff = sw.Elapsed.TotalSeconds;
-				var mb = (long)iter * blockSz / (1024 * 1024);
-				var speed = mb / diff;
+				var total = (long)iter * blockSz;
+				var speed = total / diff;
 
 				var compressor = new FastLZBlockCompressor(blockSz);
 
-				startCpuTime = process.TotalProcessorTime;
+				sw.Reset();
 				sw.Start();
 				for(int i = 0; i < iter; ++i)
 					compressor.Compress(input, input.Length, 0, output, 0);
-				sw.Stop();
-				stopCpuTime = process.TotalProcessorTime;
+				sw.Stop();;
 
-				cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
 				diff = sw.Elapsed.TotalSeconds;
-				mb = (long)iter * blockSz / (1024 * 1024);
-				var speed2 = mb / diff;
+				total = (long)iter * blockSz;
+				var speed2 = total / diff;
 				double ratio = speed2 / speed;
-				Console.WriteLine(string.Format("Compress (mode={0}): Ratio=={1:0.######}", mode, ratio));
+				Console.WriteLine(string.Format("Compress (mode={0}): FastLZBlockCompressor/FastLZ speed ratio=={1:0.#########}", mode, ratio));
 			}
 		}
 
 		public static void RelativeDecompressSpeed()
 		{
+			var sw = new Stopwatch();
+			sw.Start();
+			sw.Stop();
+
 			for(int mode = 0; mode < 5; ++mode)
 			{
 				var fastLz = new FastLZ();
-				int iter = 16000;
-				int blockSz = 16384;
+				int iter = 64000;
+				int blockSz = 4096;
 
 				var input = new byte[blockSz];
 				var output = new byte[input.Length * 2];
@@ -294,41 +294,34 @@ namespace PerfTests
 					input = Tests.FastLZData.SampleInput;
 					output = new byte[input.Length * 2];
 					blockSz = input.Length;
-					iter *= 2;
 				}
 
 				var len = fastLz.Compress(input, 0, input.Length, output, 0);
 
-				var sw = new Stopwatch();
-				var process = Process.GetCurrentProcess();
-
-				var startCpuTime = process.TotalProcessorTime;
+				sw.Reset();
 				sw.Start();
 				for(int i = 0; i < iter; ++i)
 					fastLz.Decompress(output, 0, len, input, 0);
 				sw.Stop();
-				var stopCpuTime = process.TotalProcessorTime;
 
-				var cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
 				var diff = sw.Elapsed.TotalSeconds;
-				var mb = (long)iter * blockSz / (1024 * 1024);
-				var speed = mb / diff;
+				var total = (long)iter * blockSz;
+				var speed = total / diff;
 
 				var compressor = new FastLZBlockCompressor(blockSz);
+				len = compressor.Compress(input, input.Length, 0, output, 0);
 
-				startCpuTime = process.TotalProcessorTime;
+				sw.Reset();
 				sw.Start();
 				for(int i = 0; i < iter; ++i)
 					compressor.Decompress(output, 0, input, 0);
 				sw.Stop();
-				stopCpuTime = process.TotalProcessorTime;
 
-				cpuDiff = (stopCpuTime - startCpuTime).TotalSeconds;
 				diff = sw.Elapsed.TotalSeconds;
-				mb = (long)iter * blockSz / (1024 * 1024);
-				var speed2 = mb / diff;
+				total = (long)iter * blockSz;
+				var speed2 = total / diff;
 				double ratio = speed2 / speed;
-				Console.WriteLine(string.Format("Decompress (mode={0}): Ratio=={1:0.######}", mode, ratio));
+				Console.WriteLine(string.Format("Decompress (mode={0}): FastLZBlockCompressor/FastLZ speed ratio=={1:0.#########}", mode, ratio));
 			}
 		}
 	}
