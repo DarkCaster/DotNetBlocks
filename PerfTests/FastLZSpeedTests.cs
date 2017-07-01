@@ -40,7 +40,7 @@ namespace PerfTests
 		static FastLZSpeedTests()
 		{
 			chunks = new byte[CHUNKS_CNT][];
-			for (int i = 0; i < CHUNKS_CNT; ++i)
+			for(int i = 0; i < CHUNKS_CNT; ++i)
 			{
 				chunks[i] = new byte[random.Next(MIN_CHUNK_SZ, MAX_CHUNK_SZ + 1)];
 				random.NextBytes(chunks[i]);
@@ -49,23 +49,23 @@ namespace PerfTests
 
 		public static void GenerateHighComprData(byte[] buffer, int offset = 0, int length = -1)
 		{
-			if (length < 0)
+			if(length < 0)
 				length = buffer.Length - offset;
 			int limit = offset + length;
 			var maxLen = 32;
-			if (maxLen > length / 2)
+			if(maxLen > length / 2)
 				maxLen = length / 2;
-			if (maxLen < 8)
+			if(maxLen < 8)
 				maxLen = 8;
-			while (offset < limit)
+			while(offset < limit)
 			{
 				byte val = (byte)random.Next(0, 256);
 				int len = (byte)random.Next(8, maxLen);
 				//copy data chunk to buffer
-				for (int i = 0; i < len; ++i)
+				for(int i = 0; i < len; ++i)
 				{
 					buffer[offset++] = val;
-					if (offset >= limit)
+					if(offset >= limit)
 						break;
 				}
 			}
@@ -73,18 +73,18 @@ namespace PerfTests
 
 		public static void GenerateComprData(byte[] buffer, int offset = 0, int length = -1)
 		{
-			if (length < 0)
+			if(length < 0)
 				length = buffer.Length - offset;
 			int limit = offset + length;
-			while (offset < limit)
+			while(offset < limit)
 			{
 				//select data chunk to copy
 				var chunk = chunks[random.Next(0, CHUNKS_CNT)];
 				//copy data chunk to buffer
-				for (int i = 0; i < chunk.Length; ++i)
+				for(int i = 0; i < chunk.Length; ++i)
 				{
 					buffer[offset++] = chunk[i];
-					if (offset >= limit)
+					if(offset >= limit)
 						break;
 				}
 			}
@@ -92,37 +92,37 @@ namespace PerfTests
 
 		public static void GenerateNonComprData(byte[] buffer, int offset = 0, int length = -1)
 		{
-			if (length < 0)
+			if(length < 0)
 				length = buffer.Length - offset;
 			int limit = offset + length;
-			while (offset < limit)
+			while(offset < limit)
 				buffer[offset++] = (byte)random.Next(0, 256);
 		}
 
 		public static void CompressionSpeed()
 		{
-			for (int mode = 0; mode < 5; ++mode)
+			for(int mode = 0; mode < 5; ++mode)
 			{
 				var fastLz = new FastLZ();
 				int iter = 5000;
 				int blockSz = 65536;
 
 				var input = new byte[blockSz];
-				var output = new byte[input.Length*2];
+				var output = new byte[input.Length * 2];
 
-				if (mode == 0)
+				if(mode == 0)
 					GenerateNonComprData(input);
-				else if (mode == 1)
+				else if(mode == 1)
 					GenerateComprData(input);
-				else if (mode == 2)
+				else if(mode == 2)
 					GenerateHighComprData(input);
-				else if (mode == 3)
+				else if(mode == 3)
 				{
 					var val = (byte)random.Next(0, 256);
-					for (int i = 0; i < input.Length; ++i)
+					for(int i = 0; i < input.Length; ++i)
 						input[i] = val;
 				}
-				else if (mode == 4)
+				else if(mode == 4)
 				{
 					input = Tests.FastLZData.SampleInput;
 					output = new byte[input.Length * 2];
@@ -135,7 +135,7 @@ namespace PerfTests
 
 				var startCpuTime = process.TotalProcessorTime;
 				sw.Start();
-				for (int i = 0; i < iter; ++i)
+				for(int i = 0; i < iter; ++i)
 					fastLz.Compress(input, 0, input.Length, output, 0);
 				sw.Stop();
 				var stopCpuTime = process.TotalProcessorTime;
@@ -145,14 +145,14 @@ namespace PerfTests
 				var mb = (long)iter * blockSz / (1024 * 1024);
 				var speed = mb / diff;
 
-				Console.WriteLine(string.Format("Compress (mode={3}): {0} MiB in {1:##.##} S. Speed=={2:##.###} MiB/S.", mb, diff, speed,mode));
+				Console.WriteLine(string.Format("Compress (mode={3}): {0} MiB in {1:##.##} S. Speed=={2:##.###} MiB/S.", mb, diff, speed, mode));
 				Console.WriteLine(string.Format("Compress (mode={1}): total processor time {0:##.###} S", cpuDiff, mode));
 			}
 		}
 
 		public static void DecompressionSpeed()
 		{
-			for (int mode = 0; mode < 5; ++mode)
+			for(int mode = 0; mode < 5; ++mode)
 			{
 				var fastLz = new FastLZ();
 				int iter = 16000;
@@ -161,19 +161,19 @@ namespace PerfTests
 				var input = new byte[blockSz];
 				var output = new byte[input.Length * 2];
 
-				if (mode == 0)
+				if(mode == 0)
 					GenerateNonComprData(input);
-				else if (mode == 1)
+				else if(mode == 1)
 					GenerateComprData(input);
-				else if (mode == 2)
+				else if(mode == 2)
 					GenerateHighComprData(input);
-				else if (mode == 3)
+				else if(mode == 3)
 				{
 					var val = (byte)random.Next(0, 256);
-					for (int i = 0; i < input.Length; ++i)
+					for(int i = 0; i < input.Length; ++i)
 						input[i] = val;
 				}
-				else if (mode == 4)
+				else if(mode == 4)
 				{
 					input = Tests.FastLZData.SampleInput;
 					output = new byte[input.Length * 2];
@@ -181,14 +181,14 @@ namespace PerfTests
 					iter *= 2;
 				}
 
-				var len=fastLz.Compress(input, 0, input.Length, output, 0);
+				var len = fastLz.Compress(input, 0, input.Length, output, 0);
 
 				var sw = new Stopwatch();
 				var process = Process.GetCurrentProcess();
 
 				var startCpuTime = process.TotalProcessorTime;
 				sw.Start();
-				for (int i = 0; i < iter; ++i)
+				for(int i = 0; i < iter; ++i)
 					fastLz.Decompress(output, 0, len, input, 0);
 				sw.Stop();
 				var stopCpuTime = process.TotalProcessorTime;
@@ -253,7 +253,7 @@ namespace PerfTests
 				sw.Start();
 				for(int i = 0; i < iter; ++i)
 					compressor.Compress(input, input.Length, 0, output, 0);
-				sw.Stop();;
+				sw.Stop();
 
 				diff = sw.Elapsed.TotalSeconds;
 				total = (long)iter * blockSz;
@@ -332,11 +332,12 @@ namespace PerfTests
 			sw.Start();
 			sw.Stop();
 
-			for(int mode = 0; mode < 5; ++mode)
+			for(int mode = 0; mode < 4; ++mode)
 			{
 				var fastLz = new FastLZ();
 				int iter = 2000;
 				int blockSz = 262144;
+				int mbBlockSz = 1024;
 
 				var input = new byte[blockSz];
 				var output = new byte[input.Length * 2];
@@ -353,17 +354,19 @@ namespace PerfTests
 					for(int i = 0; i < input.Length; ++i)
 						input[i] = val;
 				}
-				else if(mode == 4)
-				{
-					input = Tests.FastLZData.SampleInput;
-					output = new byte[input.Length * 2];
-					blockSz = input.Length;
-				}
 
 				sw.Reset();
 				sw.Start();
 				for(int i = 0; i < iter; ++i)
-					fastLz.Compress(input, 0, input.Length, output, 0);
+				{
+					var outOffset = 0;
+					var inOffset = 0;
+					while(inOffset < blockSz)
+					{
+						outOffset += fastLz.Compress(input, inOffset, mbBlockSz, output, outOffset);
+						inOffset += mbBlockSz;
+					}
+				}
 				sw.Stop();
 
 				var diff = sw.Elapsed.TotalSeconds;
@@ -392,11 +395,12 @@ namespace PerfTests
 			sw.Start();
 			sw.Stop();
 
-			for(int mode = 0; mode < 5; ++mode)
+			for(int mode = 0; mode < 4; ++mode)
 			{
 				var fastLz = new FastLZ();
 				int iter = 8000;
 				int blockSz = 262144;
+				int mbBlockSz = 1024;
 
 				var input = new byte[blockSz];
 				var output = new byte[input.Length * 2];
@@ -413,19 +417,27 @@ namespace PerfTests
 					for(int i = 0; i < input.Length; ++i)
 						input[i] = val;
 				}
-				else if(mode == 4)
-				{
-					input = Tests.FastLZData.SampleInput;
-					output = new byte[input.Length * 2];
-					blockSz = input.Length;
-				}
 
-				var len = fastLz.Compress(input, 0, input.Length, output, 0);
+				var outOffset = 0;
+				var inOffset = 0;
+				int offsetsLen = blockSz / mbBlockSz;
+				var offsets = new int[offsetsLen];
+				var lengths = new int[offsetsLen];
+
+				var pos = 0;
+				while(inOffset < blockSz)
+				{
+					offsets[pos] = outOffset;
+					lengths[pos] = fastLz.Compress(input, inOffset, mbBlockSz, output, outOffset);
+					outOffset += lengths[pos++];
+					inOffset += mbBlockSz;
+				}
 
 				sw.Reset();
 				sw.Start();
 				for(int i = 0; i < iter; ++i)
-					fastLz.Decompress(output, 0, len, input, 0);
+					for(int o = 0; o < offsetsLen; ++o)
+						fastLz.Decompress(output, offsets[o], lengths[o], input, mbBlockSz * o);
 				sw.Stop();
 
 				var diff = sw.Elapsed.TotalSeconds;
