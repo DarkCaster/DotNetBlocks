@@ -292,5 +292,25 @@ namespace Tests
 			Assert.AreEqual(dataLen, decLen);
 			Assert.AreEqual(input, decOutput);
 		}
+
+		public static void Test_MultiblockHelperWithOffset(IBlockCompressor compressor, int dataLen, int maxOffset)
+		{
+			var input = new byte[dataLen + maxOffset];
+			var randomOffset = random.Next(0, maxOffset);
+			GenerateComprData(input, randomOffset);
+			var outputLen = MultiblockCompressionHelper.GetOutBuffSZ(dataLen + maxOffset, compressor);
+			Assert.Greater(outputLen, dataLen+maxOffset);
+			Assert.Greater(outputLen, compressor.GetOutBuffSZ(dataLen+maxOffset));
+			var output = new byte[outputLen];
+			var comprLen = MultiblockCompressionHelper.Compress(input, dataLen, randomOffset, output, randomOffset, compressor);
+			Assert.Less(comprLen, outputLen);
+			Assert.Less(comprLen, dataLen);
+			var decOutput = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(output, randomOffset, compressor) + maxOffset];
+			Assert.AreEqual(decOutput.Length, dataLen + maxOffset);
+			var decLen = MultiblockCompressionHelper.Decompress(output, randomOffset, decOutput, randomOffset, compressor);
+			Assert.AreEqual(dataLen, decLen);
+			for(int i = 0; i < dataLen; ++i)
+				Assert.AreEqual(input[i + randomOffset], decOutput[i + randomOffset]);
+		}
 	}
 }
