@@ -41,5 +41,17 @@ namespace DarkCaster.Compression
 		/// </summary>
 		/// <returns>The compressor instance</returns>
 		IBlockCompressor GetCompressor(int maxBlockSize);
+
+		/// <summary>
+		/// Create\Get thread safe IBlockCompressor instance with default maxBlockSize
+		/// </summary>
+		/// <returns>The compressor instance</returns>
+		IThreadSafeBlockCompressor GetThreadSafeCompressor();
+
+		/// <summary>
+		/// Create\Get thread safe IBlockCompressor instance with selected maxBlockSize
+		/// </summary>
+		/// <returns>The compressor instance</returns>
+		IThreadSafeBlockCompressor GetThreadSafeCompressor(int maxBlockSize);
 	}
 }

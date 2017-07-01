@@ -29,12 +29,22 @@ namespace DarkCaster.Compression.FastLZ
 	{
 		public IBlockCompressor GetCompressor()
 		{
-			return new FastLZBlockCompressor();
+			return new FastLZBlockCompressor(false);
 		}
 
 		public IBlockCompressor GetCompressor(int maxBlockSize)
 		{
-			return new FastLZBlockCompressor(maxBlockSize);
+			return new FastLZBlockCompressor(maxBlockSize, false);
+		}
+
+		public IThreadSafeBlockCompressor GetThreadSafeCompressor()
+		{
+			return new FastLZBlockCompressor(true);
+		}
+
+		public IThreadSafeBlockCompressor GetThreadSafeCompressor(int maxBlockSize)
+		{
+			return new FastLZBlockCompressor(maxBlockSize, true);
 		}
 	}
 }

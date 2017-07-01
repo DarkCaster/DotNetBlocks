@@ -38,6 +38,8 @@ namespace DarkCaster.Compression.FastLZ
 		private readonly Func<byte[], int, int, byte[], int, int> fastLZDecompress;
 		private readonly Func<byte[], int, int, byte[], int, int> fastLZCompress;
 
+		public FastLZBlockCompressor(bool useThreadSafeApproach) : this(MAX_BLOCK_SZ, useThreadSafeApproach) { }
+
 		public FastLZBlockCompressor(int maxBlockSz = MAX_BLOCK_SZ, bool useThreadSafeApproach = false)
 		{
 			if (maxBlockSz > MAX_BLOCK_SZ || maxBlockSz < 0)
