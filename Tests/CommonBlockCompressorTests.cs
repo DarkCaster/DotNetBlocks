@@ -286,7 +286,7 @@ namespace Tests
 			var comprLen = MultiblockCompressionHelper.Compress(input, dataLen, 0, output, 0, compressor);
 			Assert.Less(comprLen, outputLen);
 			Assert.Less(comprLen, dataLen);
-			var decOutput = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(output, 0, compressor)];
+			var decOutput = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(output, 0)];
 			Assert.AreEqual(decOutput.Length, dataLen);
 			var decLen=MultiblockCompressionHelper.Decompress(output,0,decOutput,0,compressor);
 			Assert.AreEqual(dataLen, decLen);
@@ -305,7 +305,7 @@ namespace Tests
 			var comprLen = MultiblockCompressionHelper.Compress(input, dataLen, randomOffset, output, randomOffset, compressor);
 			Assert.Less(comprLen, outputLen);
 			Assert.Less(comprLen, dataLen);
-			var decOutput = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(output, randomOffset, compressor) + maxOffset];
+			var decOutput = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(output, randomOffset) + maxOffset];
 			Assert.AreEqual(decOutput.Length, dataLen + maxOffset);
 			var decLen = MultiblockCompressionHelper.Decompress(output, randomOffset, decOutput, randomOffset, compressor);
 			Assert.AreEqual(dataLen, decLen);

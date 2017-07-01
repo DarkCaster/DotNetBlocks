@@ -94,7 +94,7 @@ namespace DarkCaster.Serialization.Json
 			string str=null;
 			try
 			{
-				var bytes = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(data, offset, compressor)];
+				var bytes = new byte[MultiblockCompressionHelper.DecodeDecomprSZ(data, offset)];
 				MultiblockCompressionHelper.Decompress(data, offset, bytes, 0, compressor);
 				str=Encoding.UTF8.GetString(bytes);
 			}
