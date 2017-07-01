@@ -25,6 +25,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using DarkCaster.Compression;
 
 namespace DarkCaster.Serialization.Json
 {
@@ -33,13 +34,30 @@ namespace DarkCaster.Serialization.Json
 	/// </summary>
 	public sealed class JsonSerializationHelperFactory : ISerializationHelperFactory
 	{
+		private readonly int blockSize;
+		private readonly IBlockCompressorFactory comprFactory;
+
+		public JsonSerializationHelperFactory()
+		{
+			comprFactory = null;
+			blockSize = 16384;
+		}
+
+		public JsonSerializationHelperFactory(IBlockCompressorFactory comprFactory, int blockSize = 16384)
+		{
+			this.comprFactory = comprFactory;
+			this.blockSize = blockSize;
+		}
+
 		public ISerializationHelper<T> GetHelper<T>()
 		{
 			try
 			{
 				if (typeof(ISerializable).IsAssignableFrom(typeof(T)))
 					throw new NotSupportedException("TODO");
-				return new JsonSerializationHelper<T>();
+				if(comprFactory == null)
+					return new JsonSerializationHelper<T>();
+				return new JsonSerializationHelper<T>(comprFactory, blockSize);
 			}
 			catch(Exception ex)
 			{
@@ -53,7 +71,9 @@ namespace DarkCaster.Serialization.Json
 			{
 				if (typeof(ISerializable).IsAssignableFrom(type))
 					throw new NotSupportedException("TODO");
-				return (ISerializationHelper)Activator.CreateInstance(typeof(JsonSerializationHelper<>).MakeGenericType(new Type[] { type }));
+				if(comprFactory == null)
+					return (ISerializationHelper)Activator.CreateInstance(typeof(JsonSerializationHelper<>).MakeGenericType(new Type[] { type }));
+				return (ISerializationHelper)Activator.CreateInstance(typeof(JsonSerializationHelper<>).MakeGenericType(new Type[] { type }), new { comprFactory, blockSize });
 			}
 			catch(Exception ex)
 			{

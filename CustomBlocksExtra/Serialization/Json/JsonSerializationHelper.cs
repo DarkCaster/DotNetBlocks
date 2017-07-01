@@ -39,12 +39,12 @@ namespace DarkCaster.Serialization.Json
 
 		public JsonSerializationHelper()
 		{
-			this.compressor = new FastLZBlockCompressor(16384, true);
+			compressor = new FastLZBlockCompressor(16384, true);
 		}
 
 		public JsonSerializationHelper(IBlockCompressorFactory compFactory, int blockSz=16384)
 		{
-			throw new NotImplementedException("TODO");
+			compressor = compFactory.GetThreadSafeCompressor(blockSz);
 		}
 
 		public byte[] SerializeObj(object target)
