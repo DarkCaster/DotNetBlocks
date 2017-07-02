@@ -174,9 +174,13 @@ namespace DarkCaster.DataTransfer.Client
 			}
 		}
 
-		public async Task DisconnectAsyncWorker()
+		private async Task DisconnectAsyncWorker()
 		{
+			if(state == TunnelState.Offline)
+				return;
 			state = TunnelState.Offline;
+			if(downstream == null)
+				throw new Exception("Downstream ITunnel was not initialized! Cannot perform disconnect!");
 			await downstream.DisconnectAsync();
 		}
 
@@ -210,7 +214,20 @@ namespace DarkCaster.DataTransfer.Client
 		{
 			if(Interlocked.CompareExchange(ref isDisposed, 1, 0) == 1)
 				return;
-			throw new NotImplementedException("TODO");
+			try { Disconnect(); }
+			catch{ }
+			stateChangeLock.EnterWriteLock();
+			try
+			{
+				if(downstream != null)
+					downstream.Dispose();
+				//precaution, so any operation on downstream will throw an exception now.
+				downstream = null;
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
 		}
 	}
 }
