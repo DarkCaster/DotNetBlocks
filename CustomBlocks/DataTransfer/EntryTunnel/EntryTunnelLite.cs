@@ -35,13 +35,14 @@ namespace DarkCaster.DataTransfer.Client
 		private readonly INode downstreamNode;
 		private readonly ITunnelConfig config;
 		private readonly AsyncRWLock stateChangeLock = new AsyncRWLock();
+
 		private readonly AsyncRunner stateChangeRunner = new AsyncRunner();
+		private readonly AsyncRunner readRunner = new AsyncRunner();
+		private readonly AsyncRunner writeRunner = new AsyncRunner();
 
 		private volatile TunnelState state = TunnelState.Init;
 		private ITunnel downstream;
 		private int isDisposed = 0;
-
-
 
 		private EntryTunnelLite() { }
 
@@ -96,24 +97,81 @@ namespace DarkCaster.DataTransfer.Client
 			}
 		}
 
+		private async Task<int> ReadDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
+		{
+			if(state == TunnelState.Init)
+				return 0;
+			try
+			{
+				return await downstream.ReadDataAsync(sz, buffer, offset);
+			}
+			catch(Exception ex)
+			{
+				if(state != TunnelState.Online)
+					throw new TunnelEofException(ex);
+				throw;
+			}
+		}
+
 		public int ReadData(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			stateChangeLock.EnterReadLock();
+			try
+			{
+				return readRunner.ExecuteTask(() => ReadDataAsyncWorker(sz, buffer, offset));
+			}
+			finally
+			{
+				stateChangeLock.ExitReadLock();
+			}
+		}
+
+		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
+		{
+			await stateChangeLock.EnterReadLockAsync();
+			try
+			{
+				return await ReadDataAsyncWorker(sz, buffer, offset);
+			}
+			finally
+			{
+				stateChangeLock.ExitReadLock();
+			}
+		}
+
+		private async Task<int> WriteDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
+		{
+			if(state == TunnelState.Init)
+				return 0;
+			if(state == TunnelState.Offline)
+				throw new TunnelEofException();
+			return await downstream.WriteDataAsync(sz, buffer, offset);
 		}
 
 		public int WriteData(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			stateChangeLock.EnterReadLock();
+			try
+			{
+				return writeRunner.ExecuteTask(() => WriteDataAsyncWorker(sz, buffer, offset));
+			}
+			finally
+			{
+				stateChangeLock.ExitReadLock();
+			}
 		}
 
-		public Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
+		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
-		}
-
-		public Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
-		{
-			throw new NotImplementedException("TODO");
+			await stateChangeLock.EnterReadLockAsync();
+			try
+			{
+				return await WriteDataAsyncWorker(sz, buffer, offset);
+			}
+			finally
+			{
+				stateChangeLock.ExitReadLock();
+			}
 		}
 
 		public async Task DisconnectAsyncWorker()
@@ -152,6 +210,7 @@ namespace DarkCaster.DataTransfer.Client
 		{
 			if(Interlocked.CompareExchange(ref isDisposed, 1, 0) == 1)
 				return;
+			throw new NotImplementedException("TODO");
 		}
 	}
 }
