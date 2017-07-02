@@ -179,6 +179,14 @@ namespace Tests.Mocks
 				throw new Exception("MockClientTunnel is already disconnected!");
 		}
 
+		public Task DisconnectAsync()
+		{
+			Interlocked.Increment(ref disconnectCount);
+			if(Interlocked.CompareExchange(ref isDisconnected, 1, 0) != 0)
+				throw new Exception("MockClientTunnel is already disconnected!");
+			return Task.FromResult(true);
+		}
+
 		public void Dispose()
 		{
 			Interlocked.Increment(ref disposeCount);

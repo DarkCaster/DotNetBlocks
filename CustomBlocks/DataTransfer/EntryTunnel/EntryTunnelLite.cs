@@ -34,10 +34,14 @@ namespace DarkCaster.DataTransfer.Client
 	{
 		private readonly INode downstreamNode;
 		private readonly ITunnelConfig config;
+		private readonly AsyncRWLock stateChangeLock = new AsyncRWLock();
+		private readonly AsyncRunner stateChangeRunner = new AsyncRunner();
 
 		private volatile TunnelState state = TunnelState.Init;
 		private ITunnel downstream;
 		private int isDisposed = 0;
+
+
 
 		private EntryTunnelLite() { }
 
@@ -49,14 +53,47 @@ namespace DarkCaster.DataTransfer.Client
 
 		public TunnelState State { get { return state; } }
 
-		public TunnelState Connect()
+		private async Task<TunnelState> ConnectAsyncWorker()
 		{
-			throw new NotImplementedException("TODO");
+			if(state != TunnelState.Init)
+				throw new Exception("Cannot perform connect in this state: " + state.ToString());
+			try
+			{
+				downstream = await downstreamNode.OpenTunnelAsync(config);
+			}
+			catch(Exception)
+			{
+				state = TunnelState.Offline;
+				throw;
+			}
+			state = TunnelState.Online;
+			return TunnelState.Online;
 		}
 
-		public Task<TunnelState> ConnectAsync()
+		public TunnelState Connect()
 		{
-			throw new NotImplementedException("TODO");
+			stateChangeLock.EnterWriteLock();
+			try
+			{
+				return stateChangeRunner.ExecuteTask(ConnectAsyncWorker);
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
+		}
+
+		public async Task<TunnelState> ConnectAsync()
+		{
+			await stateChangeLock.EnterWriteLockAsync();
+			try
+			{
+				return await ConnectAsyncWorker();
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
 		}
 
 		public int ReadData(int sz, byte[] buffer, int offset = 0)
@@ -79,14 +116,36 @@ namespace DarkCaster.DataTransfer.Client
 			throw new NotImplementedException("TODO");
 		}
 
-		public void Disconnect()
+		public async Task DisconnectAsyncWorker()
 		{
-			throw new NotImplementedException("TODO");
+			state = TunnelState.Offline;
+			await downstream.DisconnectAsync();
 		}
 
-		public Task DisconnectAsync()
+		public void Disconnect()
 		{
-			throw new NotImplementedException("TODO");
+			stateChangeLock.EnterWriteLock();
+			try
+			{
+				stateChangeRunner.ExecuteTask(DisconnectAsyncWorker);
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
+		}
+
+		public async Task DisconnectAsync()
+		{
+			await stateChangeLock.EnterWriteLockAsync();
+			try
+			{
+				await DisconnectAsyncWorker();
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
 		}
 
 		public void Dispose()
