@@ -132,6 +132,7 @@
     <Compile Include="Compression\FastLZ\FastLZBlockCompressorFactory.cs" />
     <Compile Include="Compression\IThreadSafeBlockCompressor.cs" />
     <Compile Include="Compression\MultiblockCompressionHelper.cs" />
+    <Compile Include="DataTransfer\EntryTunnel\EntryTunnelLite.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />

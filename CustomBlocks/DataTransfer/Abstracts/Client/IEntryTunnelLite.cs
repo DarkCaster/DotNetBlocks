@@ -26,7 +26,15 @@ using System;
 using System.Threading.Tasks;
 namespace DarkCaster.DataTransfer.Client
 {
-	public interface IEntryTunnelLite
+	/// <summary>
+	/// Client side entry-tunnel.
+	/// Object of this interface should be used to perform data transfer from user's code, instead of using INode directly.
+	/// Defined methods are thread-safe. Some methods combinations use locks to guarantee state and data consistency:
+	/// read and write methods may be executed at the same time concurrently,
+	/// but no two parallel read or write calls allowed,
+	/// disconnect is interlocked with both read and write activity.
+	/// </summary>
+	public interface IEntryTunnelLite : IDisposable
 	{
 		/// <summary>
 		/// Gets the current state of tunnel.
