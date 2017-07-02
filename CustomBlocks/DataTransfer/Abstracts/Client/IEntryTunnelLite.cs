@@ -28,11 +28,12 @@ namespace DarkCaster.DataTransfer.Client
 {
 	/// <summary>
 	/// Client side entry-tunnel.
-	/// Object of this interface should be used to perform data transfer from user's code, instead of using INode directly.
-	/// Defined methods are thread-safe. Some methods combinations use locks to guarantee state and data consistency:
-	/// read and write methods may be executed at the same time concurrently,
+	/// Object of this interface should be used to perform data transfer from user's code, instead of using INode\ITunnel directly.
+	/// Some of methods are thread-safe and may be used from different threads at the same time.
+	/// Some methods combinations use locks to guarantee state and data consistency:
+	/// read and write methods may be executed at the same time concurrently from different threads,
 	/// but no two parallel read or write calls allowed,
-	/// disconnect is interlocked with both read and write activity.
+	/// connect\disconnect method-calls are interlocked with all other methods and itself.
 	/// </summary>
 	public interface IEntryTunnelLite : IDisposable
 	{
@@ -41,6 +42,7 @@ namespace DarkCaster.DataTransfer.Client
 		/// This feature must use volatile field.
 		/// It's change is not atomic with tunnel state change.
 		/// However it is guaranteed that it will be updated when Connect or Disconnect returns.
+		/// It is recommended to use this property for informational purposes only.
 		/// </summary>
 		/// <value>Current state</value>
 		TunnelState State { get; }
