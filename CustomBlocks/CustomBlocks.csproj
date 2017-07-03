@@ -106,8 +106,6 @@
     <Compile Include="DataTransfer\Udp\Client\UdpClientNode.cs" />
     <Compile Include="DataTransfer\Udp\Client\UdpClientTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\IEntryNode.cs" />
-    <Compile Include="DataTransfer\Abstracts\Client\IEntryTunnel.cs" />
-    <Compile Include="DataTransfer\EntryTunnel\EntryTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelEofException.cs" />
     <Compile Include="DataTransfer\Abstracts\Config\ITunnelConfig.cs" />
     <Compile Include="DataTransfer\Abstracts\Config\ITunnelConfigFactory.cs" />
