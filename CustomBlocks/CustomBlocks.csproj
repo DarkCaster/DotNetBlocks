@@ -131,6 +131,8 @@
     <Compile Include="Compression\IThreadSafeBlockCompressor.cs" />
     <Compile Include="Compression\MultiblockCompressionHelper.cs" />
     <Compile Include="DataTransfer\EntryTunnel\EntryTunnel.cs" />
+    <Compile Include="DataTransfer\Tcp\Client\TcpClientNode.cs" />
+    <Compile Include="DataTransfer\Tcp\Client\TcpClientTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -157,6 +159,8 @@
     <Folder Include="DataTransfer\ExitTunnel\" />
     <Folder Include="Compression\" />
     <Folder Include="Compression\FastLZ\" />
+    <Folder Include="DataTransfer\Tcp\" />
+    <Folder Include="DataTransfer\Tcp\Client\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
