@@ -44,8 +44,6 @@ namespace Tests.Mocks
 		private int isDisposed = 0;
 		private int noFailOpsCounter;
 
-		private int readCount = 0;
-		private int writeCount = 0;
 		private int readAsyncCount = 0;
 		private int writeAsyncCount = 0;
 		private int disconnectCount = 0;
@@ -138,20 +136,6 @@ namespace Tests.Mocks
 			}
 		}
 
-		public int ReadData(int sz, byte[] buffer, int offset = 0)
-		{
-			Interlocked.Increment(ref readCount);
-			CheckParams(sz, buffer, offset);
-			return ReadWriteData(sz);
-		}
-
-		public int WriteData(int sz, byte[] buffer, int offset = 0)
-		{
-			Interlocked.Increment(ref writeCount);
-			CheckParams(sz, buffer, offset);
-			return ReadWriteData(sz);
-		}
-
 		public Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			Interlocked.Increment(ref readAsyncCount);
@@ -194,8 +178,6 @@ namespace Tests.Mocks
 				throw new ObjectDisposedException("Dispose on ITunnel objects should be only run once!");
 		}
 
-		public int ReadCount { get { return Interlocked.CompareExchange(ref readCount, 0, 0); } }
-		public int WriteCount { get { return Interlocked.CompareExchange(ref writeCount, 0, 0); } }
 		public int ReadAsyncCount { get { return Interlocked.CompareExchange(ref readAsyncCount, 0, 0); } }
 		public int WriteAsyncCount { get { return Interlocked.CompareExchange(ref writeAsyncCount, 0, 0); } }
 		public int DisconectCount { get { return Interlocked.CompareExchange(ref disconnectCount, 0, 0); } }

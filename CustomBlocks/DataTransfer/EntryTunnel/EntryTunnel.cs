@@ -117,7 +117,8 @@ namespace DarkCaster.DataTransfer.Client
 			readLock.Wait();
 			try
 			{
-				return downstream.ReadData(sz, buffer, offset);
+				throw new NotSupportedException("WILL BE REMOVED SOON");
+				//return downstream.ReadData(sz, buffer, offset);
 			}
 			catch (Exception ex)
 			{
@@ -137,9 +138,10 @@ namespace DarkCaster.DataTransfer.Client
 			writeLock.Wait();
 			try
 			{
+				throw new NotSupportedException("WILL BE REMOVED SOON");
 				if (state != TunnelState.Online)
 					throw new TunnelEofException();
-				return downstream.WriteData(sz, buffer, offset);
+				//return downstream.WriteData(sz, buffer, offset);
 			}
 			catch (TunnelEofException)
 			{
@@ -213,8 +215,9 @@ namespace DarkCaster.DataTransfer.Client
 						{
 							if (state == TunnelState.Offline)
 								throw new StateSwitchException();
-							try { downstream.Disconnect(); }
-							catch (Exception ex) { if (iEx == null) iEx = ex; }
+							throw new NotSupportedException("WILL BE REMOVED SOON");
+							//try { downstream.Disconnect(); }
+							//catch (Exception ex) { if (iEx == null) iEx = ex; }
 							state = TunnelState.Offline;
 							return new TunnelStateEventArgs(TunnelState.Offline, iEx);
 						}

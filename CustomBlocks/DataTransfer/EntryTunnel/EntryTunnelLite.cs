@@ -180,7 +180,7 @@ namespace DarkCaster.DataTransfer.Client
 				return;
 			state = TunnelState.Offline;
 			if(downstream == null)
-				throw new Exception("Downstream ITunnel was not initialized! Cannot perform disconnect!");
+				throw new Exception("Downstream ITunnel was not initialized!");
 			await downstream.DisconnectAsync();
 		}
 

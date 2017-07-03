@@ -30,15 +30,6 @@ namespace DarkCaster.DataTransfer.Client
 {
 	public interface ITunnel : IDisposable
 	{
-		//TODO: remove
-		int ReadData(int sz, byte[] buffer, int offset = 0);
-
-		//TODO: remove
-		int WriteData(int sz, byte[] buffer, int offset = 0);
-
-		//TODO: remove
-		void Disconnect();
-
 		/// <summary>
 		/// Data read request, async.
 		/// Should not be used directly, use IEntryTunnel instead.

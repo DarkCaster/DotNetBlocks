@@ -36,9 +36,9 @@ namespace DarkCaster.DataTransfer.Client
 			this.downstream = downstream;
 		}
 
-		public IEntryTunnel OpenTunnel(ITunnelConfig config)
+		public IEntryTunnelLite OpenTunnel(ITunnelConfig config)
 		{
-			return new EntryTunnel(downstream, config);
+			return new EntryTunnelLite(downstream, config);
 		}
 	}
 }
