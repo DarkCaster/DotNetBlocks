@@ -30,9 +30,6 @@ namespace DarkCaster.DataTransfer.Client
 {
 	public interface INode
 	{
-		///TODO: remove when finish porting to new OpenTunnelAsync
-		ITunnel OpenTunnel(ITunnelConfig config);
-
 		Task<ITunnel> OpenTunnelAsync(ITunnelConfig config);
 	}
 }
