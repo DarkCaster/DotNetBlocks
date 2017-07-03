@@ -1,4 +1,4 @@
-﻿// EntryTunnelLite.cs
+﻿// EntryTunnel.cs
 //
 // The MIT License (MIT)
 //
@@ -30,7 +30,7 @@ using DarkCaster.DataTransfer.Config;
 
 namespace DarkCaster.DataTransfer.Client
 {
-	public sealed class EntryTunnelLite : IEntryTunnelLite
+	public sealed class EntryTunnel : IEntryTunnel
 	{
 		private readonly INode downstreamNode;
 		private readonly ITunnelConfig config;
@@ -44,9 +44,9 @@ namespace DarkCaster.DataTransfer.Client
 		private ITunnel downstream;
 		private int isDisposed = 0;
 
-		private EntryTunnelLite() { }
+		private EntryTunnel() { }
 
-		public EntryTunnelLite(INode downstreamNode, ITunnelConfig config)
+		public EntryTunnel(INode downstreamNode, ITunnelConfig config)
 		{
 			this.downstreamNode = downstreamNode;
 			this.config = config;

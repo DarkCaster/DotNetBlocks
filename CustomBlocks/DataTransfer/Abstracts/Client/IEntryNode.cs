@@ -29,6 +29,6 @@ namespace DarkCaster.DataTransfer.Client
 {
 	public interface IEntryNode
 	{
-		IEntryTunnelLite OpenTunnel(ITunnelConfig config);
+		IEntryTunnel OpenTunnel(ITunnelConfig config);
 	}
 }

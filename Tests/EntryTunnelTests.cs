@@ -108,7 +108,7 @@ namespace Tests
 			writeDone = false;
 		}
 
-		private void ReadTask(IEntryTunnelLite tunnel)
+		private void ReadTask(IEntryTunnel tunnel)
 		{
 			try
 			{
@@ -127,7 +127,7 @@ namespace Tests
 			readDone = true;
 		}
 
-		private void WriteTask(IEntryTunnelLite tunnel)
+		private void WriteTask(IEntryTunnel tunnel)
 		{
 			try
 			{
@@ -146,7 +146,7 @@ namespace Tests
 			writeDone = true;
 		}
 
-		private async Task ReadTaskAsync(IEntryTunnelLite tunnel)
+		private async Task ReadTaskAsync(IEntryTunnel tunnel)
 		{
 			try
 			{
@@ -165,7 +165,7 @@ namespace Tests
 			readDone = true;
 		}
 
-		private async Task WriteTaskAsync(IEntryTunnelLite tunnel)
+		private async Task WriteTaskAsync(IEntryTunnel tunnel)
 		{
 			try
 			{

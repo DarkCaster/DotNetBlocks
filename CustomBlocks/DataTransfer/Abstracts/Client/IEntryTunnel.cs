@@ -1,4 +1,4 @@
-﻿// IEntryTunnelLite.cs
+﻿// IEntryTunnel.cs
 //
 // The MIT License (MIT)
 //
@@ -35,7 +35,7 @@ namespace DarkCaster.DataTransfer.Client
 	/// but no two parallel read or write calls allowed,
 	/// connect\disconnect method-calls are interlocked with all other methods and itself.
 	/// </summary>
-	public interface IEntryTunnelLite : IDisposable
+	public interface IEntryTunnel : IDisposable
 	{
 		/// <summary>
 		/// Gets the current state of tunnel.
