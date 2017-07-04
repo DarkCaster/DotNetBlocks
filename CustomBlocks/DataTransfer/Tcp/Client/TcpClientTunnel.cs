@@ -23,31 +23,45 @@
 // SOFTWARE.
 //
 using System;
+using System.Net.Sockets;
 using System.Threading.Tasks;
-using DarkCaster.DataTransfer.Config;
-using DarkCaster.DataTransfer.Client;
+
 namespace DarkCaster.DataTransfer.Client.Tcp
 {
 	public sealed class TcpClientTunnel : ITunnel
 	{
-		public Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
+		private readonly Socket socket;
+
+		public TcpClientTunnel(Socket socket)
 		{
-			throw new NotImplementedException("TODO");
+			this.socket = socket;
 		}
 
-		public Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
+		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			return await Task.Factory.FromAsync(
+				(callback, state) => socket.BeginReceive(buffer, offset, sz, SocketFlags.None, callback, state),
+				socket.EndReceive, null).ConfigureAwait(false);
 		}
 
-		public Task DisconnectAsync()
+		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			throw new NotImplementedException("TODO");
+			return await Task.Factory.FromAsync(
+				(callback, state) => socket.BeginSend(buffer, offset, sz, SocketFlags.None, callback, state),
+				socket.EndSend, null).ConfigureAwait(false);
+		}
+
+		public async Task DisconnectAsync()
+		{
+			socket.Shutdown(SocketShutdown.Both);
+			await Task.Factory.FromAsync(
+				(callback, state) => socket.BeginDisconnect(true, callback, state),
+				socket.EndDisconnect, null).ConfigureAwait(false);
 		}
 
 		public void Dispose()
 		{
-			
+			socket.Dispose();
 		}
 	}
 }

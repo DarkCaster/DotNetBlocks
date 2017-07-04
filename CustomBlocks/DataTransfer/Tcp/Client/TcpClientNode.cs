@@ -23,23 +23,40 @@
 // SOFTWARE.
 //
 using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Config;
-using DarkCaster.DataTransfer.Client;
 
 namespace DarkCaster.DataTransfer.Client.Tcp
 {
 	public sealed class TcpClientNode : INode
 	{
-		public Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
+		public async Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
 		{
-			var host = config.Get<string>("remotehost");
-			var port = config.Get<int>("remoteport");
+			var host = config.Get<string>("remote_host");
+			var port = config.Get<int>("remote_port");
 			if(string.IsNullOrEmpty(host))
-				throw new Exception("failed to get remote connection address from \"remotehost\" config parameter");
+				throw new Exception("failed to get remote connection address from \"remote_host\" config parameter");
 			if(port==0)
-				throw new Exception("failed to get remote connection port from \"remoteport\" config parameter");
-			throw new NotImplementedException("TODO");
+				throw new Exception("failed to get remote connection port from \"remote_port\" config parameter");
+			//open tcp connection
+			var addr = Dns.GetHostEntry(host).AddressList[0];
+			var client = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+			await Task.Factory.FromAsync(
+				(callback, state) => client.BeginConnect(new IPEndPoint(addr, port), callback, state),
+				client.EndConnect, null).ConfigureAwait(false);
+			//apply some optional settings to socket
+			var nodelay = config.Get<bool>("tcp_nodelay");
+			client.NoDelay = nodelay;
+			var bufferSize = config.Get<int>("tcp_buffer_size");
+			if(bufferSize>0)
+			{
+				client.ReceiveBufferSize = bufferSize;
+				client.SendBufferSize = bufferSize;
+			}
+			//create and return new itunnel object with this tcp connection
+			return new TcpClientTunnel(client);
 		}
 	}
 }
