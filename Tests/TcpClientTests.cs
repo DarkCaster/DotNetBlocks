@@ -24,6 +24,8 @@
 //
 using System;
 using NUnit.Framework;
+using System.Net;
+using System.Net.Sockets;
 using DarkCaster.DataTransfer.Config;
 using DarkCaster.DataTransfer.Client;
 using DarkCaster.DataTransfer.Client.Tcp;
@@ -48,6 +50,36 @@ namespace Tests
 			var runner = new AsyncRunner();
 			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
 
+			tunnel.Dispose();
+			mock.Dispose();
+		}
+
+		[Test]
+		public void ReadBlock()
+		{
+			var mock = new MockTcpServer(55555);
+			mock.RunServer();
+
+			var config = new TunnelConfig();
+			config.Set("remote_host", "localhost");
+			config.Set("remote_port", 55555);
+
+			var runner = new AsyncRunner();
+			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
+
+			var buffer = new byte[1024];
+			int read = -1;
+			runner.AddTask(() => tunnel.ReadDataAsync(1024, buffer, 0), (x) => read = x);
+			runner.AddTask(tunnel.DisconnectAsync);
+			try
+			{
+				runner.RunPendingTasks();
+			}
+			catch(AggregateException ex)
+			{
+				Assert.AreSame(typeof(SocketException), ex.InnerException.GetType());
+			}
+			Assert.AreEqual(-1, read);
 			tunnel.Dispose();
 			mock.Dispose();
 		}
