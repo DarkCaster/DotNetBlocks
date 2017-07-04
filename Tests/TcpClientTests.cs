@@ -42,14 +42,12 @@ namespace Tests
 		{
 			var mock = new MockTcpServer(55555);
 			mock.RunServer();
-
 			var config = new TunnelConfig();
 			config.Set("remote_host", "localhost");
 			config.Set("remote_port", 55555);
-
 			var runner = new AsyncRunner();
 			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
-
+			runner.ExecuteTask(tunnel.DisconnectAsync);
 			tunnel.Dispose();
 			mock.Dispose();
 		}
@@ -59,14 +57,11 @@ namespace Tests
 		{
 			var mock = new MockTcpServer(55555);
 			mock.RunServer();
-
 			var config = new TunnelConfig();
 			config.Set("remote_host", "localhost");
 			config.Set("remote_port", 55555);
-
 			var runner = new AsyncRunner();
 			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
-
 			var buffer = new byte[1024];
 			int read = -1;
 			runner.AddTask(() => tunnel.ReadDataAsync(1024, buffer, 0), (x) => read = x);
@@ -80,6 +75,26 @@ namespace Tests
 				Assert.AreSame(typeof(SocketException), ex.InnerException.GetType());
 			}
 			Assert.AreEqual(-1, read);
+			tunnel.Dispose();
+			mock.Dispose();
+		}
+
+		[Test]
+		public void ReadLessData()
+		{
+			var mock = new MockTcpServer(55555);
+			mock.RunServer();
+			var config = new TunnelConfig();
+			config.Set("remote_host", "localhost");
+			config.Set("remote_port", 55555);
+			var runner = new AsyncRunner();
+			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
+			var buffer = new byte[1024];
+			var sbuffer = new byte[1];
+			mock.connection.Send(sbuffer);
+			int read = runner.ExecuteTask(() => tunnel.ReadDataAsync(1024, buffer, 0));
+			Assert.AreEqual(1, read);
+			runner.ExecuteTask(tunnel.DisconnectAsync);
 			tunnel.Dispose();
 			mock.Dispose();
 		}

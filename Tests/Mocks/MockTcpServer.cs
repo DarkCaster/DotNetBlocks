@@ -33,7 +33,7 @@ namespace Tests.Mocks
 	public class MockTcpServer : IDisposable
 	{
 		public readonly Socket socket;
-		private volatile Socket connection;
+		public volatile Socket connection;
 
 		public void RunServer()
 		{
