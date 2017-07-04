@@ -72,6 +72,8 @@
     <Compile Include="CommonBlockCompressorTests.cs" />
     <Compile Include="FastLZSampleData\FastLZData.cs" />
     <Compile Include="FastLZTests.cs" />
+    <Compile Include="Mocks\MockTcpServer.cs" />
+    <Compile Include="TcpClientTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
