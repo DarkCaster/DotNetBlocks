@@ -99,79 +99,72 @@ namespace DarkCaster.DataTransfer.Client
 
 		private async Task<int> ReadDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
 		{
-			if(state == TunnelState.Init)
-				return 0;
+			await stateChangeLock.EnterReadLockAsync();
+			try
+			{
+				if(state == TunnelState.Init)
+					return 0;
+			}
+			finally
+			{
+				stateChangeLock.ExitReadLock();
+			}
+
 			try
 			{
 				return await downstream.ReadDataAsync(sz, buffer, offset);
 			}
 			catch(Exception ex)
 			{
-				if(state != TunnelState.Online)
-					throw new TunnelEofException(ex);
+				await stateChangeLock.EnterReadLockAsync();
+				try
+				{
+					if(state != TunnelState.Online)
+						throw new TunnelEofException(ex);
+				}
+				finally
+				{
+					stateChangeLock.ExitReadLock();
+				}
 				throw;
 			}
 		}
 
 		public int ReadData(int sz, byte[] buffer, int offset = 0)
 		{
-			stateChangeLock.EnterReadLock();
-			try
-			{
-				return readRunner.ExecuteTask(() => ReadDataAsyncWorker(sz, buffer, offset));
-			}
-			finally
-			{
-				stateChangeLock.ExitReadLock();
-			}
+			return readRunner.ExecuteTask(() => ReadDataAsyncWorker(sz, buffer, offset));
 		}
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
+			return await ReadDataAsyncWorker(sz, buffer, offset);
+		}
+
+		private async Task<int> WriteDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
+		{
 			await stateChangeLock.EnterReadLockAsync();
 			try
 			{
-				return await ReadDataAsyncWorker(sz, buffer, offset);
+				if(state == TunnelState.Init)
+					return 0;
+				if(state == TunnelState.Offline)
+					throw new TunnelEofException();
 			}
 			finally
 			{
 				stateChangeLock.ExitReadLock();
 			}
-		}
-
-		private async Task<int> WriteDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
-		{
-			if(state == TunnelState.Init)
-				return 0;
-			if(state == TunnelState.Offline)
-				throw new TunnelEofException();
 			return await downstream.WriteDataAsync(sz, buffer, offset);
 		}
 
 		public int WriteData(int sz, byte[] buffer, int offset = 0)
 		{
-			stateChangeLock.EnterReadLock();
-			try
-			{
-				return writeRunner.ExecuteTask(() => WriteDataAsyncWorker(sz, buffer, offset));
-			}
-			finally
-			{
-				stateChangeLock.ExitReadLock();
-			}
+			return writeRunner.ExecuteTask(() => WriteDataAsyncWorker(sz, buffer, offset));
 		}
 
 		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			await stateChangeLock.EnterReadLockAsync();
-			try
-			{
-				return await WriteDataAsyncWorker(sz, buffer, offset);
-			}
-			finally
-			{
-				stateChangeLock.ExitReadLock();
-			}
+			return await WriteDataAsyncWorker(sz, buffer, offset);
 		}
 
 		private async Task DisconnectAsyncWorker()
