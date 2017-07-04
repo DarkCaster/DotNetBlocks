@@ -221,26 +221,26 @@ namespace DarkCaster.DataTransfer.Config
 
 		public T Get<T>(string key)
 		{
-			StorageRecord record=null;
-			if(storage.TryGetValue(key.ToLower(), out record))
+			//TODO: add nullables support for primitives that do not support null value
+			if(storage.TryGetValue(key.ToLower(), out StorageRecord record))
 			{
-				if (record.PType == 0 && typeof(T) == typeof(byte[]))
+				if(record.PType == 0 && typeof(T) == typeof(byte[]))
 					return (T)(object)ReadByteRecord(record);
-				if (record.PType == 1 && typeof(T) == typeof(bool))
+				if(record.PType == 1 && typeof(T) == typeof(bool))
 					return (T)(object)ReadBoolRecord(record);
-				if (record.PType == 2 && typeof(T) == typeof(int))
+				if(record.PType == 2 && typeof(T) == typeof(int))
 					return (T)(object)ReadIntRecord(record);
-				if (record.PType == 3 && typeof(T) == typeof(uint))
+				if(record.PType == 3 && typeof(T) == typeof(uint))
 					return (T)(object)ReadUIntRecord(record);
-				if (record.PType == 4 && typeof(T) == typeof(long))
+				if(record.PType == 4 && typeof(T) == typeof(long))
 					return (T)(object)ReadLongRecord(record);
-				if (record.PType == 5 && typeof(T) == typeof(ulong))
+				if(record.PType == 5 && typeof(T) == typeof(ulong))
 					return (T)(object)ReadULongRecord(record);
-				if (record.PType == 6 && typeof(T) == typeof(float))
+				if(record.PType == 6 && typeof(T) == typeof(float))
 					return (T)(object)ReadFloatRecord(record);
-				if (record.PType == 7 && typeof(T) == typeof(double))
+				if(record.PType == 7 && typeof(T) == typeof(double))
 					return (T)(object)ReadDoubleRecord(record);
-				if (record.PType == 8 && typeof(T) == typeof(string))
+				if(record.PType == 8 && typeof(T) == typeof(string))
 					return (T)(object)ReadStringRecord(record);
 			}
 			return default(T);
