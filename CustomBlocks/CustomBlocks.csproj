@@ -103,8 +103,6 @@
     <Compile Include="DataTransfer\Abstracts\Client\INode.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelState.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelStateEventArgs.cs" />
-    <Compile Include="DataTransfer\Udp\Client\UdpClientNode.cs" />
-    <Compile Include="DataTransfer\Udp\Client\UdpClientTunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\IEntryNode.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelEofException.cs" />
     <Compile Include="DataTransfer\Abstracts\Config\ITunnelConfig.cs" />
@@ -149,9 +147,7 @@
     <Folder Include="Async" />
     <Folder Include="DataTransfer\" />
     <Folder Include="DataTransfer\Abstracts\" />
-    <Folder Include="DataTransfer\Udp\" />
     <Folder Include="DataTransfer\Abstracts\Client\" />
-    <Folder Include="DataTransfer\Udp\Client\" />
     <Folder Include="DataTransfer\EntryTunnel\" />
     <Folder Include="DataTransfer\Abstracts\Config\" />
     <Folder Include="DataTransfer\TunnelConfig\" />
