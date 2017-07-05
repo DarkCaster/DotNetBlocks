@@ -39,6 +39,8 @@ namespace DarkCaster.DataTransfer.Client.Tcp
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
+			if(sz == 0)
+				return 0;
 			return await Task.Factory.FromAsync(
 				(callback, state) => socket.BeginReceive(buffer, offset, sz, SocketFlags.None, callback, state),
 				socket.EndReceive, null).ConfigureAwait(false);
