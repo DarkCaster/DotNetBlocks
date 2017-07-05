@@ -25,13 +25,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using DarkCaster.Async;
 
 namespace DarkCaster.DataTransfer.Server
 {
 	public sealed class ExitTunnel : IExitTunnel
 	{
-		private readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
-		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
+		private readonly AsyncRunner readRunner = new AsyncRunner();
+		private readonly AsyncRunner writeRunner = new AsyncRunner();
 		private readonly ITunnel upstream;
 		private int isDisposed = 0;
 
@@ -42,69 +43,29 @@ namespace DarkCaster.DataTransfer.Server
 
 		public int ReadData(int sz, byte[] buffer, int offset = 0)
 		{
-			readLock.Wait();
-			try
-			{
-				return upstream.ReadData(sz, buffer, offset);
-			}
-			finally
-			{
-				readLock.Release();
-			}
+			return readRunner.ExecuteTask(() => upstream.ReadDataAsync(sz, buffer, offset));
 		}
 
 		public int WriteData(int sz, byte[] buffer, int offset = 0)
 		{
-			writeLock.Wait();
-			try
-			{
-				return upstream.WriteData(sz, buffer, offset);
-			}
-			finally
-			{
-				writeLock.Release();
-			}
+			return writeRunner.ExecuteTask(() => upstream.WriteDataAsync(sz, buffer, offset));
 		}
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			await readLock.WaitAsync();
-			try
-			{
-				return await upstream.ReadDataAsync(sz, buffer, offset);
-			}
-			finally
-			{
-				readLock.Release();
-			}
+			return await upstream.ReadDataAsync(sz, buffer, offset);
 		}
 
 		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			await writeLock.WaitAsync();
-			try
-			{
-				return await upstream.WriteDataAsync(sz, buffer, offset);
-			}
-			finally
-			{
-				writeLock.Release();
-			}
+			return await upstream.WriteDataAsync(sz, buffer, offset);
 		}
 
 		public void Dispose()
 		{
 			if (Interlocked.CompareExchange(ref isDisposed, 1, 0) != 0)
 				return;
-			try
-			{
-				upstream.Dispose();
-			}
-			finally
-			{
-				readLock.Dispose();
-				writeLock.Dispose();
-			}
+			upstream.Dispose();
 		}
 	}
 }

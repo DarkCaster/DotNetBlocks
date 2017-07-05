@@ -28,10 +28,34 @@ namespace DarkCaster.DataTransfer.Server
 	/// <summary>
 	/// Server side exit-tunnel.
 	/// Object of this interface should be used to perform data transfer from user's code, instead of using INode directly.
-	/// Defined methods are thread-safe. Some methods combinations use locks to guarantee data consistency:
-	/// read and write methods may be executed at the same time concurrently,
+	/// Read and write methods may be executed at the same time concurrently,
 	/// but no two parallel read or write calls allowed.
 	/// Dispose must be called after all read\write jobs is terminated, and it will close and dispose all upstrean tunnels.
 	/// </summary>
-	public interface IExitTunnel : ITunnel { }
+	public interface IExitTunnel : ITunnel
+	{
+		/// <summary>
+		/// Data read request, that blocks while awaiting for data.
+		/// May return less data, than requested.
+		/// Will throw TunnelEofException on closed connection, when no data left to read.
+		/// ReadData should not be used after any exception is thrown.
+		/// </summary>
+		/// <returns>Bytes count that was actually read</returns>
+		/// <param name="sz">Bytes count to read</param>
+		/// <param name="buffer">Buffer, where to store received data</param>
+		/// <param name="offset">Offset</param>
+		int ReadData(int sz, byte[] buffer, int offset = 0);
+
+		/// <summary>
+		/// Data write request, that blocks execution while writing requested amound of data.
+		/// May write less data, than requested.
+		/// WriteData should not be used after any exception is thrown.
+		/// May throw TunnelEofException when trying to write data on closed connection.
+		/// </summary>
+		/// <param name="sz">Bytes count to write</param>
+		/// <param name="buffer">Buffer, where source data is located</param>
+		/// <param name="offset">Offset</param>
+		/// <returns>Bytes count that was actually written</returns>
+		int WriteData(int sz, byte[] buffer, int offset = 0);
+	}
 }
