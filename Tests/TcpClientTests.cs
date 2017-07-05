@@ -24,10 +24,9 @@
 //
 using System;
 using NUnit.Framework;
-using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Config;
-using DarkCaster.DataTransfer.Client;
 using DarkCaster.DataTransfer.Client.Tcp;
 using DarkCaster.Async;
 using Tests.Mocks;
@@ -40,11 +39,12 @@ namespace Tests
 		[Test]
 		public void Connect()
 		{
-			var mock = new MockTcpServer(55555);
+			var port = 55551;
+			var mock = new MockTcpServer(port);
 			mock.RunServer();
 			var config = new TunnelConfig();
 			config.Set("remote_host", "localhost");
-			config.Set("remote_port", 55555);
+			config.Set("remote_port", port);
 			var runner = new AsyncRunner();
 			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
 			runner.ExecuteTask(tunnel.DisconnectAsync);
@@ -55,17 +55,18 @@ namespace Tests
 		[Test]
 		public void ReadBlock()
 		{
-			var mock = new MockTcpServer(55555);
+			var port = 55552;
+			var mock = new MockTcpServer(port);
 			mock.RunServer();
 			var config = new TunnelConfig();
 			config.Set("remote_host", "localhost");
-			config.Set("remote_port", 55555);
+			config.Set("remote_port", port);
 			var runner = new AsyncRunner();
 			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
 			var buffer = new byte[1024];
 			int read = -1;
 			runner.AddTask(() => tunnel.ReadDataAsync(1024, buffer, 0), (x) => read = x);
-			runner.AddTask(tunnel.DisconnectAsync);
+			runner.AddTask(async () => { await Task.Delay(1000); await tunnel.DisconnectAsync(); });
 			try
 			{
 				runner.RunPendingTasks();
@@ -82,11 +83,12 @@ namespace Tests
 		[Test]
 		public void ReadLessData()
 		{
-			var mock = new MockTcpServer(55555);
+			var port = 55553;
+			var mock = new MockTcpServer(port);
 			mock.RunServer();
 			var config = new TunnelConfig();
 			config.Set("remote_host", "localhost");
-			config.Set("remote_port", 55555);
+			config.Set("remote_port", port);
 			var runner = new AsyncRunner();
 			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
 			var buffer = new byte[1024];
@@ -94,6 +96,91 @@ namespace Tests
 			mock.connection.Send(sbuffer);
 			int read = runner.ExecuteTask(() => tunnel.ReadDataAsync(1024, buffer, 0));
 			Assert.AreEqual(1, read);
+			runner.ExecuteTask(tunnel.DisconnectAsync);
+			tunnel.Dispose();
+			mock.Dispose();
+		}
+
+		[Test]
+		public void ReadNull()
+		{
+			var port = 55554;
+			var mock = new MockTcpServer(port);
+			mock.RunServer();
+			var config = new TunnelConfig();
+			config.Set("remote_host", "localhost");
+			config.Set("remote_port", port);
+			var runner = new AsyncRunner();
+			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
+			var buffer = new byte[1024];
+			int read = runner.ExecuteTask(() => tunnel.ReadDataAsync(0, buffer, 0));
+			Assert.AreEqual(0, read);
+			runner.ExecuteTask(tunnel.DisconnectAsync);
+			tunnel.Dispose();
+			mock.Dispose();
+		}
+
+		[Test]
+		public void WriteNull()
+		{
+			var port = 55555;
+			var mock = new MockTcpServer(port);
+			mock.RunServer();
+			var config = new TunnelConfig();
+			config.Set("remote_host", "localhost");
+			config.Set("remote_port", port);
+			var runner = new AsyncRunner();
+			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
+			var buffer = new byte[1024];
+			int write = runner.ExecuteTask(() => tunnel.WriteDataAsync(0, buffer, 0));
+			Assert.AreEqual(0, write);
+			runner.ExecuteTask(tunnel.DisconnectAsync);
+			tunnel.Dispose();
+			mock.Dispose();
+		}
+
+		[Test]
+		public void WriteBlock()
+		{
+			var port = 55556;
+			var mock = new MockTcpServer(port);
+			mock.RunServer();
+			var config = new TunnelConfig();
+			config.Set("remote_host", "localhost");
+			config.Set("remote_port", port);
+			var runner = new AsyncRunner();
+			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
+			var buffer = new byte[16 * 1024 * 1024];
+			int write = -1;
+			runner.AddTask(() => tunnel.WriteDataAsync(16 * 1024 * 1024, buffer, 0), (x) => write = x);
+			runner.AddTask(async()=> { await Task.Delay(1000); await tunnel.DisconnectAsync(); });
+			try
+			{
+				runner.RunPendingTasks();
+			}
+			catch(AggregateException ex)
+			{
+				Assert.AreSame(typeof(SocketException), ex.InnerException.GetType());
+			}
+			Assert.AreEqual(-1, write);
+			tunnel.Dispose();
+			mock.Dispose();
+		}
+
+		[Test]
+		public void WriteData()
+		{
+			var port = 55557;
+			var mock = new MockTcpServer(port);
+			mock.RunServer();
+			var config = new TunnelConfig();
+			config.Set("remote_host", "localhost");
+			config.Set("remote_port", port);
+			var runner = new AsyncRunner();
+			var tunnel = runner.ExecuteTask(async () => { return await new TcpClientNode().OpenTunnelAsync(config); });
+			var buffer = new byte[1];
+			int write = runner.ExecuteTask(() => tunnel.WriteDataAsync(1, buffer, 0));
+			Assert.AreEqual(1, write);
 			runner.ExecuteTask(tunnel.DisconnectAsync);
 			tunnel.Dispose();
 			mock.Dispose();

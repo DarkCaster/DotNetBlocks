@@ -32,22 +32,44 @@ namespace Tests.Mocks
 {
 	public class MockTcpServer : IDisposable
 	{
+		private readonly int port;
 		public readonly Socket socket;
 		public volatile Socket connection;
+		public volatile Task server;
+		private volatile bool isDisposed = false;
 
 		public void RunServer()
 		{
-			Task.Run(() => ServerTask());
+			server=Task.Run(() => ServerTask());
+			var result = false;
+			while(!result)
+			{
+				try
+				{
+					//open tcp connection
+					var addr = Dns.GetHostEntry("localhost").AddressList[0];
+					var client = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+					client.Connect(new IPEndPoint(addr, port));
+					client.Dispose();
+				}
+				catch
+				{
+					continue;
+				}
+				result = true;
+			}
 		}
 
 		private void ServerTask()
 		{
 			socket.Listen(1);
-			connection=socket.Accept();
+			while(!isDisposed)
+				connection = socket.Accept();
 		}
 
 		public MockTcpServer(int port)
 		{
+			this.port = port;
 			IPHostEntry ipHost = Dns.GetHostEntry("localhost");
 			IPAddress ipAddr = ipHost.AddressList[0];
 			IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, port);
@@ -57,8 +79,11 @@ namespace Tests.Mocks
 
 		public void Dispose()
 		{
-			socket.Dispose();
+			isDisposed = true;
+			connection.Close();
 			connection.Dispose();
+			socket.Close();
+			socket.Dispose();
 		}
 	}
 }
