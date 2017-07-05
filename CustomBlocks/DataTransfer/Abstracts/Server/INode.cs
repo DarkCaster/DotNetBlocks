@@ -30,11 +30,11 @@ namespace DarkCaster.DataTransfer.Server
 	public interface INode : IDisposable
 	{
 		/// <summary>
-		/// Perform init. May block while processing.
+		/// Perform init, same as Init() but async.
 		/// After init is complete it is ready to accept new connections and spawn new ITunnel instances.
 		/// Should be called by downstream node (IExitNode, for example).
 		/// </summary>
-		void Init();
+		Task InitAsync();
 
 		/// <summary>
 		/// Register downstream node. Should called only by downstream node in it's constructor.

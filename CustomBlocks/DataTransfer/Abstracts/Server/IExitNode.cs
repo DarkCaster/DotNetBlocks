@@ -30,5 +30,11 @@ namespace DarkCaster.DataTransfer.Server
 	public interface IExitNode : INode
 	{
 		ISafeEvent<NewTunnelEventArgs> IncomingConnectionEvent { get; }
+
+		/// <summary>
+		/// Perform init. May block while processing.
+		/// After init is complete it is ready to accept new connections and spawn new ITunnel instances.
+		/// </summary>
+		void Init();
 	}
 }

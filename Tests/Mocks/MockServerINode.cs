@@ -55,9 +55,10 @@ namespace Tests.Mocks
 			LastTunnel = null;
 		}
 
-		public void Init()
+		public Task InitAsync()
 		{
 			Interlocked.Increment(ref initCount);
+			return Task.FromResult(true);
 		}
 
 		public void RegisterDownstream(INode downstream)

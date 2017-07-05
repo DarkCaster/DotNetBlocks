@@ -36,6 +36,7 @@ namespace DarkCaster.DataTransfer.Server
 
 		private readonly INode upstreamNode = null;
 		private readonly AsyncRWLock upstreamLock = new AsyncRWLock();
+		private readonly AsyncRunner asyncRunner = new AsyncRunner();
 		private readonly ISafeEventCtrl<NewTunnelEventArgs> evCtl;
 		private readonly ISafeEvent<NewTunnelEventArgs> ev;
 
@@ -61,7 +62,17 @@ namespace DarkCaster.DataTransfer.Server
 			{
 				if (isDisposed)
 					return;
-				upstreamNode.Init();
+				asyncRunner.ExecuteTask(upstreamNode.InitAsync);
+			}
+			finally { upstreamLock.ExitReadLock(); }
+		}
+
+		public async Task InitAsync()
+		{
+			await upstreamLock.EnterReadLockAsync();
+			try
+			{
+				await upstreamNode.InitAsync();
 			}
 			finally { upstreamLock.ExitReadLock(); }
 		}
