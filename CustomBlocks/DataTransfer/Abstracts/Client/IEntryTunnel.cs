@@ -33,7 +33,7 @@ namespace DarkCaster.DataTransfer.Client
 	/// Some methods combinations use locks to guarantee state and data consistency:
 	/// read and write methods may be executed at the same time concurrently from different threads,
 	/// but no two parallel read or write calls allowed,
-	/// connect\disconnect method-calls are interlocked with all other methods and itself.
+	/// connect and disconnect method-calls are mutually interlocked.
 	/// </summary>
 	public interface IEntryTunnel : IDisposable
 	{
@@ -62,8 +62,7 @@ namespace DarkCaster.DataTransfer.Client
 		/// Data read request. Blocks while awaiting for data.
 		/// May return less data, than requested.
 		/// May be used in offline state, to read remaining data from tunnel.
-		/// While tunnel is connecting, it will block while tunnel do not switch to online or offline state.
-		/// In offline state it will read remaining data, and throw TunnelEofException when no stale data left in tunnel. 
+		/// In offline state it will read remaining data, and throw TunnelEofException when no stale data left in tunnel.
 		/// </summary>
 		/// <returns>Bytes count that was actually read</returns>
 		/// <param name="sz">Bytes count to read</param>
@@ -74,7 +73,6 @@ namespace DarkCaster.DataTransfer.Client
 		/// <summary>
 		/// Data write request, that blocks execution while writing requested amound of data.
 		/// May return less data-written count, than requested.
-		/// While tunnel is connecting, it will block while tunnel do not switch to online or offline state.
 		/// In offline state it will throw TunnelEofException.
 		/// </summary>
 		/// <returns>Bytes count that was actually written</returns>
