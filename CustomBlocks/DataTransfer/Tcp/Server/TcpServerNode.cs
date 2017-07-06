@@ -33,25 +33,78 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 {
 	public sealed class TcpServerNode : INode
 	{
+		private int isDisposed = 0;
+
+		private readonly int port;
+		private readonly string[] bindings;
+		private readonly bool nodelay;
+		private readonly int bufferSize;
+
+		private readonly object listenersManageLock = new object();
+		private Task[] listeners;
+
+		private volatile INode downstream;
+
 		public TcpServerNode(ITunnelConfig serverConfig)
 		{
-			var port = serverConfig.Get<int>("local_port");
+			port = serverConfig.Get<int>("local_port");
 			//get port
 			if(port == 0)
 				port = 65000;
-			//TODO: get list of addresses to bind to
-			int lCnt = 10;
-			//TODO: create array of params for listenters
+			//get addreses to bind
+			var binding = serverConfig.Get<string>("bind");
+			if(!string.IsNullOrEmpty(binding))
+				bindings = binding.Split(';');
+			else
+			{
+				bindings = new string[2];
+				bindings[0] = "any_ip4";
+				bindings[1] = "any_ip6";
+			}
+			for(int i = 0; i < bindings.Length; ++i)
+				bindings[i] = bindings[i].ToLower();
+			nodelay = serverConfig.Get<bool>("tcp_nodelay");
+			bufferSize = serverConfig.Get<int>("tcp_buffer_size");
+			listeners = new Task[bindings.Length];
 		}
 
 		public Task InitAsync()
 		{
-			throw new NotImplementedException("TODO");
+			lock(listenersManageLock)
+				for(int i = 0; i < listeners.Length; ++i)
+					listeners[i] = Task.Run(() => ListenerWorker(bindings[i]));
+			return Task.FromResult(true);
+		}
+
+		private async Task ListenerWorker( string binding )
+		{
+			IPAddress addr = null;
+			if(binding == "any_ip4")
+				addr = IPAddress.Any;
+			else if(!IPAddress.TryParse(binding, out addr))
+				addr = (await Dns.GetHostAddressesAsync(binding))[0];
+			var listener = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+			listener.Bind(new IPEndPoint(addr, port));
+			listener.Listen(10);
+			while( Interlocked.CompareExchange(ref isDisposed, 0, 0) == 0 )
+			{
+				var tSocket = await Task.Factory.FromAsync(listener.BeginAccept, listener.EndAccept, null);
+				tSocket.NoDelay = nodelay;
+				if(bufferSize!=0)
+				{
+					tSocket.ReceiveBufferSize = bufferSize;
+					tSocket.SendBufferSize = bufferSize;
+				}
+				//TODO: create new tunnel
+				//TODO: create itunnel config and populate it with diagnostic stuff like incoming ip address, port, etc
+				//TODO: call downstream's OpenTunnelAsync
+				throw new NotImplementedException("TODO");
+			}
 		}
 
 		public void RegisterDownstream(INode downstream)
 		{
-			throw new NotImplementedException("TODO");
+			this.downstream = downstream;
 		}
 
 		public Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
@@ -59,8 +112,19 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 			throw new NotSupportedException("TcpServerNode::OpenTunnelAsync cannot be called by upstream, becaue this is a top node");
 		}
 
+		public Task ShutdownAsync()
+		{
+			Interlocked.CompareExchange(ref isDisposed, 1, 0);
+			lock(listenersManageLock)
+				for(int i = 0; i < listeners.Length; ++i)
+					//TODO: task cancelation
+					throw new NotImplementedException("TODO");
+			return Task.FromResult(true);
+		}
+
 		public void Dispose()
 		{
+			//TODO: dispose all listener-sockets;
 			throw new NotImplementedException("TODO");
 		}
 	}
