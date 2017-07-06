@@ -47,6 +47,7 @@ namespace Tests.Mocks
 		private int readAsyncCount = 0;
 		private int writeAsyncCount = 0;
 		private int disposeCount = 0;
+		private int disconnectCount = 0;
 
 		public MockServerITunnel(int minDelay, int maxDelay, float failProbability, float partialOpProbability, int noFailOpsCount)
 		{
@@ -134,8 +135,15 @@ namespace Tests.Mocks
 				throw new ObjectDisposedException("Dispose on ITunnel objects should be only run once!");
 		}
 
+		public Task DisconnectAsync()
+		{
+			Interlocked.Increment(ref disconnectCount);
+			return Task.FromResult(true);
+		}
+
 		public int ReadAsyncCount { get { return Interlocked.CompareExchange(ref readAsyncCount, 0, 0); } }
 		public int WriteAsyncCount { get { return Interlocked.CompareExchange(ref writeAsyncCount, 0, 0); } }
 		public int DisposeCount { get { return Interlocked.CompareExchange(ref disposeCount, 0, 0); } }
+		public int DisconnectCount { get { return Interlocked.CompareExchange(ref disconnectCount, 0, 0); } }
 	}
 }

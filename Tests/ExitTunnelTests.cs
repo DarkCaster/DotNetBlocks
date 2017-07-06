@@ -95,6 +95,7 @@ namespace Tests
 			var dbgTunnel = mockNode.LastTunnel;
 			Assert.NotNull(dbgTunnel);
 			Assert.AreEqual(1, dbgTunnel.DisposeCount);
+			Assert.AreEqual(1, dbgTunnel.DisconnectCount);
 		}
 
 		private volatile Exception readEx = null;
@@ -224,6 +225,7 @@ namespace Tests
 			var dbgTunnel = mockNode.LastTunnel;
 			Assert.NotNull(dbgTunnel);
 			Assert.AreEqual(1, dbgTunnel.DisposeCount);
+			Assert.AreEqual(1, dbgTunnel.DisconnectCount);
 			Assert.GreaterOrEqual(dbgTunnel.ReadAsyncCount, Interlocked.CompareExchange(ref readOps, 0, 0));
 			Assert.GreaterOrEqual(dbgTunnel.WriteAsyncCount, Interlocked.CompareExchange(ref writeOps, 0, 0));
 		}
@@ -267,6 +269,7 @@ namespace Tests
 			var dbgTunnel = mockNode.LastTunnel;
 			Assert.NotNull(dbgTunnel);
 			Assert.AreEqual(1, dbgTunnel.DisposeCount);
+			Assert.AreEqual(1, dbgTunnel.DisconnectCount);
 			Assert.GreaterOrEqual(dbgTunnel.ReadAsyncCount, Interlocked.CompareExchange(ref readOps, 0, 0));
 			Assert.GreaterOrEqual(dbgTunnel.WriteAsyncCount, Interlocked.CompareExchange(ref writeOps, 0, 0));
 		}

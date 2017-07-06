@@ -33,38 +33,85 @@ namespace DarkCaster.DataTransfer.Server
 	{
 		private readonly AsyncRunner readRunner = new AsyncRunner();
 		private readonly AsyncRunner writeRunner = new AsyncRunner();
+		private readonly AsyncRunner disconnectRunner = new AsyncRunner();
 		private readonly ITunnel upstream;
 		private int isDisposed = 0;
+		private int isDisconnected = 0;
 
 		public ExitTunnel(ITunnel upstream)
 		{
 			this.upstream = upstream;
 		}
 
+		private async Task<int> WriteDataWorkerAsync(int sz, byte[] buffer, int offset)
+		{
+			if(Interlocked.CompareExchange(ref isDisconnected, 0, 0) != 0)
+				throw new TunnelEofException();
+			try
+			{
+				return await upstream.WriteDataAsync(sz, buffer, offset);
+			}
+			catch
+			{
+				if(Interlocked.CompareExchange(ref isDisconnected, 0, 0) != 0)
+					throw new TunnelEofException();
+				throw;
+			}
+		}
+
+		private async Task<int> ReadDataWorkerAsync(int sz, byte[] buffer, int offset)
+		{
+			try
+			{
+				return await upstream.ReadDataAsync(sz, buffer, offset);
+			}
+			catch
+			{
+				if(Interlocked.CompareExchange(ref isDisconnected, 0, 0) != 0)
+					throw new TunnelEofException();
+				throw;
+			}
+		}
+
 		public int ReadData(int sz, byte[] buffer, int offset = 0)
 		{
-			return readRunner.ExecuteTask(() => upstream.ReadDataAsync(sz, buffer, offset));
+			return readRunner.ExecuteTask(() => ReadDataWorkerAsync(sz, buffer, offset));
 		}
 
 		public int WriteData(int sz, byte[] buffer, int offset = 0)
 		{
-			return writeRunner.ExecuteTask(() => upstream.WriteDataAsync(sz, buffer, offset));
+			return writeRunner.ExecuteTask(() => WriteDataWorkerAsync(sz, buffer, offset));
 		}
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			return await upstream.ReadDataAsync(sz, buffer, offset);
+			return await ReadDataWorkerAsync(sz, buffer, offset);
 		}
 
 		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			return await upstream.WriteDataAsync(sz, buffer, offset);
+			return await WriteDataWorkerAsync(sz, buffer, offset);
+		}
+
+		public void Disconnect()
+		{
+			if(Interlocked.CompareExchange(ref isDisconnected, 1, 0) != 0)
+				return;
+			disconnectRunner.ExecuteTask(upstream.DisconnectAsync);
+		}
+
+		public async Task DisconnectAsync()
+		{
+			if(Interlocked.CompareExchange(ref isDisconnected, 1, 0) != 0)
+				return;
+			await upstream.DisconnectAsync();
 		}
 
 		public void Dispose()
 		{
 			if (Interlocked.CompareExchange(ref isDisposed, 1, 0) != 0)
 				return;
+			Disconnect();
 			upstream.Dispose();
 		}
 	}
