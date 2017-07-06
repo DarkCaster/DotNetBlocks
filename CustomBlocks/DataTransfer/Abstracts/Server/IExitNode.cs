@@ -36,5 +36,13 @@ namespace DarkCaster.DataTransfer.Server
 		/// After init is complete it is ready to accept new connections and spawn new ITunnel instances.
 		/// </summary>
 		void Init();
+
+		/// <summary>
+		/// Perform shutdown of INode instance.
+		/// Should be called by upstream INode or user code (in case of IExitTunnel)
+		/// This method should be used to stop all running tasks that can spawn new tunnels,
+		/// and prepare instance to be disposed.
+		/// </summary>
+		void Shutdown();
 	}
 }

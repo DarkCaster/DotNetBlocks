@@ -33,6 +33,7 @@ namespace DarkCaster.DataTransfer.Server
 	public sealed class ExitNode : IExitNode
 	{
 		private bool isDisposed = false;
+		private bool isShutdown = false;
 
 		private readonly INode upstreamNode = null;
 		private readonly AsyncRWLock upstreamLock = new AsyncRWLock();
@@ -60,7 +61,7 @@ namespace DarkCaster.DataTransfer.Server
 			upstreamLock.EnterReadLock();
 			try
 			{
-				if (isDisposed)
+				if (isDisposed || isShutdown)
 					return;
 				asyncRunner.ExecuteTask(upstreamNode.InitAsync);
 			}
@@ -72,6 +73,8 @@ namespace DarkCaster.DataTransfer.Server
 			await upstreamLock.EnterReadLockAsync();
 			try
 			{
+				if(isDisposed || isShutdown)
+					return;
 				await upstreamNode.InitAsync();
 			}
 			finally { upstreamLock.ExitReadLock(); }
@@ -106,6 +109,41 @@ namespace DarkCaster.DataTransfer.Server
 			}
 		}
 
+		private async Task ShutdownAsyncWorker()
+		{
+			if(isShutdown)
+				return;
+			isShutdown = true;
+			if(upstreamNode != null)
+				await upstreamNode.ShutdownAsync();
+		}
+
+		public void Shutdown()
+		{
+			upstreamLock.EnterWriteLock();
+			try
+			{
+				asyncRunner.ExecuteTask(ShutdownAsyncWorker);
+			}
+			finally
+			{
+				upstreamLock.ExitWriteLock();
+			}
+		}
+
+		public async Task ShutdownAsync()
+		{
+			await upstreamLock.EnterWriteLockAsync();
+			try
+			{
+				await ShutdownAsyncWorker();
+			}
+			finally
+			{
+				upstreamLock.ExitWriteLock();
+			}
+		}
+
 		public void Dispose()
 		{
 			upstreamLock.EnterWriteLock();
@@ -114,6 +152,7 @@ namespace DarkCaster.DataTransfer.Server
 				if (isDisposed)
 					return;
 				isDisposed = true;
+				asyncRunner.ExecuteTask(ShutdownAsyncWorker);
 				if (upstreamNode != null)
 					upstreamNode.Dispose();
 			}

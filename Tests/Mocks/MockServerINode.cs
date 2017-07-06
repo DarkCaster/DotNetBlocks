@@ -34,6 +34,7 @@ namespace Tests.Mocks
 	{
 		public int initCount = 0;
 		public int disposeCount = 0;
+		public int shutdownCount = 0;
 
 		private readonly int minDelay;
 		private readonly int maxDelay;
@@ -80,6 +81,12 @@ namespace Tests.Mocks
 		public void Dispose()
 		{
 			Interlocked.Increment(ref disposeCount);
+		}
+
+		public Task ShutdownAsync()
+		{
+			Interlocked.Increment(ref shutdownCount);
+			return Task.FromResult(true);
 		}
 	}
 }

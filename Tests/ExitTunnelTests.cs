@@ -39,7 +39,12 @@ namespace Tests
 		public void NewNode()
 		{
 			var mockNode = new MockServerINode(0, 0, 0, 0, 10);
-			Assert.DoesNotThrow(() => new ExitNode(mockNode));
+			IExitNode node=null;
+			Assert.DoesNotThrow(() => { node = new ExitNode(mockNode); });
+			Assert.DoesNotThrow(node.Shutdown);
+			Assert.DoesNotThrow(node.Dispose);
+			Assert.AreEqual(1,mockNode.disposeCount);
+			Assert.AreEqual(1, mockNode.shutdownCount);
 		}
 
 		private int incomingEvCount = 0;
@@ -96,6 +101,9 @@ namespace Tests
 			Assert.NotNull(dbgTunnel);
 			Assert.AreEqual(1, dbgTunnel.DisposeCount);
 			Assert.AreEqual(1, dbgTunnel.DisconnectCount);
+			node.Dispose();
+			Assert.AreEqual(1, mockNode.disposeCount);
+			Assert.AreEqual(1, mockNode.shutdownCount);
 		}
 
 		private volatile Exception readEx = null;
@@ -228,6 +236,10 @@ namespace Tests
 			Assert.AreEqual(1, dbgTunnel.DisconnectCount);
 			Assert.GreaterOrEqual(dbgTunnel.ReadAsyncCount, Interlocked.CompareExchange(ref readOps, 0, 0));
 			Assert.GreaterOrEqual(dbgTunnel.WriteAsyncCount, Interlocked.CompareExchange(ref writeOps, 0, 0));
+
+			node.Dispose();
+			Assert.AreEqual(1, mockNode.disposeCount);
+			Assert.AreEqual(1, mockNode.shutdownCount);
 		}
 
 		[Test]
@@ -272,6 +284,10 @@ namespace Tests
 			Assert.AreEqual(1, dbgTunnel.DisconnectCount);
 			Assert.GreaterOrEqual(dbgTunnel.ReadAsyncCount, Interlocked.CompareExchange(ref readOps, 0, 0));
 			Assert.GreaterOrEqual(dbgTunnel.WriteAsyncCount, Interlocked.CompareExchange(ref writeOps, 0, 0));
+
+			node.Dispose();
+			Assert.AreEqual(1, mockNode.disposeCount);
+			Assert.AreEqual(1, mockNode.shutdownCount);
 		}
 	}
 }

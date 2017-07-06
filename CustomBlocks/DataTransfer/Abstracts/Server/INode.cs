@@ -49,5 +49,14 @@ namespace DarkCaster.DataTransfer.Server
 		/// <param name="config">Config object, that may be used to tune-up tunnel's params</param>
 		/// <param name="upstream">ITunnel object from upstream, will be used in read\write operations</param>
 		Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream);
+
+		/// <summary>
+		/// Perform shutdown of INode instance.
+		/// Should be called by upstream INode or user code (in case of IExitTunnel)
+		/// This method should be used to stop all running tasks that can spawn new tunnels,
+		/// and prepare instance to be disposed.
+		/// </summary>
+		/// <returns>The shutdown.</returns>
+		Task ShutdownAsync();
 	}
 }
