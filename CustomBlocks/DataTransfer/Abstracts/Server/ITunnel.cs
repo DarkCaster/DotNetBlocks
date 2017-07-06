@@ -31,5 +31,6 @@ namespace DarkCaster.DataTransfer.Server
 	{
 		Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0);
 		Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0);
+		Task DisconnectAsync();
 	}
 }

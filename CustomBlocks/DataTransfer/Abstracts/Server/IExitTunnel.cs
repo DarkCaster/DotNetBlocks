@@ -57,5 +57,11 @@ namespace DarkCaster.DataTransfer.Server
 		/// <param name="offset">Offset</param>
 		/// <returns>Bytes count that was actually written</returns>
 		int WriteData(int sz, byte[] buffer, int offset = 0);
+
+		/// <summary>
+		/// Perform tunnel disconnect,
+		/// Read of write calls may throw exception after disconnect.
+		/// </summary>
+		void Disconnect();
 	}
 }
