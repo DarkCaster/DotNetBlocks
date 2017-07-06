@@ -25,6 +25,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Config;
 
@@ -32,6 +33,17 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 {
 	public sealed class TcpServerNode : INode
 	{
+		public TcpServerNode(ITunnelConfig serverConfig)
+		{
+			var port = serverConfig.Get<int>("local_port");
+			//get port
+			if(port == 0)
+				port = 65000;
+			//TODO: get list of addresses to bind to
+			int lCnt = 10;
+			//TODO: create array of params for listenters
+		}
+
 		public Task InitAsync()
 		{
 			throw new NotImplementedException("TODO");
@@ -44,7 +56,7 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 
 		public Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
 		{
-			throw new NotImplementedException("TODO");
+			throw new NotSupportedException("TcpServerNode::OpenTunnelAsync cannot be called by upstream, becaue this is a top node");
 		}
 
 		public void Dispose()
