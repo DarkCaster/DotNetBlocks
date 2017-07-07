@@ -50,5 +50,19 @@ namespace Tests
 			node.Dispose();
 		}
 
+		[Test]
+		public void InitFail()
+		{
+			var config = new TunnelConfig();
+			config.Set("bind", "127.0.0.1;127.0.0.2;noresolve.none");
+			var node = new TcpServerNode(config);
+			var runner = new AsyncRunner();
+			var mock = new MockServerINode(0, 0, 0, 0, 1, node);
+			runner.ExecuteTask(node.InitAsync);
+			Assert.AreEqual(typeof(SocketException), mock.ex.GetType());
+			runner.ExecuteTask(node.ShutdownAsync);
+			node.Dispose();
+		}
+
 	}
 }
