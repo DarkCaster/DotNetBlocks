@@ -72,6 +72,11 @@ namespace Tests.Mocks
 			throw new NotSupportedException("NOPE");
 		}
 
+		public Task NodeFailAsync(Exception ex)
+		{
+			throw new NotSupportedException("NOPE");
+		}
+
 		public void CreateTunnel()
 		{
 			LastTunnel = new MockServerITunnel(minDelay, maxDelay, failProbability, partialOpProbability, noFailOpsCount);

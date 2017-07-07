@@ -43,12 +43,22 @@ namespace DarkCaster.DataTransfer.Server
 		void RegisterDownstream(INode downstream);
 
 		/// <summary>
-		/// Open new tunnel. May be requested only by upstream node.
+		/// Open new tunnel. May be requested only by upstream node, usually, from separate thread.
+		/// You may need to add additional synchronization if you need access shared data.
 		/// </summary>
-		/// <returns>Awaitable Task object, that represent tunnel open process.</returns>
+		/// <returns>Awaitable Task object, that represent tunnel-open process.</returns>
 		/// <param name="config">Config object, that may be used to tune-up tunnel's params</param>
 		/// <param name="upstream">ITunnel object from upstream, will be used in read\write operations</param>
 		Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream);
+
+		/// <summary>
+		/// May be called only by upstream node to indicate error in operation, usually from separate thread.
+		/// You may need to add additional synchronization if you need access shared data.
+		/// Must be forwarted to downstream, down to final IExitNode (that will notify user's code about error).
+		/// </summary>
+		/// <returns>The fail async.</returns>
+		/// <param name="ex">Ex.</param>
+		Task NodeFailAsync(Exception ex);
 
 		/// <summary>
 		/// Perform shutdown of INode instance.

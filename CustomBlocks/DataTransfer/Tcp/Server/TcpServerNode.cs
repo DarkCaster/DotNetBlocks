@@ -112,6 +112,11 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 			throw new NotSupportedException("TcpServerNode::OpenTunnelAsync cannot be called by upstream, becaue this is a top node");
 		}
 
+		public Task NodeFailAsync(Exception ex)
+		{
+			throw new NotSupportedException("TcpServerNode::NodeFailAsync cannot be called by upstream, becaue this is a top node");
+		}
+
 		public Task ShutdownAsync()
 		{
 			Interlocked.CompareExchange(ref isDisposed, 1, 0);

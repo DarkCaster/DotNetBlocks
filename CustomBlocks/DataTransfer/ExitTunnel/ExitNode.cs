@@ -38,23 +38,32 @@ namespace DarkCaster.DataTransfer.Server
 		private readonly INode upstreamNode = null;
 		private readonly AsyncRWLock upstreamLock = new AsyncRWLock();
 		private readonly AsyncRunner asyncRunner = new AsyncRunner();
-		private readonly ISafeEventCtrl<NewTunnelEventArgs> evCtl;
-		private readonly ISafeEvent<NewTunnelEventArgs> ev;
+		private readonly ISafeEventCtrl<NewTunnelEventArgs> incomingEvCtl;
+		private readonly ISafeEvent<NewTunnelEventArgs> incomingEv;
+		private readonly ISafeEventCtrl<NodeFailEventArgs> errorEvCtl;
+		private readonly ISafeEvent<NodeFailEventArgs> errorEv;
 
 		public ExitNode(INode upstream)
 		{
 			this.upstreamNode = upstream;
 			upstream.RegisterDownstream(this);
 #if DEBUG
-			evCtl = new SafeEventDbg<NewTunnelEventArgs>();
-			ev = (ISafeEvent<NewTunnelEventArgs>)evCtl;
+			incomingEvCtl = new SafeEventDbg<NewTunnelEventArgs>();
+			incomingEv = (ISafeEvent<NewTunnelEventArgs>)incomingEvCtl;
+			errorEvCtl = new SafeEventDbg<NodeFailEventArgs>();
+			errorEv = (ISafeEvent<NodeFailEventArgs>)errorEvCtl;
 #else
-			evCtl = new SafeEvent<NewTunnelEventArgs>();
-			ev = (ISafeEvent<NewTunnelEventArgs>)evCtl;
+			incomingEvCtl = new SafeEvent<NewTunnelEventArgs>();
+			incomingEv = (ISafeEvent<NewTunnelEventArgs>)incomingEvCtl;
+			errorEvCtl = new SafeEvent<NodeFailEventArgs>();
+			errorEv = (ISafeEvent<NodeFailEventArgs>)errorEvCtl;
 #endif
+
 		}
 
-		public ISafeEvent<NewTunnelEventArgs> IncomingConnectionEvent { get { return ev; } }
+		public ISafeEvent<NewTunnelEventArgs> IncomingConnectionEvent { get { return incomingEv; } }
+
+		public ISafeEvent<NodeFailEventArgs> NodeFailEvent { get { return errorEv; } }
 
 		public void Init()
 		{
@@ -88,7 +97,7 @@ namespace DarkCaster.DataTransfer.Server
 		private void SpawnExitTunnel(ITunnelConfig config, ITunnel upstream)
 		{
 			var tunnel = new ExitTunnel(upstream);
-			Task.Run(() => evCtl.Raise(this, new NewTunnelEventArgs(tunnel, config)));
+			Task.Run(() => incomingEvCtl.Raise(this, new NewTunnelEventArgs(tunnel, config)));
 		}
 
 		public async Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
@@ -96,8 +105,9 @@ namespace DarkCaster.DataTransfer.Server
 			await upstreamLock.EnterReadLockAsync();
 			try
 			{
-				if (isDisposed)
+				if (isDisposed||isShutdown)
 				{
+					await upstream.DisconnectAsync();
 					upstream.Dispose();
 					return;
 				}
@@ -107,6 +117,17 @@ namespace DarkCaster.DataTransfer.Server
 			{
 				upstreamLock.ExitReadLock();
 			}
+		}
+
+		private void SpawnError(Exception ex)
+		{
+			Task.Run(() => errorEvCtl.Raise(this, new NodeFailEventArgs(ex)));
+		}
+
+		public Task NodeFailAsync(Exception ex)
+		{
+			SpawnError(ex);
+			return Task.FromResult(true);
 		}
 
 		private async Task ShutdownAsyncWorker()
@@ -155,6 +176,8 @@ namespace DarkCaster.DataTransfer.Server
 				asyncRunner.ExecuteTask(ShutdownAsyncWorker);
 				if (upstreamNode != null)
 					upstreamNode.Dispose();
+				errorEvCtl.Dispose();
+				incomingEvCtl.Dispose();
 			}
 			finally
 			{

@@ -32,6 +32,15 @@ namespace DarkCaster.DataTransfer.Server
 		ISafeEvent<NewTunnelEventArgs> IncomingConnectionEvent { get; }
 
 		/// <summary>
+		/// Raised when some of the internal INode components detects error condition,
+		/// and failed to maintain it's normal operation.
+		/// You should discard (call Disconnect and Dispose) any active and incoming connections (ITunnel objects) from this ExitNode
+		/// when this event occurs, and Dispose failed ExitNode object - it should not be used anymore:
+		/// new connections may not work (throw exceptions), current connections may fail.
+		/// </summary>
+		ISafeEvent<NodeFailEventArgs> NodeFailEvent { get; }
+
+		/// <summary>
 		/// Perform init. May block while processing.
 		/// After init is complete it is ready to accept new connections and spawn new ITunnel instances.
 		/// </summary>
