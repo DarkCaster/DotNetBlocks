@@ -158,22 +158,11 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 		{
 			tcs.Cancel();
 			foreach(var socket in sockets)
-				await Task.Factory.FromAsync(
-					(callback, state) => socket.BeginDisconnect(true, callback, state),
-					socket.EndDisconnect, null).ConfigureAwait(false);
+				socket.Close();
 			try { await Task.WhenAll(listeners); }
-			catch(Exception ex)
-			{
-				var aex = ex as AggregateException;
-				if(aex == null)
-					throw;
-				foreach(var e in aex.InnerExceptions)
-					if(!(e is OperationCanceledException))
-						throw;
-			}
-			//TODO: should not happen, retest
+			catch {}
 			foreach(var task in listeners)
-				if(!(task.IsCanceled || task.IsCompleted))
+				if(task.Status != TaskStatus.RanToCompletion && task.Status != TaskStatus.Canceled && task.Status != TaskStatus.Faulted)
 					throw new Exception("Some listener tasks still running!");
 		}
 
