@@ -40,11 +40,14 @@ namespace Tests
 		public void Init()
 		{
 			var config = new TunnelConfig();
+			config.Set("bind","127.0.0.1;127.0.0.2");
 			var node = new TcpServerNode(config);
 			var runner = new AsyncRunner();
 			var mock = new MockServerINode(0, 0, 0, 0, 1, node);
 			runner.ExecuteTask(node.InitAsync);
 			Assert.Null(mock.ex);
+			runner.ExecuteTask(node.ShutdownAsync);
+			node.Dispose();
 		}
 
 	}
