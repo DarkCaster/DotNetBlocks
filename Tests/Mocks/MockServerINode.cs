@@ -43,10 +43,11 @@ namespace Tests.Mocks
 		private readonly int noFailOpsCount;
 
 		private volatile INode downstream;
+		public volatile Exception ex = null;
 
 		public MockServerITunnel LastTunnel { get; set; }
 
-		public MockServerINode(int minDelay, int maxDelay, float failProbability, float partialOpProbability, int noFailOpsCount)
+		public MockServerINode(int minDelay, int maxDelay, float failProbability, float partialOpProbability, int noFailOpsCount, INode upstream = null)
 		{
 			this.minDelay = minDelay;
 			this.maxDelay = maxDelay;
@@ -54,6 +55,8 @@ namespace Tests.Mocks
 			this.partialOpProbability = partialOpProbability;
 			this.noFailOpsCount = noFailOpsCount;
 			LastTunnel = null;
+			if(upstream!=null)
+				upstream.RegisterDownstream(this);
 		}
 
 		public Task InitAsync()
@@ -74,7 +77,8 @@ namespace Tests.Mocks
 
 		public Task NodeFailAsync(Exception ex)
 		{
-			throw new NotSupportedException("NOPE");
+			this.ex = ex;
+			return Task.FromResult(true);
 		}
 
 		public void CreateTunnel()

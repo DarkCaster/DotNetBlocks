@@ -42,7 +42,9 @@ namespace Tests
 			var config = new TunnelConfig();
 			var node = new TcpServerNode(config);
 			var runner = new AsyncRunner();
+			var mock = new MockServerINode(0, 0, 0, 0, 1, node);
 			runner.ExecuteTask(node.InitAsync);
+			Assert.Null(mock.ex);
 		}
 
 	}
