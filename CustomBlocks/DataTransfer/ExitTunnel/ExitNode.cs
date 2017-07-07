@@ -1,4 +1,4 @@
-﻿// ExitNode.cs
+﻿﻿// ExitNode.cs
 //
 // The MIT License (MIT)
 //
@@ -23,6 +23,7 @@
 // SOFTWARE.
 //
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DarkCaster.Async;
 using DarkCaster.Events;
@@ -34,6 +35,7 @@ namespace DarkCaster.DataTransfer.Server
 	{
 		private bool isDisposed = false;
 		private bool isShutdown = false;
+		private int isFailed = 0;
 
 		private readonly INode upstreamNode = null;
 		private readonly AsyncRWLock upstreamLock = new AsyncRWLock();
@@ -126,6 +128,9 @@ namespace DarkCaster.DataTransfer.Server
 
 		public Task NodeFailAsync(Exception ex)
 		{
+			//error notification will be spawned only once
+			if(Interlocked.CompareExchange(ref isFailed, 1, 0) == 1)
+				return Task.FromResult(true);
 			SpawnError(ex);
 			return Task.FromResult(true);
 		}
@@ -173,7 +178,8 @@ namespace DarkCaster.DataTransfer.Server
 				if (isDisposed)
 					return;
 				isDisposed = true;
-				asyncRunner.ExecuteTask(ShutdownAsyncWorker);
+				try { asyncRunner.ExecuteTask(ShutdownAsyncWorker); }
+				catch { }
 				if (upstreamNode != null)
 					upstreamNode.Dispose();
 				errorEvCtl.Dispose();
