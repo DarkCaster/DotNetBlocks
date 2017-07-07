@@ -60,9 +60,8 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 				bindings = binding.Split(';');
 			else
 			{
-				bindings = new string[2];
+				bindings = new string[1];
 				bindings[0] = "any_ip4";
-				bindings[1] = "any_ip6";
 			}
 			for(int i = 0; i < bindings.Length; ++i)
 				bindings[i] = bindings[i].ToLower();
