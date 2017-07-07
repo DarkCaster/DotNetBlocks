@@ -27,6 +27,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using DarkCaster.DataTransfer.Config;
 
 namespace DarkCaster.DataTransfer.Server.Tcp
@@ -42,8 +43,8 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 		// We do not need any additional synchronization here,
 		// because ExitNode from the user's side provide all needed synchronization and thread safety
 		// when running InitAsync, ShutdownAsync and Dispose methods.
-		private Task[] listeners;
-		private Socket[] sockets;
+		private List<Task> listeners = new List<Task>();
+		private List<Socket> sockets = new List<Socket>();
 
 		private volatile INode downstream;
 
@@ -67,26 +68,39 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 				bindings[i] = bindings[i].ToLower();
 			nodelay = serverConfig.Get<bool>("tcp_nodelay");
 			bufferSize = serverConfig.Get<int>("tcp_buffer_size");
-			listeners = new Task[bindings.Length];
-			sockets = new Socket[bindings.Length];
 		}
 
 		public async Task InitAsync()
 		{
 			try
 			{
-				for(int i = 0; i < listeners.Length; ++i)
+				for(int i = 0; i < bindings.Length; ++i)
 				{
-					IPAddress addr = null;
+					IPAddress[] addrs = null;
 					if(bindings[i] == "any_ip4")
-						addr = IPAddress.Any;
-					else if(!IPAddress.TryParse(bindings[i], out addr))
-						addr = (await Dns.GetHostAddressesAsync(bindings[i]))[0];
-					sockets[i] = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-					sockets[i].Bind(new IPEndPoint(addr, port));
-					sockets[i].Listen(10);
-					listeners[i] = Task.Run(() => ListenerWorker(sockets[i], tcs.Token));
+						addrs = new IPAddress[] { IPAddress.Any };
+					else if(bindings[i] == "any_ip6")
+						addrs = new IPAddress[] { IPAddress.IPv6Any };
+					else if(IPAddress.TryParse(bindings[i], out IPAddress addr))
+						addrs = new IPAddress[] { addr };
+					else
+					{
+						addrs = await Dns.GetHostAddressesAsync(bindings[i]);
+						if(addrs == null || addrs.Length==0)
+							throw new Exception("Cannot resolve ip address for host: " + bindings[i]);
+					}
+					foreach(var addr in addrs)
+					{
+						var ep = new IPEndPoint(addr, port);
+						var socket=new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+						socket.Bind(ep);
+						socket.Listen(10);
+						sockets.Add(socket);
+						listeners.Add(Task.Run(() => ListenerWorker(socket, tcs.Token)));
+					}
 				}
+				if(listeners.Count == 0)
+					throw new Exception("No listeners started!");
 			}
 			catch(Exception ex)
 			{
@@ -144,21 +158,11 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 		public async Task ShutdownAsync()
 		{
 			tcs.Cancel();
-			for(int i = 0; i < sockets.Length; ++i)
-				if(sockets[i] != null)
-					await Task.Factory.FromAsync(
-						(callback, state) => sockets[i].BeginDisconnect(true, callback, state),
-						sockets[i].EndDisconnect, null).ConfigureAwait(false); //recheck this
-			int len = 0;
-			for(len = 0; len < listeners.Length; ++len)
-				if(listeners[len] == null)
-					break;
-			if(len == 0)
-				return;
-			var tasks = new Task[len];
-			for(int i = 0; i < len; ++i)
-				tasks[i] = listeners[i];
-			try { await Task.WhenAll(tasks); }
+			foreach(var socket in sockets)
+				await Task.Factory.FromAsync(
+					(callback, state) => socket.BeginDisconnect(true, callback, state),
+					socket.EndDisconnect, null).ConfigureAwait(false);
+			try { await Task.WhenAll(listeners); }
 			catch(Exception ex)
 			{
 				var aex = ex as AggregateException;
@@ -169,19 +173,18 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 						throw;
 			}
 			//TODO: should not happen, retest
-			for(int i = 0; i < len; ++i)
-				if(!(tasks[i].IsCanceled || tasks[i].IsCompleted))
+			foreach(var task in listeners)
+				if(!(task.IsCanceled || task.IsCompleted))
 					throw new Exception("Some listener tasks still running!");
 		}
 
 		public void Dispose()
 		{
 			//do not check anything, because all operations must be already stopped by ExitTunnel from user's side.
-			for(int i = 0; i < listeners.Length; ++i)
-			{
-				listeners[i].Dispose();
-				sockets[i].Dispose();
-			}
+			foreach(var socket in sockets)
+				socket.Dispose();
+			foreach(var task in listeners)
+				task.Dispose();
 		}
 	}
 }
