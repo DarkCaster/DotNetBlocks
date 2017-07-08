@@ -113,6 +113,7 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 			{
 				while(!token.IsCancellationRequested)
 				{
+					//create new connection-socket
 					var tSocket = await Task.Factory.FromAsync(listener.BeginAccept, listener.EndAccept, null).ConfigureAwait(false);
 					tSocket.NoDelay = nodelay;
 					if(bufferSize != 0)
@@ -120,10 +121,22 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 						tSocket.ReceiveBufferSize = bufferSize;
 						tSocket.SendBufferSize = bufferSize;
 					}
-					//TODO: create new tunnel
-					//TODO: create itunnel config and populate it with diagnostic stuff like incoming ip address, port, etc
-					//TODO: call downstream's OpenTunnelAsync
-					throw new NotImplementedException("TODO");
+					//create tunnel config, and set connection info that will be forwarded to user's code
+					var config = new TunnelConfig();
+					config.Set("tcp_nodelay", nodelay);
+					config.Set("tcp_buffer_size", bufferSize);
+					var localEp = (IPEndPoint)tSocket.LocalEndPoint;
+					var remoteEp = (IPEndPoint)tSocket.RemoteEndPoint;
+					config.Set("local_port", localEp.Port);
+					config.Set("local_host", localEp.Address.ToString());
+					config.Set("local_addr", localEp.Address.GetAddressBytes());
+					config.Set("remote_port", remoteEp.Port);
+					config.Set("remote_host", remoteEp.Address.ToString());
+					config.Set("remote_addr", remoteEp.Address.GetAddressBytes());
+					//create new tunnel
+					var tunnel = new TcpServerTunnel(tSocket);
+					//call downstream's OpenTunnelAsync
+					await downstream.OpenTunnelAsync(config, tunnel);
 				}
 				token.ThrowIfCancellationRequested();
 			}
