@@ -133,6 +133,7 @@
     <Compile Include="DataTransfer\Tcp\Client\TcpClientTunnel.cs" />
     <Compile Include="DataTransfer\Tcp\Server\TcpServerNode.cs" />
     <Compile Include="DataTransfer\Abstracts\Server\NodeFailEventArgs.cs" />
+    <Compile Include="DataTransfer\Tcp\Server\TcpServerTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
