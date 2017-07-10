@@ -23,42 +23,13 @@
 // SOFTWARE.
 //
 using System;
-using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using DarkCaster.DataTransfer.Config;
+using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Server.Tcp
 {
-	public sealed class TcpServerTunnel : ITunnel
+	public sealed class TcpServerTunnel : TcpTunnelBase, ITunnel
 	{
-		private readonly Socket socket;
-
-		public TcpServerTunnel(Socket socket)
-		{
-			this.socket = socket;
-		}
-
-		public Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
-		{
-			throw new NotImplementedException("TODO");
-		}
-
-		public Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
-		{
-			throw new NotImplementedException("TODO");
-		}
-
-		public Task DisconnectAsync()
-		{
-			throw new NotImplementedException("TODO");
-		}
-
-		public void Dispose()
-		{
-			throw new NotImplementedException("TODO");
-		}
+		public TcpServerTunnel(Socket socket) : base(socket) { }
 	}
 }
