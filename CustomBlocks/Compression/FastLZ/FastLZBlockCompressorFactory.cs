@@ -46,5 +46,7 @@ namespace DarkCaster.Compression.FastLZ
 		{
 			return new FastLZBlockCompressor(maxBlockSize, true);
 		}
+
+		public bool MetadataPreviewSupported { get { return true; } }
 	}
 }

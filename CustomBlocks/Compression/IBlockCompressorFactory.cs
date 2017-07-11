@@ -53,5 +53,12 @@ namespace DarkCaster.Compression
 		/// </summary>
 		/// <returns>The compressor instance</returns>
 		IThreadSafeBlockCompressor GetThreadSafeCompressor(int maxBlockSize);
+
+		/// <summary>
+		/// Gets a value indicating whether selected compressor created by this factory supports metadata-preview feature,
+		/// that may be used to decode compressed block size parameters from one or more bytes from block beginning.
+		/// </summary>
+		/// <value><c>true</c> if metadata preview supported; otherwise, <c>false</c>.</value>
+		bool MetadataPreviewSupported { get; }
 	}
 }
