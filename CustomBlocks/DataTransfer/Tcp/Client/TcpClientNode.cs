@@ -42,18 +42,26 @@ namespace DarkCaster.DataTransfer.Client.Tcp
 				throw new Exception("failed to get remote connection port from \"remote_port\" config parameter");
 			//open tcp connection
 			var addr = Dns.GetHostEntry(host).AddressList[0];
+			var nodelay = config.Get<bool>("tcp_nodelay");
+			var bufferSize = config.Get<int>("tcp_buffer_size");
 			var client = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-			await Task.Factory.FromAsync(
+			try
+			{
+				await Task.Factory.FromAsync(
 				(callback, state) => client.BeginConnect(new IPEndPoint(addr, port), callback, state),
 				client.EndConnect, null).ConfigureAwait(false);
-			//apply some optional settings to socket
-			var nodelay = config.Get<bool>("tcp_nodelay");
-			client.NoDelay = nodelay;
-			var bufferSize = config.Get<int>("tcp_buffer_size");
-			if(bufferSize>0)
+				//apply some optional settings to socket
+				client.NoDelay = nodelay;
+				if(bufferSize > 0)
+				{
+					client.ReceiveBufferSize = bufferSize;
+					client.SendBufferSize = bufferSize;
+				}
+			}
+			catch
 			{
-				client.ReceiveBufferSize = bufferSize;
-				client.SendBufferSize = bufferSize;
+				client.Dispose();
+				throw;
 			}
 			//create and return new itunnel object with this tcp connection
 			return new TcpClientTunnel(client);
