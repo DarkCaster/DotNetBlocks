@@ -135,6 +135,7 @@
     <Compile Include="DataTransfer\Abstracts\Server\NodeFailEventArgs.cs" />
     <Compile Include="DataTransfer\Tcp\Server\TcpServerTunnel.cs" />
     <Compile Include="DataTransfer\Tcp\Private\TcpTunnelBase.cs" />
+    <Compile Include="DataTransfer\Compression\Client\CompressionClientNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -163,6 +164,8 @@
     <Folder Include="DataTransfer\Tcp\Client\" />
     <Folder Include="DataTransfer\Tcp\Server\" />
     <Folder Include="DataTransfer\Tcp\Private\" />
+    <Folder Include="DataTransfer\Compression\" />
+    <Folder Include="DataTransfer\Compression\Client\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
