@@ -75,12 +75,22 @@ namespace DarkCaster.Compression
 
 		/// <summary>
 		/// Decodes the size of the service metadata from data block with compressed data.
-		/// Mainly used in debug.
+		/// May be used in data transfer scenarios when all compressed data is not available at once.
 		/// </summary>
 		/// <returns>The metadata size.</returns>
 		/// <param name="buffer">Buffer.</param>
 		/// <param name="offset">Offset.</param>
-		int DecodeMetadataSZ(byte[] buffer, int offset=0);
+		int DecodeMetadataSZ(byte[] buffer, int offset = 0);
+
+		/// <summary>
+		/// How much data from beginning of the compressed block need to be read
+		/// in order to DecodeMetadataSZ to work properly.
+		/// May be used in data transfer scenarios when all compressed data is not available at once.
+		/// If DecodeMetadataSZ cannot be decoded from incomplete compressed block
+		/// this property should return 0
+		/// </summary>
+		/// <value>Minimum data from beginnig of compressed block need to be present in order to DecodeMetadataSZ to work</value>
+		int MetadataPreviewSZ { get; }
 
 		/// <summary>
 		/// Calculate maximum size in bytes needed for output buffer in order to succsesfully compress data for specified input buffer size.

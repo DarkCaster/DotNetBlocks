@@ -167,5 +167,7 @@ namespace DarkCaster.Compression.FastLZ
 		{
 			return inputSZ + inputSZ / 32 + CalculateHeaderLength(inputSZ) + 1;
 		}
+
+		public int MetadataPreviewSZ { get { return 1; } }
 	}
 }
