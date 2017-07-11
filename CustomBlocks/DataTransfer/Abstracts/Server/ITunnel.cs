@@ -23,14 +23,12 @@
 // SOFTWARE.
 //
 using System;
-using System.Threading.Tasks;
+using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Server
 {
-	public interface ITunnel : IDisposable
-	{
-		Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0);
-		Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0);
-		Task DisconnectAsync();
-	}
+	/// <summary>
+	/// Server's ITunnel interface
+	/// </summary>
+	public interface ITunnel : ITunnelBase { }
 }

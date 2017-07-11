@@ -23,39 +23,12 @@
 // SOFTWARE.
 //
 using System;
-using System.Threading.Tasks;
-using DarkCaster.Events;
+using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Client
 {
-	public interface ITunnel : IDisposable
-	{
-		/// <summary>
-		/// Data read request, async.
-		/// Should not be used directly, use IEntryTunnel instead.
-		/// May return less data, than requested.
-		/// May be used in offline state, to read remaining data from tunnel.
-		/// </summary>
-		/// <returns>Bytes count that was actually read, before disconnect</returns>
-		/// <param name="sz">Bytes count to read</param>
-		/// <param name="buffer">Buffer, where to store received data</param>
-		/// <param name="offset">Offset</param>
-		Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0);
-
-		/// <summary>
-		/// Data write request, async.
-		/// Should not be used directly, use IEntryTunnel instead.
-		/// May return less data, than requested.
-		/// May NOT be used in offline state (may or may not throw exception).
-		/// </summary>
-		/// <param name="sz">Bytes count to write</param>
-		/// <param name="buffer">Buffer, where source data is located</param>
-		/// <param name="offset">Offset</param>
-		Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0);
-
-		/// <summary>
-		/// Perform disconnect.
-		/// </summary>
-		Task DisconnectAsync();
-	}
+	/// <summary>
+	/// Client's ITunnel interface
+	/// </summary>
+	public interface ITunnel : ITunnelBase { }
 }
