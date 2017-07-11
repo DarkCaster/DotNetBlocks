@@ -23,72 +23,14 @@
 // SOFTWARE.
 //
 using System;
-using System.Threading.Tasks;
 using DarkCaster.Compression;
+using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Client.Compression
 {
-	public sealed class CompressionClientTunnel : ITunnel
+	public sealed class CompressionClientTunnel : CompressionTunnelBase, ITunnel
 	{
-		private readonly ITunnel downstream;
-		private readonly IBlockCompressor readCompr;
-		private readonly IBlockCompressor writeCompr;
-
-		private int uncReadPos;
-		private int uncReadBSZ;
-		private int readPhase;
-
-		private readonly int writeBlkSz;
-		private readonly byte[] readBuff;
-		private readonly byte[] readBuffCompr;
-
 		public CompressionClientTunnel(IBlockCompressor readCompr, IBlockCompressor writeCompr, ITunnel downstream)
-		{
-			this.downstream = downstream;
-			this.readCompr = readCompr;
-			this.writeCompr = writeCompr;
-
-			readBuff = new byte[readCompr.MaxBlockSZ];
-			readBuffCompr=new byte[readCompr.GetOutBuffSZ(readCompr.MaxBlockSZ)];
-			uncReadPos = readCompr.MaxBlockSZ;
-			uncReadBSZ = 0;
-			readPhase = 0;
-		}
-
-		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
-		{
-			if(sz == 0)
-				return 0;
-			//do we need to read new compressed block
-			if(uncReadPos >= uncReadBSZ && readPhase == 0)
-				readPhase = 1;
-			//TODO: read compressed block preview
-			//TODO: decode compressed block metadata size
-			//TODO: read remaining compressed block metadata
-			//TODO: decode compressed block size
-			//TODO: read remaining compressed block data
-			//TODO: decompress data
-			//TODO: read decompressed data
-			throw new NotImplementedException("TODO");
-		}
-
-		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
-		{
-			if(sz == 0)
-				return 0;
-			//TODO: compress data
-			//TODO: write all compressed data to downstream
-			throw new NotImplementedException("TODO");
-		}
-
-		public async Task DisconnectAsync()
-		{
-			await downstream.DisconnectAsync();
-		}
-
-		public void Dispose()
-		{
-			downstream.Dispose();
-		}
+			: base(readCompr, writeCompr, downstream) { }
 	}
 }
