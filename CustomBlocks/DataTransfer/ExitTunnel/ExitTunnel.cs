@@ -33,10 +33,11 @@ namespace DarkCaster.DataTransfer.Server
 	{
 		private readonly AsyncRunner readRunner = new AsyncRunner();
 		private readonly AsyncRunner writeRunner = new AsyncRunner();
-		private readonly AsyncRunner disconnectRunner = new AsyncRunner();
+		private readonly AsyncRunner stateChangeRunner = new AsyncRunner();
+		private readonly AsyncRWLock stateChangeLock = new AsyncRWLock();
 		private readonly ITunnel upstream;
+		private volatile bool isDisconnected = false;
 		private int isDisposed = 0;
-		private int isDisconnected = 0;
 
 		public ExitTunnel(ITunnel upstream)
 		{
@@ -45,7 +46,7 @@ namespace DarkCaster.DataTransfer.Server
 
 		private async Task<int> WriteDataWorkerAsync(int sz, byte[] buffer, int offset)
 		{
-			if(Interlocked.CompareExchange(ref isDisconnected, 0, 0) != 0)
+			if(isDisconnected)
 				throw new TunnelEofException();
 			try
 			{
@@ -53,7 +54,7 @@ namespace DarkCaster.DataTransfer.Server
 			}
 			catch
 			{
-				if(Interlocked.CompareExchange(ref isDisconnected, 0, 0) != 0)
+				if(isDisconnected)
 					throw new TunnelEofException();
 				throw;
 			}
@@ -67,7 +68,7 @@ namespace DarkCaster.DataTransfer.Server
 			}
 			catch
 			{
-				if(Interlocked.CompareExchange(ref isDisconnected, 0, 0) != 0)
+				if(isDisconnected)
 					throw new TunnelEofException();
 				throw;
 			}
@@ -93,23 +94,43 @@ namespace DarkCaster.DataTransfer.Server
 			return await WriteDataWorkerAsync(sz, buffer, offset);
 		}
 
+		private async Task DisconnectAsyncWorker()
+		{
+			if(isDisconnected)
+				return;
+			await upstream.DisconnectAsync();
+			isDisconnected = true;
+		}
+
 		public void Disconnect()
 		{
-			if(Interlocked.CompareExchange(ref isDisconnected, 1, 0) != 0)
-				return;
-			disconnectRunner.ExecuteTask(upstream.DisconnectAsync);
+			stateChangeLock.EnterWriteLock();
+			try
+			{
+				stateChangeRunner.ExecuteTask(DisconnectAsyncWorker);
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
 		}
 
 		public async Task DisconnectAsync()
 		{
-			if(Interlocked.CompareExchange(ref isDisconnected, 1, 0) != 0)
-				return;
-			await upstream.DisconnectAsync();
+			await stateChangeLock.EnterWriteLockAsync();
+			try
+			{
+				await DisconnectAsyncWorker();
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
 		}
 
 		public void Dispose()
 		{
-			if (Interlocked.CompareExchange(ref isDisposed, 1, 0) != 0)
+			if(Interlocked.CompareExchange(ref isDisposed, 1, 0) != 0)
 				return;
 			Disconnect();
 			upstream.Dispose();
