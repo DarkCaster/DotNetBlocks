@@ -57,10 +57,17 @@ namespace DarkCaster.DataTransfer.Private
 
 		public async Task DisconnectAsync()
 		{
-			socket.Shutdown(SocketShutdown.Both);
-			await Task.Factory.FromAsync(
+			try { socket.Shutdown(SocketShutdown.Both); }
+			//TODO: ignore only some types of SocketExceptions
+			catch(SocketException) {}
+			try
+			{
+				await Task.Factory.FromAsync(
 				(callback, state) => socket.BeginDisconnect(true, callback, state),
 				socket.EndDisconnect, null).ConfigureAwait(false);
+			}
+			//TODO: ignore only some types of SocketExceptions
+			catch(SocketException) { }
 		}
 
 		public void Dispose()
