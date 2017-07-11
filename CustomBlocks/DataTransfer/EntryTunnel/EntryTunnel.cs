@@ -99,33 +99,16 @@ namespace DarkCaster.DataTransfer.Client
 
 		private async Task<int> ReadDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
 		{
-			await stateChangeLock.EnterReadLockAsync();
-			try
-			{
-				if(state == TunnelState.Init)
-					return 0;
-			}
-			finally
-			{
-				stateChangeLock.ExitReadLock();
-			}
-
+			if(state == TunnelState.Init)
+				return 0;
 			try
 			{
 				return await downstream.ReadDataAsync(sz, buffer, offset);
 			}
 			catch(Exception ex)
 			{
-				await stateChangeLock.EnterReadLockAsync();
-				try
-				{
-					if(state != TunnelState.Online)
-						throw new TunnelEofException(ex);
-				}
-				finally
-				{
-					stateChangeLock.ExitReadLock();
-				}
+				if(state != TunnelState.Online)
+					throw new TunnelEofException(ex);
 				throw;
 			}
 		}
@@ -142,18 +125,11 @@ namespace DarkCaster.DataTransfer.Client
 
 		private async Task<int> WriteDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
 		{
-			await stateChangeLock.EnterReadLockAsync();
-			try
-			{
-				if(state == TunnelState.Init)
-					return 0;
-				if(state == TunnelState.Offline)
-					throw new TunnelEofException();
-			}
-			finally
-			{
-				stateChangeLock.ExitReadLock();
-			}
+			var curState = state;
+			if(curState == TunnelState.Init)
+				return 0;
+			if(curState == TunnelState.Offline)
+				throw new TunnelEofException();
 			return await downstream.WriteDataAsync(sz, buffer, offset);
 		}
 
