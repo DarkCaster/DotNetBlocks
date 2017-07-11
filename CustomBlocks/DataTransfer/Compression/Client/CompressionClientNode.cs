@@ -42,14 +42,30 @@ namespace DarkCaster.DataTransfer.Client.Compression
 			this.defaultBlockSz = defaultBlockSz;
 		}
 
-		public Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
+		public async Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
 		{
-			//TODO: create downstream tunnel
-			//TODO: parse compressors-parameters
-			//TODO: create separate compressors for read and write routines
-			//TODO: create and return compression-tunnel and return
-			//TODO: in case of error - disconnect and dispose tunnel
-			throw new NotImplementedException("TODO");
+			//create downstream tunnel
+			var dTun = await downstream.OpenTunnelAsync(config);
+			//parse compressors-parameters
+			var blockSz = config.Get<int>("compr_block_size");
+			if(blockSz == 0)
+				blockSz = defaultBlockSz;
+			//create separate compressors for read and write routines
+			var readCompressor = comprFactory.GetCompressor(blockSz);
+			var writeCompressor = comprFactory.GetCompressor(blockSz);
+			try
+			{
+				//TODO:create and return compression-tunnel
+				throw new NotImplementedException("TODO");
+			}
+			catch
+			{
+				//in case of error - disconnect and dispose downstream tunnel
+				await dTun.DisconnectAsync();
+				dTun.Dispose();
+				//forward exception from current tunnel
+				throw;
+			}
 		}
 	}
 }
