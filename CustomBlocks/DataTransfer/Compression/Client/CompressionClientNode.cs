@@ -37,6 +37,8 @@ namespace DarkCaster.DataTransfer.Client.Compression
 
 		public CompressionClientNode(INode downstream, IBlockCompressorFactory comprFactory, int defaultBlockSz=16384)
 		{
+			if(!comprFactory.MetadataPreviewSupported)
+				throw new Exception("Metadata preview feature is not supported by selected compressor, cannot proceed!");
 			this.downstream = downstream;
 			this.comprFactory = comprFactory;
 			this.defaultBlockSz = defaultBlockSz;
@@ -55,8 +57,7 @@ namespace DarkCaster.DataTransfer.Client.Compression
 			var writeCompressor = comprFactory.GetCompressor(blockSz);
 			try
 			{
-				//TODO:create and return compression-tunnel
-				throw new NotImplementedException("TODO");
+				return new CompressionClientTunnel(readCompressor, writeCompressor, dTun);
 			}
 			catch
 			{

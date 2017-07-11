@@ -136,6 +136,7 @@
     <Compile Include="DataTransfer\Tcp\Server\TcpServerTunnel.cs" />
     <Compile Include="DataTransfer\Tcp\Private\TcpTunnelBase.cs" />
     <Compile Include="DataTransfer\Compression\Client\CompressionClientNode.cs" />
+    <Compile Include="DataTransfer\Compression\Client\CompressionClientTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
