@@ -67,7 +67,7 @@ namespace DarkCaster.DataTransfer.Client.Compression
 				//receive block size confirmation from server
 				ngPos = 0;
 				while(ngPos < 3)
-					ngPos += await dTun.ReadDataAsync(ng.Length - ngPos, ng, ngPos);
+					ngPos += await dTun.ReadDataAsync(3 - ngPos, ng, ngPos);
 				//set block size, reported by server
 				blockSz = CompressionMagicHelper.DecodeBlockSZ(ng, 0);
 				if(blockSz > maxBlockSZ)
