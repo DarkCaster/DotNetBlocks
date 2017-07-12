@@ -24,40 +24,93 @@
 //
 using System;
 using System.Threading.Tasks;
+using DarkCaster.Compression;
 using DarkCaster.DataTransfer.Config;
+using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Server.Compression
 {
 	public sealed class CompressionServerNode : INode
 	{
-		public Task InitAsync()
+		private readonly int maxBlockSZ;
+		private readonly IBlockCompressorFactory comprFactory;
+		private readonly INode upstreamNode;
+		private volatile INode downstreamNode;
+
+		public CompressionServerNode(ITunnelConfig serverConfig, INode upstream, IBlockCompressorFactory comprFactory, int defaultMaxBlockSZ = 65536)
 		{
-			throw new NotImplementedException("TODO");
+			this.comprFactory = comprFactory;
+			maxBlockSZ = serverConfig.Get<int>("compr_max_block_size");
+			if(maxBlockSZ == 0)
+				maxBlockSZ = defaultMaxBlockSZ;
+			upstreamNode = upstream;
+			upstreamNode.RegisterDownstream(this);
+		}
+
+		public async Task InitAsync()
+		{
+			await upstreamNode.InitAsync();
 		}
 
 		public void RegisterDownstream(INode downstream)
 		{
-			throw new NotImplementedException("TODO");
+			downstreamNode = downstream;
 		}
 
-		public Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
+		public async Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
 		{
-			throw new NotImplementedException("TODO");
+			int blockSize = 0;
+			try
+			{
+				var ng = new byte[5];
+				//receive magic and block size
+				int ngPos = 0;
+				while(ngPos < ng.Length)
+					ngPos += await upstream.ReadDataAsync(ng.Length - ngPos, ng, ngPos);
+				CompressionMagicHelper.DecodeMagicAndBlockSZ(ng, 0, out short magic, out blockSize);
+				//compare magic
+				if(magic != comprFactory.Magic)
+					throw new Exception("Magic mismatch");
+				//check block size
+				if(blockSize > maxBlockSZ)
+					blockSize = maxBlockSZ;
+				//send back valid block size
+				CompressionMagicHelper.EncodeBlockSZ(blockSize, ng, 0);
+				ngPos = 0;
+				while(ngPos < 3)
+					ngPos += await upstream.WriteDataAsync(3 - ngPos, ng, ngPos);
+			}
+			catch
+			{
+				//close upstream tunnel on any error, and return
+				await upstream.DisconnectAsync();
+				upstream.Dispose();
+				return;
+			}
+			//add block size to config
+			config.Set("compr_block_size", blockSize);
+			//create read and write compressors
+			var readCompr = comprFactory.GetCompressor(blockSize);
+			var writeCompr = comprFactory.GetCompressor(blockSize);
+			//create new tunnel and connect it with given upstream tunnel
+			var tunnel = new CompressionServerTunnel(readCompr, writeCompr, upstream);
+			//call downstream's OpenTunnelAsync and pass created and prepared tunnel to it
+			await downstreamNode.OpenTunnelAsync(config, tunnel);
 		}
 
-		public Task NodeFailAsync(Exception ex)
+		public async Task NodeFailAsync(Exception ex)
 		{
-			throw new NotImplementedException("TODO");
+			await downstreamNode.NodeFailAsync(ex);
 		}
 
-		public Task ShutdownAsync()
+		public async Task ShutdownAsync()
 		{
-			throw new NotImplementedException("TODO");
+			await upstreamNode.ShutdownAsync();
 		}
 
 		public void Dispose()
 		{
-			throw new NotImplementedException("TODO");
+			upstreamNode.Dispose();
 		}
 	}
 }
