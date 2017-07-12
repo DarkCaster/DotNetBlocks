@@ -42,6 +42,7 @@ namespace Tests.Mocks
 		private readonly float partialOpProbability;
 		private readonly int noFailOpsCount;
 
+		private readonly INode upstreamNode;
 		private volatile INode downstream;
 		public volatile Exception ex = null;
 
@@ -56,13 +57,17 @@ namespace Tests.Mocks
 			this.noFailOpsCount = noFailOpsCount;
 			LastTunnel = null;
 			if(upstream!=null)
+			{
+				upstreamNode = upstream;
 				upstream.RegisterDownstream(this);
+			}
 		}
 
-		public Task InitAsync()
+		public async Task InitAsync()
 		{
 			Interlocked.Increment(ref initCount);
-			return Task.FromResult(true);
+			if(upstreamNode!=null)
+				await upstreamNode.InitAsync();
 		}
 
 		public void RegisterDownstream(INode downstream)
