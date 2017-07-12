@@ -139,6 +139,8 @@
     <Compile Include="DataTransfer\Compression\Client\CompressionClientTunnel.cs" />
     <Compile Include="DataTransfer\Compression\Private\CompressionTunnelBase.cs" />
     <Compile Include="DataTransfer\Abstracts\Private\ITunnelBase.cs" />
+    <Compile Include="DataTransfer\Compression\Server\CompressionServerNode.cs" />
+    <Compile Include="DataTransfer\Compression\Server\CompressionServerTunnel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -171,6 +173,7 @@
     <Folder Include="DataTransfer\Compression\Client\" />
     <Folder Include="DataTransfer\Compression\Private\" />
     <Folder Include="DataTransfer\Abstracts\Private\" />
+    <Folder Include="DataTransfer\Compression\Server\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
