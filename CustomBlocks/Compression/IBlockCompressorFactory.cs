@@ -60,5 +60,14 @@ namespace DarkCaster.Compression
 		/// </summary>
 		/// <value><c>true</c> if metadata preview supported; otherwise, <c>false</c>.</value>
 		bool MetadataPreviewSupported { get; }
+
+		/// <summary>
+		/// Unique compressor ID. Fully-compatible compressors should have the same "magic" value.
+		/// It may be used (for example) to perform additional protocol neogotiation
+		/// when needed to ensure compressors compatibility on each sides.
+		/// Value 0 means that "magic" feature is not supported.
+		/// </summary>
+		/// <value>The magic number, that represents selected compressor and it's main settings</value>
+		short Magic { get; }
 	}
 }

@@ -48,5 +48,7 @@ namespace DarkCaster.Compression.FastLZ
 		}
 
 		public bool MetadataPreviewSupported { get { return true; } }
+
+		public short Magic { get { return 0x0001; } }
 	}
 }
