@@ -26,6 +26,7 @@ using System;
 using System.Threading.Tasks;
 using DarkCaster.Compression;
 using DarkCaster.DataTransfer.Config;
+using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Client.Compression
 {
@@ -34,14 +35,16 @@ namespace DarkCaster.DataTransfer.Client.Compression
 		private readonly IBlockCompressorFactory comprFactory;
 		private readonly INode downstream;
 		private readonly int defaultBlockSz;
+		private readonly int maxBlockSZ;
 
-		public CompressionClientNode(INode downstream, IBlockCompressorFactory comprFactory, int defaultBlockSz=16384)
+		public CompressionClientNode(INode downstream, IBlockCompressorFactory comprFactory, int defaultBlockSz=16384, int maxBlockSz=0xFFFFFF)
 		{
 			if(!comprFactory.MetadataPreviewSupported)
 				throw new Exception("Metadata preview feature is not supported by selected compressor, cannot proceed!");
 			this.downstream = downstream;
 			this.comprFactory = comprFactory;
 			this.defaultBlockSz = defaultBlockSz;
+			this.maxBlockSZ = maxBlockSz;
 		}
 
 		public async Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
@@ -52,11 +55,26 @@ namespace DarkCaster.DataTransfer.Client.Compression
 			var blockSz = config.Get<int>("compr_block_size");
 			if(blockSz == 0)
 				blockSz = defaultBlockSz;
-			//create separate compressors for read and write routines
-			var readCompressor = comprFactory.GetCompressor(blockSz);
-			var writeCompressor = comprFactory.GetCompressor(blockSz);
 			try
 			{
+				//send compressor magic and block size
+				var ng = new byte[5];
+				CompressionMagicHelper.EncodeMagicAndBlockSZ(comprFactory.Magic, blockSz, ng, 0);
+				//send compressor magic and block size
+				int ngPos = 0;
+				while(ngPos < ng.Length)
+					ngPos += await dTun.WriteDataAsync(ng.Length - ngPos, ng, ngPos);
+				//receive block size confirmation from server
+				ngPos = 0;
+				while(ngPos < 3)
+					ngPos += await dTun.ReadDataAsync(ng.Length - ngPos, ng, ngPos);
+				//set block size, reported by server
+				blockSz = CompressionMagicHelper.DecodeBlockSZ(ng, 0);
+				if(blockSz > maxBlockSZ)
+					throw new Exception("Server's requested block size > local maxBlockSZ");
+				//create separate compressors for read and write routines
+				var readCompressor = comprFactory.GetCompressor(blockSz);
+				var writeCompressor = comprFactory.GetCompressor(blockSz);
 				return new CompressionClientTunnel(readCompressor, writeCompressor, dTun);
 			}
 			catch
