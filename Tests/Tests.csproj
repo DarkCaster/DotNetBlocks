@@ -75,6 +75,11 @@
     <Compile Include="Mocks\MockTcpServer.cs" />
     <Compile Include="TcpClientTests.cs" />
     <Compile Include="TcpServerNodeTests.cs" />
+    <Compile Include="Mocks\DataLoop\Storage.cs" />
+    <Compile Include="Mocks\DataLoop\MockTunnelBase.cs" />
+    <Compile Include="Mocks\DataLoop\MockClientLoopTunnel.cs" />
+    <Compile Include="Mocks\DataLoop\MockServerLoopTunnel.cs" />
+    <Compile Include="Mocks\DataLoop\MockServerLoopNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
@@ -90,6 +95,7 @@
     <Folder Include="Shared\" />
     <Folder Include="Mocks" />
     <Folder Include="FastLZSampleData\" />
+    <Folder Include="Mocks\DataLoop\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
