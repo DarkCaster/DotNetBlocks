@@ -33,6 +33,7 @@ namespace Tests.Mocks.DataLoop
 	{
 		public readonly int minBlockSize;
 		public readonly int maxBlockSize;
+		private readonly Random random;
 
 		public byte[] readBlock;
 		public int readBlockPos;
@@ -59,6 +60,7 @@ namespace Tests.Mocks.DataLoop
 			readBlock = new byte[0];
 			readBlockPos = 0;
 			readTimeleft = readTimeout;
+			random = new Random();
 		}
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
@@ -92,6 +94,9 @@ namespace Tests.Mocks.DataLoop
 			Interlocked.Increment(ref writeOpsCount);
 			if(sz == 0)
 				return Task.FromResult(0);
+			var bsz = random.Next(minBlockSize, maxBlockSize + 1);
+			if(sz > bsz)
+				sz = bsz;
 			var chunk = new byte[sz];
 			Buffer.BlockCopy(buffer, offset, chunk, 0, sz);
 			writeStorage.WriteChunk(chunk);
