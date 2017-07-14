@@ -36,7 +36,6 @@ namespace Tests.Mocks.DataLoop
 		private readonly Random random;
 		private readonly AsyncRunner newConnRunner = new AsyncRunner();
 		private readonly ITunnelConfigFactory configFactory;
-		private readonly INode upstreamNode;
 		private volatile INode downstreamNode;
 
 		private readonly int minBlockSize;
@@ -51,7 +50,7 @@ namespace Tests.Mocks.DataLoop
 		private int shutdownCount;
 		private int disposeCount;
 
-		public MockServerLoopNode(ITunnelConfig serverConfig, INode upstream, ITunnelConfigFactory configFactory,
+		public MockServerLoopNode(ITunnelConfig serverConfig, ITunnelConfigFactory configFactory,
 															int defaultMinBlockSize = 16, int defaultMaxBlockSize = 4096, int defaultReadTimeout = 5000,
 															int defaultNoFailOpsCount = 1, float defaultNodeFailProb = 0.0f)
 		{
@@ -70,7 +69,6 @@ namespace Tests.Mocks.DataLoop
 				nodeFailProb = defaultNodeFailProb;
 			if(noFailOpsCount <= 0)
 				noFailOpsCount = defaultNoFailOpsCount;
-			this.upstreamNode = upstream;
 			this.configFactory = configFactory;
 			this.random = new Random();
 		}
@@ -78,6 +76,10 @@ namespace Tests.Mocks.DataLoop
 		public async Task NewConnection(Storage clientReadStorage, Storage clientWriteStorage)
 		{
 			Interlocked.Increment(ref ncCount);
+			if(Interlocked.CompareExchange(ref shutdownCount, 0, 0) != 0)
+				throw new Exception("Server was shutdown");
+			if(Interlocked.CompareExchange(ref disposeCount, 0, 0) != 0)
+				throw new ObjectDisposedException("You should not see this exception!");
 			//simulate fail
 			if(--noFailOpsCount <= 0 && (float)random.NextDouble() < nodeFailProb)
 			{

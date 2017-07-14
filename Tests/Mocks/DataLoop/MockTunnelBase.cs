@@ -106,6 +106,8 @@ namespace Tests.Mocks.DataLoop
 		public Task DisconnectAsync()
 		{
 			Interlocked.Increment(ref disconnectOpsCount);
+			readStorage.Hangup();
+			writeStorage.Hangup();
 			return Task.FromResult(true);
 		}
 

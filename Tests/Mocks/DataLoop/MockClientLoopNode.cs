@@ -32,17 +32,22 @@ namespace Tests.Mocks.DataLoop
 {
 	public sealed class MockClientLoopNode : INode
 	{
-		private readonly MockServerLoopNode entry;
+		private volatile MockServerLoopNode entry;
 		private readonly int defaultMinBlockSize;
 		private readonly int defaultMaxBlockSize;
 		private readonly int defaultReadTimeout;
 
-		public MockClientLoopNode(MockServerLoopNode serverLoopEntry, int defaultMinBlockSize = 16, int defaultMaxBlockSize = 4096, int defaultReadTimeout = 5000)
+		public MockClientLoopNode(int defaultMinBlockSize = 16, int defaultMaxBlockSize = 4096, int defaultReadTimeout = 5000)
 		{
-			entry = serverLoopEntry;
 			this.defaultMinBlockSize = defaultMinBlockSize;
 			this.defaultMaxBlockSize = defaultMaxBlockSize;
 			this.defaultReadTimeout = defaultReadTimeout;
+			entry = null;
+		}
+
+		public void SetServerEntry(MockServerLoopNode serverLoopEntry)
+		{
+			entry = serverLoopEntry;
 		}
 
 		public async Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)

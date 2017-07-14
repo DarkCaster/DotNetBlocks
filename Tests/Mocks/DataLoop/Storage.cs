@@ -30,7 +30,7 @@ namespace Tests.Mocks.DataLoop
 	public class Storage
 	{
 		private readonly ConcurrentQueue<byte[]> chunks = new ConcurrentQueue<byte[]>();
-		private volatile bool hangup;
+		private volatile bool hangup = false;
 		public void Reset() { while(chunks.TryDequeue(out byte[] result)) {} }
 
 		public void Hangup()
@@ -40,10 +40,10 @@ namespace Tests.Mocks.DataLoop
 
 		public byte[] ReadChunk()
 		{
-			if(hangup)
-				throw new Exception("HANGUP");
 			if(chunks.TryDequeue(out byte[] chunk))
 				return chunk;
+			if(hangup)
+				throw new Exception("HANGUP");
 			return null;
 		}
 

@@ -63,6 +63,7 @@ namespace Tests.Mocks.DataLoop
 		{
 			upstreamNode = upstream;
 			downstreamNode = null;
+			upstreamNode.RegisterDownstream(this);
 		}
 
 		public async Task InitAsync()
@@ -70,16 +71,24 @@ namespace Tests.Mocks.DataLoop
 			await upstreamNode.InitAsync();
 		}
 
+		//optional, if using ExitNode ontop of this
 		public void RegisterDownstream(INode downstream)
 		{
 			downstreamNode = downstream;
 		}
 
-		public Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
+		public async Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
 		{
-			incomingConfigs.Enqueue(config);
-			incomingTunnels.Enqueue(upstream);
-			return Task.FromResult(true);
+			if(downstreamNode==null)
+			{
+				incomingConfigs.Enqueue(config);
+				incomingTunnels.Enqueue(upstream);
+				return;
+			}
+			else
+			{
+				await downstreamNode.OpenTunnelAsync(config, upstream);
+			}
 		}
 
 		public async Task NodeFailAsync(Exception ex)
