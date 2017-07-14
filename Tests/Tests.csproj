@@ -82,6 +82,8 @@
     <Compile Include="Mocks\DataLoop\MockServerLoopNode.cs" />
     <Compile Include="Mocks\DataLoop\MockExitLoopNode.cs" />
     <Compile Include="Mocks\DataLoop\MockClientLoopNode.cs" />
+    <Compile Include="CommonDataTransferTests.cs" />
+    <Compile Include="DT_CompressionNodeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
