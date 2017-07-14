@@ -56,6 +56,17 @@ namespace Tests.Mocks.DataLoop
 			}
 		}
 
+		public async Task WaitForNewConnectionAsync(int timeout)
+		{
+			while((incomingTunnels.IsEmpty || incomingConfigs.IsEmpty) && timeout > 0)
+			{
+				await Task.Delay(10);
+				timeout -= 10;
+			}
+			if(timeout <= 0)
+				throw new Exception("WaitForNewConnectionAsync failed");
+		}
+
 		private readonly INode upstreamNode;
 		private volatile INode downstreamNode;
 

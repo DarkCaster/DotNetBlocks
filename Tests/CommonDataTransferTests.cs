@@ -50,6 +50,7 @@ namespace Tests
 			Assert.IsNull(serverMockExit.IncomingTunnel);
 			//create new connection
 			var clTun = runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig));
+			runner.ExecuteTask(() => serverMockExit.WaitForNewConnectionAsync(5000));
 			var svTun = serverMockExit.IncomingTunnel;
 			var svCfg = serverMockExit.IncomingConfig;
 			Assert.NotNull(svTun);
