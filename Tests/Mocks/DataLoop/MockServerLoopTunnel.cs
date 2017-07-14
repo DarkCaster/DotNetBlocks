@@ -23,7 +23,7 @@
 // SOFTWARE.
 //
 using System;
-using DarkCaster.DataTransfer.Client;
+using DarkCaster.DataTransfer.Server;
 
 namespace Tests.Mocks.DataLoop
 {

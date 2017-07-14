@@ -31,8 +31,8 @@ namespace Tests.Mocks.DataLoop
 {
 	public abstract class MockTunnelBase : ITunnelBase
 	{
-		public readonly int minBlockSize;
-		public readonly int maxBlockSize;
+		private readonly int minBlockSize;
+		private readonly int maxBlockSize;
 		private readonly Random random;
 
 		public byte[] readBlock;
