@@ -23,7 +23,9 @@
 // SOFTWARE.
 //
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using DarkCaster.Async;
 using DarkCaster.DataTransfer.Server;
 using DarkCaster.DataTransfer.Config;
 
@@ -31,39 +33,93 @@ namespace Tests.Mocks.DataLoop
 {
 	public sealed class MockServerLoopNode : INode
 	{
+		private readonly Random random;
+		private readonly AsyncRunner newConnRunner = new AsyncRunner();
+		private readonly ITunnelConfigFactory configFactory;
+		private readonly INode upstreamNode;
+		private volatile INode downstreamNode;
 
-		public void NewConnection(Storage readStorage, Storage writeStorage)
+		private readonly int minBlockSize;
+		private readonly int maxBlockSize;
+		private readonly int readTimeout;
+		private readonly float nodeFailProb;
+		private int noFailOpsCount;
+
+		private int initCount;
+		private int ncCount;
+		private int regDsCount;
+		private int shutdownCount;
+		private int disposeCount;
+
+		public MockServerLoopNode(ITunnelConfig serverConfig, INode upstream, ITunnelConfigFactory configFactory,
+															int defaultMinBlockSize = 16, int defaultMaxBlockSize = 4096, int defaultReadTimeout = 5000,
+															int defaultNoFailOpsCount = 1, float defaultNodeFailProb = 0.0f)
 		{
+			minBlockSize = serverConfig.Get<int>("mock_min_block_size");
+			maxBlockSize = serverConfig.Get<int>("mock_max_block_size");
+			readTimeout = serverConfig.Get<int>("mock_read_timeout");
+			nodeFailProb = serverConfig.Get<float>("mock_fail_prob");
+			noFailOpsCount = serverConfig.Get<int>("mock_nofail_ops_count");
+			if(minBlockSize <= 0)
+				minBlockSize = defaultMinBlockSize;
+			if(maxBlockSize <= 0)
+				maxBlockSize = defaultMaxBlockSize;
+			if(readTimeout <= 0)
+				readTimeout = defaultReadTimeout;
+			if(nodeFailProb <= 0.001f)
+				nodeFailProb = defaultNodeFailProb;
+			if(noFailOpsCount <= 0)
+				noFailOpsCount = defaultNoFailOpsCount;
+			this.upstreamNode = upstream;
+			this.configFactory = configFactory;
+			this.random = new Random();
+		}
+
+		public void NewConnection(Storage clientReadStorage, Storage clientWriteStorage)
+		{
+			Interlocked.Increment(ref ncCount);
+			//simulate fail
+			if(--noFailOpsCount <= 0 && (float)random.NextDouble() < nodeFailProb)
+			{
+				newConnRunner.ExecuteTask(() => downstreamNode.NodeFailAsync(new Exception("Expected fail")));
+				throw new Exception("Expected fail triggered");
+			}
+			var tunnel = new MockServerLoopTunnel(minBlockSize, maxBlockSize, clientWriteStorage, readTimeout, clientReadStorage);
+			var config = configFactory.CreateNew();
+			newConnRunner.ExecuteTask(() => downstreamNode.OpenTunnelAsync(config, tunnel));
 		}
 
 		public Task InitAsync()
 		{
-			throw new NotImplementedException("TODO");
+			Interlocked.Increment(ref initCount);
+			return Task.FromResult(true);
 		}
 
 		public void RegisterDownstream(INode downstream)
 		{
-			throw new NotImplementedException("TODO");
+			Interlocked.Increment(ref regDsCount);
+			this.downstreamNode = downstream;
 		}
 
 		public Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
 		{
-			throw new NotImplementedException("TODO");
+			throw new NotSupportedException("THIS IS A ROOT SERVER NODE");
 		}
 
 		public Task NodeFailAsync(Exception ex)
 		{
-			throw new NotImplementedException("TODO");
+			throw new NotSupportedException("THIS IS A ROOT SERVER NODE");
 		}
 
 		public Task ShutdownAsync()
 		{
-			throw new NotImplementedException("TODO");
+			Interlocked.Increment(ref shutdownCount);
+			return Task.FromResult(true);
 		}
 
 		public void Dispose()
 		{
-			
+			Interlocked.Increment(ref disposeCount);
 		}
 	}
 }
