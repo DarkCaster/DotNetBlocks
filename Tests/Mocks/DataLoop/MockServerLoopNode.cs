@@ -73,7 +73,12 @@ namespace Tests.Mocks.DataLoop
 			this.random = new Random();
 		}
 
-		public async Task NewConnection(Storage clientReadStorage, Storage clientWriteStorage)
+		public void NewConnection(Storage clientReadStorage, Storage clientWriteStorage)
+		{
+			Task.Run(async () => await NewConnectionTask(clientReadStorage,clientWriteStorage));
+		}
+
+		public async Task NewConnectionTask(Storage clientReadStorage, Storage clientWriteStorage)
 		{
 			Interlocked.Increment(ref ncCount);
 			if(Interlocked.CompareExchange(ref shutdownCount, 0, 0) != 0)
@@ -90,6 +95,7 @@ namespace Tests.Mocks.DataLoop
 			var config = configFactory.CreateNew();
 			await downstreamNode.OpenTunnelAsync(config, tunnel);
 		}
+
 
 		public Task InitAsync()
 		{

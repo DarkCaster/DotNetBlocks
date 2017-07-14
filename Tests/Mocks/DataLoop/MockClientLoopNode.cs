@@ -68,7 +68,7 @@ namespace Tests.Mocks.DataLoop
 			var tunnel = new MockClientLoopTunnel(minBlockSize, maxBlockSize, clientReadStg, readTimeout, clientWriteStg);
 			try
 			{
-				await entry.NewConnection(clientReadStg, clientWriteStg);
+				entry.NewConnection(clientReadStg, clientWriteStg);
 			}
 			catch
 			{
