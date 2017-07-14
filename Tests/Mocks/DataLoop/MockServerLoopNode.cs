@@ -121,5 +121,11 @@ namespace Tests.Mocks.DataLoop
 		{
 			Interlocked.Increment(ref disposeCount);
 		}
+
+		public int InitCount { get { return Interlocked.CompareExchange(ref initCount, 0, 0); } }
+		public int NcCount { get { return Interlocked.CompareExchange(ref ncCount, 0, 0); } }
+		public int RegDsCount { get { return Interlocked.CompareExchange(ref regDsCount, 0, 0); } }
+		public int ShutdownCount { get { return Interlocked.CompareExchange(ref shutdownCount, 0, 0); } }
+		public int DisposeCount { get { return Interlocked.CompareExchange(ref disposeCount, 0, 0); } }
 	}
 }
