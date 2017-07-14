@@ -75,18 +75,18 @@ namespace Tests.Mocks.DataLoop
 			this.random = new Random();
 		}
 
-		public void NewConnection(Storage clientReadStorage, Storage clientWriteStorage)
+		public async Task NewConnection(Storage clientReadStorage, Storage clientWriteStorage)
 		{
 			Interlocked.Increment(ref ncCount);
 			//simulate fail
 			if(--noFailOpsCount <= 0 && (float)random.NextDouble() < nodeFailProb)
 			{
-				newConnRunner.ExecuteTask(() => downstreamNode.NodeFailAsync(new Exception("Expected fail")));
+				await downstreamNode.NodeFailAsync(new Exception("Expected fail"));
 				throw new Exception("Expected fail triggered");
 			}
 			var tunnel = new MockServerLoopTunnel(minBlockSize, maxBlockSize, clientWriteStorage, readTimeout, clientReadStorage);
 			var config = configFactory.CreateNew();
-			newConnRunner.ExecuteTask(() => downstreamNode.OpenTunnelAsync(config, tunnel));
+			await downstreamNode.OpenTunnelAsync(config, tunnel);
 		}
 
 		public Task InitAsync()

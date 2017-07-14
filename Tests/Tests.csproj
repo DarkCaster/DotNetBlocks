@@ -81,6 +81,7 @@
     <Compile Include="Mocks\DataLoop\MockServerLoopTunnel.cs" />
     <Compile Include="Mocks\DataLoop\MockServerLoopNode.cs" />
     <Compile Include="Mocks\DataLoop\MockExitLoopNode.cs" />
+    <Compile Include="Mocks\DataLoop\MockClientLoopNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
