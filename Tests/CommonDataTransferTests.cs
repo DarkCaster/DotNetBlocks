@@ -30,7 +30,9 @@ using DarkCaster.Serialization.Binary;
 using Tests.Mocks.DataLoop;
 using NUnit.Framework;
 
+using STunnel = DarkCaster.DataTransfer.Server.ITunnel;
 using SNode = DarkCaster.DataTransfer.Server.INode;
+using CTunnel = DarkCaster.DataTransfer.Client.ITunnel;
 using CNode = DarkCaster.DataTransfer.Client.INode;
 
 namespace Tests
@@ -48,14 +50,19 @@ namespace Tests
 			Assert.AreEqual(1, serverLoopMock.InitCount);
 			Assert.IsNull(serverMockExit.IncomingConfig);
 			Assert.IsNull(serverMockExit.IncomingTunnel);
-			//create new connection
-			var clTun = runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig));
-			runner.ExecuteTask(() => serverMockExit.WaitForNewConnectionAsync(5000));
-			var svTun = serverMockExit.IncomingTunnel;
-			var svCfg = serverMockExit.IncomingConfig;
-			Assert.NotNull(svTun);
-			Assert.NotNull(svCfg);
-			Assert.AreEqual(1, serverLoopMock.NcCount);
+			//create new connection(s)
+			var cnt = 50;
+			var clTuns = new CTunnel[cnt];
+			for(int i = 0; i < cnt;++i)
+			{
+				clTuns[i] = runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig));
+				runner.ExecuteTask(() => serverMockExit.WaitForNewConnectionAsync(5000));
+				var svTun = serverMockExit.IncomingTunnel;
+				var svCfg = serverMockExit.IncomingConfig;
+				Assert.NotNull(svTun);
+				Assert.NotNull(svCfg);
+			}
+			Assert.AreEqual(50, serverLoopMock.NcCount);
 			Assert.AreEqual(0, serverLoopMock.ShutdownCount);
 			Assert.AreEqual(0, serverLoopMock.DisposeCount);
 			//simulate server shutdown
@@ -69,5 +76,84 @@ namespace Tests
 			Assert.IsNull(serverMockExit.IncomingTunnel);
 		}
 
+		private static void GenerateHighComprData(byte[] buffer, int offset = 0, int length = -1)
+		{
+			if(length < 0)
+				length = buffer.Length - offset;
+			int limit = offset + length;
+			var maxLen = 32;
+			if(maxLen > length / 2)
+				maxLen = length / 2;
+			if(maxLen < 8)
+				maxLen = 8;
+			var random = new Random();
+			while(offset < limit)
+			{
+				byte val = (byte)random.Next(0, 256);
+				int len = (byte)random.Next(8, maxLen);
+				//copy data chunk to buffer
+				for(int i = 0; i < len; ++i)
+				{
+					buffer[offset++] = val;
+					if(offset >= limit)
+						break;
+				}
+			}
+		}
+
+		public static void ReadWrite(ITunnelConfig clTunConfig, CNode clientNode, MockClientLoopNode clientLoopMock, SNode serverNode, MockServerLoopNode serverLoopMock)
+		{
+			clientLoopMock.SetServerEntry(serverLoopMock);
+			var serverMockExit = new MockExitLoopNode(serverNode);
+			Assert.AreEqual(1, serverLoopMock.RegDsCount);
+			Assert.AreEqual(0, serverLoopMock.InitCount);
+			var runner = new AsyncRunner();
+			runner.ExecuteTask(serverMockExit.InitAsync);
+			Assert.AreEqual(1, serverLoopMock.InitCount);
+			Assert.IsNull(serverMockExit.IncomingConfig);
+			Assert.IsNull(serverMockExit.IncomingTunnel);
+			var clTun = runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig));
+			runner.ExecuteTask(() => serverMockExit.WaitForNewConnectionAsync(5000));
+			var svTun = serverMockExit.IncomingTunnel;
+			var svCfg = serverMockExit.IncomingConfig;
+			Assert.NotNull(svTun);
+			Assert.NotNull(svCfg);
+			Assert.AreEqual(1, serverLoopMock.NcCount);
+			Assert.AreEqual(0, serverLoopMock.ShutdownCount);
+			Assert.AreEqual(0, serverLoopMock.DisposeCount);
+			var sourceData = new byte[262144];
+			//try writing data to client tunnel
+			GenerateHighComprData(sourceData);
+			//write source data
+			int pos = 0;
+			while(pos < sourceData.Length)
+				pos += runner.ExecuteTask(() => clTun.WriteDataAsync(sourceData.Length - pos, sourceData, pos));
+			//read from the other end
+			var countolData=new byte[262144];
+			pos = 0;
+			while(pos < countolData.Length)
+				pos += runner.ExecuteTask(() => svTun.ReadDataAsync(countolData.Length - pos, countolData, pos));
+			Assert.AreEqual(sourceData, countolData);
+			//try writing data to server tunnel
+			GenerateHighComprData(sourceData);
+			//write source data to server tunnel
+			pos = 0;
+			while(pos < sourceData.Length)
+				pos += runner.ExecuteTask(() => svTun.WriteDataAsync(sourceData.Length - pos, sourceData, pos));
+			//read from the other end
+			pos = 0;
+			while(pos < countolData.Length)
+				pos += runner.ExecuteTask(() => clTun.ReadDataAsync(countolData.Length - pos, countolData, pos));
+			Assert.AreEqual(sourceData, countolData);
+			//simulate server shutdown
+			runner.ExecuteTask(serverMockExit.ShutdownAsync);
+			serverMockExit.Dispose();
+			Assert.AreEqual(1, serverLoopMock.ShutdownCount);
+			Assert.AreEqual(1, serverLoopMock.DisposeCount);
+			//try to open new connection again
+			Assert.Throws(typeof(Exception), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
+			Assert.IsNull(serverMockExit.IncomingConfig);
+			Assert.IsNull(serverMockExit.IncomingTunnel);
+		}
 	}
 }
