@@ -82,20 +82,19 @@ namespace Tests.Mocks.DataLoop
 		{
 			Interlocked.Increment(ref ncCount);
 			if(Interlocked.CompareExchange(ref shutdownCount, 0, 0) != 0)
-				throw new Exception("Server was shutdown");
+				throw new MockLoopException("Server was shutdown");
 			if(Interlocked.CompareExchange(ref disposeCount, 0, 0) != 0)
 				throw new ObjectDisposedException("You should not see this exception!");
 			//simulate fail
 			if(--noFailOpsCount <= 0 && (float)random.NextDouble() < nodeFailProb)
 			{
 				await downstreamNode.NodeFailAsync(new Exception("Expected fail"));
-				throw new Exception("Expected fail triggered");
+				throw new MockLoopException("Expected fail triggered");
 			}
 			var tunnel = new MockServerLoopTunnel(minBlockSize, maxBlockSize, clientWriteStorage, readTimeout, clientReadStorage);
 			var config = configFactory.CreateNew();
 			await downstreamNode.OpenTunnelAsync(config, tunnel);
 		}
-
 
 		public Task InitAsync()
 		{
