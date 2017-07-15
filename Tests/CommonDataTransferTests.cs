@@ -64,7 +64,7 @@ namespace Tests
 				Assert.NotNull(svTun);
 				Assert.NotNull(svCfg);
 			}
-			Assert.AreEqual(50, serverLoopMock.NcCount);
+			Assert.AreEqual(cnt, serverLoopMock.NcCount);
 			Assert.AreEqual(0, serverLoopMock.ShutdownCount);
 			Assert.AreEqual(0, serverLoopMock.DisposeCount);
 			//simulate server shutdown
@@ -160,6 +160,7 @@ namespace Tests
 
 		private delegate Task<int> ReadDataAsyncDelegate(int sz, byte[] buffer, int offset);
 		private delegate Task<int> WriteDataAsyncDelegate(int sz, byte[] buffer, int offset);
+		private static volatile bool start;
 
 		private static async Task<Exception> ReadWorker(ReadDataAsyncDelegate readDelegate, byte[] controlData)
 		{
@@ -167,10 +168,23 @@ namespace Tests
 			var random = new Random();
 			while(true)
 			{
+				if(!start)
+				{
+					await Task.Delay(10);
+					continue;
+				}
 				random.NextBytes(testData);
-				int pos = 0;
-				while(pos < testData.Length)
-					pos += await readDelegate(testData.Length - pos, testData, pos);
+				try
+				{
+					int pos = 0;
+					while(pos < testData.Length)
+						pos += await readDelegate(testData.Length - pos, testData, pos);
+				}
+				//expected failure
+				catch(MockLoopException ex)
+				{
+					return ex;
+				}
 				for(int i = 0; i < testData.Length; ++i)
 					if(testData[i] != controlData[i])
 						throw new Exception("Data verification failed");
@@ -181,12 +195,34 @@ namespace Tests
 		{
 			while(true)
 			{
-				int pos = 0;
-				while(pos < sourceData.Length)
-					pos += await writeDelegate(sourceData.Length - pos, sourceData, pos);
+				if(!start)
+				{
+					await Task.Delay(10);
+					continue;
+				}
+				try
+				{
+					int pos = 0;
+					while(pos < sourceData.Length)
+						pos += await writeDelegate(sourceData.Length - pos, sourceData, pos);
+				}
+				//expected failure
+				catch(MockLoopException ex)
+				{
+					return ex;
+				}
 			}
 		}
 
+		private static void Reset()
+		{
+			start = false;
+		}
+
+		private static void Start()
+		{
+			start = true;
+		}
 		public static void MultithreadedReadWrite(ITunnelConfig clTunConfig, CNode clientNode, MockClientLoopNode clientLoopMock, SNode serverNode, MockServerLoopNode serverLoopMock)
 		{
 		}
