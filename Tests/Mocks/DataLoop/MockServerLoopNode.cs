@@ -75,23 +75,23 @@ namespace Tests.Mocks.DataLoop
 
 		public void NewConnection(Storage clientReadStorage, Storage clientWriteStorage)
 		{
+			if(Interlocked.CompareExchange(ref shutdownCount, 0, 0) != 0)
+				throw new MockLoopException("Server was shutdown");
+			if(Interlocked.CompareExchange(ref disposeCount, 0, 0) != 0)
+				throw new ObjectDisposedException("You should not see this exception!");
 			Task.Run(async () => await NewConnectionTask(clientReadStorage,clientWriteStorage));
 		}
 
 		public async Task NewConnectionTask(Storage clientReadStorage, Storage clientWriteStorage)
 		{
 			Interlocked.Increment(ref ncCount);
-			if(Interlocked.CompareExchange(ref shutdownCount, 0, 0) != 0)
-				throw new MockLoopException("Server was shutdown");
-			if(Interlocked.CompareExchange(ref disposeCount, 0, 0) != 0)
-				throw new ObjectDisposedException("You should not see this exception!");
 			//simulate fail
 			if(--noFailOpsCount <= 0 && (float)random.NextDouble() < nodeFailProb)
 			{
 				await downstreamNode.NodeFailAsync(new Exception("Expected fail"));
 				throw new MockLoopException("Expected fail triggered");
 			}
-			var tunnel = new MockServerLoopTunnel(minBlockSize, maxBlockSize, clientWriteStorage, readTimeout, clientReadStorage);
+			var tunnel = new MockServerLoopTunnel(minBlockSize, maxBlockSize, clientWriteStorage, readTimeout, clientReadStorage, noFailOpsCount, nodeFailProb);
 			var config = configFactory.CreateNew();
 			await downstreamNode.OpenTunnelAsync(config, tunnel);
 		}

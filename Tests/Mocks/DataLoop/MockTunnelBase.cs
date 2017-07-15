@@ -33,7 +33,8 @@ namespace Tests.Mocks.DataLoop
 	{
 		private readonly int minBlockSize;
 		private readonly int maxBlockSize;
-		private readonly Random random;
+		private readonly Random writeRandom;
+		private readonly Random readRandom;
 
 		public byte[] readBlock;
 		public int readBlockPos;
@@ -44,12 +45,15 @@ namespace Tests.Mocks.DataLoop
 		private readonly int readTimeout;
 		private int readTimeleft;
 
+		private readonly float failProb;
+		private int noFailOpsCount;
+
 		private int readOpsCount=0;
 		private int writeOpsCount=0;
 		private int disconnectOpsCount=0;
 		private int disposeOpsCount=0;
 
-		protected MockTunnelBase(int minBlockSize, int maxBlockSize, Storage readStorage, int readTimeout, Storage writeStorage)
+		protected MockTunnelBase(int minBlockSize, int maxBlockSize, Storage readStorage, int readTimeout, Storage writeStorage, int noFailOpsCount, float failProb)
 		{
 			this.readStorage = readStorage;
 			this.readTimeout = readTimeout;
@@ -60,12 +64,17 @@ namespace Tests.Mocks.DataLoop
 			readBlock = new byte[0];
 			readBlockPos = 0;
 			readTimeleft = readTimeout;
-			random = new Random();
+			writeRandom = new Random();
+			readRandom = new Random();
+			this.failProb = failProb;
+			this.noFailOpsCount = noFailOpsCount;
 		}
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			Interlocked.Increment(ref readOpsCount);
+			if(Interlocked.Decrement(ref noFailOpsCount) <= 0 && readRandom.NextDouble() < failProb)
+				throw new MockLoopException("Read: expected fail triggered");
 			if(sz == 0)
 				return 0;
 			if(readBlockPos >= readBlock.Length)
@@ -92,9 +101,11 @@ namespace Tests.Mocks.DataLoop
 		public Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			Interlocked.Increment(ref writeOpsCount);
+			if(Interlocked.Decrement(ref noFailOpsCount) <= 0 && readRandom.NextDouble() < failProb)
+				throw new MockLoopException("Write: expected fail triggered");
 			if(sz == 0)
 				return Task.FromResult(0);
-			var bsz = random.Next(minBlockSize, maxBlockSize + 1);
+			var bsz = writeRandom.Next(minBlockSize, maxBlockSize + 1);
 			if(sz > bsz)
 				sz = bsz;
 			var chunk = new byte[sz];

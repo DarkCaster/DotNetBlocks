@@ -29,7 +29,7 @@ namespace Tests.Mocks.DataLoop
 {
 	public sealed class MockServerLoopTunnel : MockTunnelBase, ITunnel
 	{
-		public MockServerLoopTunnel(int minBlockSize, int maxBlockSize, Storage readStorage, int readTimeout, Storage writeStorage)
-			: base(minBlockSize, maxBlockSize, readStorage, readTimeout, writeStorage) { }
+		public MockServerLoopTunnel(int minBlockSize, int maxBlockSize, Storage readStorage, int readTimeout, Storage writeStorage, int noFailOpsCount, float failProb)
+			: base(minBlockSize, maxBlockSize, readStorage, readTimeout, writeStorage, noFailOpsCount, failProb) { }
 	}
 }

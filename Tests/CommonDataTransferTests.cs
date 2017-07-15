@@ -41,6 +41,8 @@ namespace Tests
 	{
 		public static void NewConnection(ITunnelConfig clTunConfig, CNode clientNode, MockClientLoopNode clientLoopMock,  SNode serverNode, MockServerLoopNode serverLoopMock)
 		{
+			clTunConfig.Set("mock_nofail_ops_count", 1);
+			clTunConfig.Set("mock_fail_prob", 0.001f);
 			clientLoopMock.SetServerEntry(serverLoopMock);
 			var serverMockExit = new MockExitLoopNode(serverNode);
 			Assert.AreEqual(1, serverLoopMock.RegDsCount);
@@ -71,7 +73,7 @@ namespace Tests
 			Assert.AreEqual(1, serverLoopMock.ShutdownCount);
 			Assert.AreEqual(1, serverLoopMock.DisposeCount);
 			//try to open new connection again
-			Assert.Throws(typeof(Exception), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
+			Assert.Throws(typeof(MockLoopException), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
 			Assert.IsNull(serverMockExit.IncomingConfig);
 			Assert.IsNull(serverMockExit.IncomingTunnel);
 		}
@@ -151,7 +153,7 @@ namespace Tests
 			Assert.AreEqual(1, serverLoopMock.ShutdownCount);
 			Assert.AreEqual(1, serverLoopMock.DisposeCount);
 			//try to open new connection again
-			Assert.Throws(typeof(Exception), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
+			Assert.Throws(typeof(MockLoopException), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
 			Assert.IsNull(serverMockExit.IncomingConfig);
 			Assert.IsNull(serverMockExit.IncomingTunnel);
 		}

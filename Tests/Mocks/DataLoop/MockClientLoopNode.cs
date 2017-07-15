@@ -36,12 +36,16 @@ namespace Tests.Mocks.DataLoop
 		private readonly int defaultMinBlockSize;
 		private readonly int defaultMaxBlockSize;
 		private readonly int defaultReadTimeout;
+		private readonly int defaultNoFailOpsCount;
+		private readonly float defaultNodeFailProb;
 
-		public MockClientLoopNode(int defaultMinBlockSize = 16, int defaultMaxBlockSize = 4096, int defaultReadTimeout = 5000)
+		public MockClientLoopNode(int defaultMinBlockSize = 16, int defaultMaxBlockSize = 4096, int defaultReadTimeout = 5000, int defaultNoFailOpsCount = 1, float defaultNodeFailProb = 0.0f)
 		{
 			this.defaultMinBlockSize = defaultMinBlockSize;
 			this.defaultMaxBlockSize = defaultMaxBlockSize;
 			this.defaultReadTimeout = defaultReadTimeout;
+			this.defaultNoFailOpsCount = defaultNoFailOpsCount;
+			this.defaultNodeFailProb = defaultNodeFailProb;
 			entry = null;
 		}
 
@@ -50,11 +54,13 @@ namespace Tests.Mocks.DataLoop
 			entry = serverLoopEntry;
 		}
 
-		public async Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
+		public Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
 		{
 			int minBlockSize = config.Get<int>("mock_min_block_size");
 			int maxBlockSize = config.Get<int>("mock_max_block_size");
 			int readTimeout = config.Get<int>("mock_read_timeout");
+			float nodeFailProb = config.Get<float>("mock_fail_prob");
+			int noFailOpsCount = config.Get<int>("mock_nofail_ops_count");
 
 			if(minBlockSize <= 0)
 				minBlockSize = defaultMinBlockSize;
@@ -62,20 +68,17 @@ namespace Tests.Mocks.DataLoop
 				maxBlockSize = defaultMaxBlockSize;
 			if(readTimeout <= 0)
 				readTimeout = defaultReadTimeout;
+			if(nodeFailProb <= 0.001f)
+				nodeFailProb = defaultNodeFailProb;
+			if(noFailOpsCount <= 0)
+				noFailOpsCount = defaultNoFailOpsCount;
 			
 			var clientReadStg = new Storage();
 			var clientWriteStg = new Storage();
-			var tunnel = new MockClientLoopTunnel(minBlockSize, maxBlockSize, clientReadStg, readTimeout, clientWriteStg);
-			try
-			{
-				entry.NewConnection(clientReadStg, clientWriteStg);
-			}
-			catch
-			{
-				await tunnel.DisconnectAsync();
-				tunnel.Dispose();
-			}
-			return tunnel;
+			//initiate new connection for server node, and set-up shared storage
+			entry.NewConnection(clientReadStg, clientWriteStg);
+			//create new tunnel connection, with shared storage
+			return Task.FromResult((ITunnel)new MockClientLoopTunnel(minBlockSize, maxBlockSize, clientReadStg, readTimeout, clientWriteStg, noFailOpsCount, nodeFailProb));
 		}
 	}
 }
