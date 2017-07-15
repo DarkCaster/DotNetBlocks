@@ -23,10 +23,10 @@
 // SOFTWARE.
 //
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using DarkCaster.Async;
-using DarkCaster.DataTransfer;
 using DarkCaster.DataTransfer.Config;
-using DarkCaster.Serialization.Binary;
 using Tests.Mocks.DataLoop;
 using NUnit.Framework;
 
@@ -154,6 +154,39 @@ namespace Tests
 			Assert.Throws(typeof(Exception), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
 			Assert.IsNull(serverMockExit.IncomingConfig);
 			Assert.IsNull(serverMockExit.IncomingTunnel);
+		}
+
+		private delegate Task<int> ReadDataAsyncDelegate(int sz, byte[] buffer, int offset);
+		private delegate Task<int> WriteDataAsyncDelegate(int sz, byte[] buffer, int offset);
+
+		private static async Task<Exception> ReadWorker(ReadDataAsyncDelegate readDelegate, byte[] controlData)
+		{
+			var testData = new byte[controlData.Length];
+			var random = new Random();
+			while(true)
+			{
+				random.NextBytes(testData);
+				int pos = 0;
+				while(pos < testData.Length)
+					pos += await readDelegate(testData.Length - pos, testData, pos);
+				for(int i = 0; i < testData.Length; ++i)
+					if(testData[i] != controlData[i])
+						throw new Exception("Data verification failed");
+			}
+		}
+
+		private static async Task<Exception> WriteWorker(WriteDataAsyncDelegate writeDelegate, byte[] sourceData)
+		{
+			while(true)
+			{
+				int pos = 0;
+				while(pos < sourceData.Length)
+					pos += await writeDelegate(sourceData.Length - pos, sourceData, pos);
+			}
+		}
+
+		public static void MultithreadedReadWrite(ITunnelConfig clTunConfig, CNode clientNode, MockClientLoopNode clientLoopMock, SNode serverNode, MockServerLoopNode serverLoopMock)
+		{
 		}
 	}
 }
