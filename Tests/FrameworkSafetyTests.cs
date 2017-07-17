@@ -8,7 +8,8 @@ using NUnit.Framework;
 namespace Tests
 {
 	/// <summary>
-	/// Some tests for internal framework classes to test behavior in some specific cases.
+	/// This tests are basically intended for my own clarification of some specific .NET aspects and test of some non-typical cases.
+	/// Some tests may be intended for verificaition of some specific bugs in mono\dotnet\dotnet-core\etc for specific platform (for ARM).
 	/// </summary>
 	[TestFixture]
 	public class FrameworkSafetyTests
@@ -138,6 +139,52 @@ namespace Tests
 			for (int i = 0; i < workers; ++i)
 				result |= tasks[i].Result;
 			Assert.True(result);
+		}
+
+		private static async Task<int> TestWorker(int iterations, int result)
+		{
+			var random = new Random();
+			for(int i = 0; i < iterations; ++i)
+				await Task.Delay(random.Next(1, 20));
+			return result;
+		}
+
+		//more info about this test case:
+		//https://stackoverflow.com/questions/27701812/anonymous-function-and-local-variables
+
+		[Test]
+		public void TaskRun_ChangedParameter()
+		{
+			var cnt = 5;
+			var iters = 50;
+			var tasks = new Task<int>[cnt];
+			var runner = new DarkCaster.Async.AsyncRunner();
+			Assert.AreEqual(100, runner.ExecuteTask(() => TestWorker(iters, 100)));
+			//variable "i" will be changed at the moment when it will be accessed by task
+			for(int i = 0; i < cnt; ++i)
+				tasks[i] = Task.Run(() => TestWorker(iters, i));
+			//verify that variable "i" was set to value 5 for all tasks
+			for(int i = 0; i < cnt; ++i)
+				Assert.AreEqual(cnt, tasks[i].Result);
+		}
+
+		[Test]
+		public void TaskRun_UniqueParameter()
+		{
+			var cnt = 5;
+			var iters = 50;
+			var tasks = new Task<int>[cnt];
+			var runner = new DarkCaster.Async.AsyncRunner();
+			Assert.AreEqual(100, runner.ExecuteTask(() => TestWorker(iters, 100)));
+			//value from variable "i" will be captured by context of anonymous method
+			for(int i = 0; i < cnt; ++i)
+			{
+				var p = i;
+				tasks[i] = Task.Run(() => TestWorker(iters, p));
+			}
+			//verify that we have expected unique value for all tasks
+			for(int i = 0; i < cnt; ++i)
+				Assert.AreEqual(i, tasks[i].Result);
 		}
 	}
 }
