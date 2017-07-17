@@ -141,50 +141,41 @@ namespace Tests
 			Assert.True(result);
 		}
 
-		private static async Task<int> TestWorker(int iterations, int result)
-		{
-			var random = new Random();
-			for(int i = 0; i < iterations; ++i)
-				await Task.Delay(random.Next(1, 20));
-			return result;
-		}
-
 		//more info about this test case:
 		//https://stackoverflow.com/questions/27701812/anonymous-function-and-local-variables
 
-		[Test]
-		public void TaskRun_ChangedParameter()
+		private static int TestWorker(int result)
 		{
-			var cnt = 5;
-			var iters = 50;
-			var tasks = new Task<int>[cnt];
-			var runner = new DarkCaster.Async.AsyncRunner();
-			Assert.AreEqual(100, runner.ExecuteTask(() => TestWorker(iters, 100)));
-			//variable "i" will be changed at the moment when it will be accessed by task
-			for(int i = 0; i < cnt; ++i)
-				tasks[i] = Task.Run(() => TestWorker(iters, i));
-			//verify that variable "i" was set to value 5 for all tasks
-			for(int i = 0; i < cnt; ++i)
-				Assert.AreEqual(cnt, tasks[i].Result);
+			return result;
 		}
 
 		[Test]
-		public void TaskRun_UniqueParameter()
+		public void TaskRun_ParameterNotCaptured()
 		{
-			var cnt = 5;
-			var iters = 50;
+			var cnt = 10;
 			var tasks = new Task<int>[cnt];
-			var runner = new DarkCaster.Async.AsyncRunner();
-			Assert.AreEqual(100, runner.ExecuteTask(() => TestWorker(iters, 100)));
-			//value from variable "i" will be captured by context of anonymous method
+			for(int i = 0; i < cnt; ++i)
+				tasks[i] = Task.Run(() => TestWorker(i));
+			for(int i = 0; i < cnt; ++i)
+				//seems that initial variable was not captured, result will not match initial value
+				if(tasks[i].Result == i)
+					throw new Exception(string.Format("tasks[{0}].Result == {1}",i,tasks[i].Result));
+		}
+
+		[Test]
+		public void TaskRun_ParameterCaptured()
+		{
+			var cnt = 10;
+			var tasks = new Task<int>[cnt];
 			for(int i = 0; i < cnt; ++i)
 			{
-				var p = i;
-				tasks[i] = Task.Run(() => TestWorker(iters, p));
+				var j = i;
+				tasks[i] = Task.Run(() => TestWorker(j));
 			}
-			//verify that we have expected unique value for all tasks
 			for(int i = 0; i < cnt; ++i)
-				Assert.AreEqual(i, tasks[i].Result);
+				//initial variable was captured, result will match initial value
+				if(tasks[i].Result != i)
+					throw new Exception(string.Format("tasks[{0}].Result == {1}", i, tasks[i].Result));
 		}
 	}
 }
