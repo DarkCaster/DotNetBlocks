@@ -160,10 +160,18 @@ namespace Tests
 
 		private delegate Task<int> ReadDataAsyncDelegate(int sz, byte[] buffer, int offset);
 		private delegate Task<int> WriteDataAsyncDelegate(int sz, byte[] buffer, int offset);
-		private static volatile bool start;
+		private static volatile bool start = false;
+		private static readonly object sourceDataLock=new object();
+		private static byte[] sourceData = null;
 
-		private static async Task<Exception> ReadWorker(ReadDataAsyncDelegate readDelegate, byte[] controlData)
+		private static async Task<Exception> ReadWorker(ReadDataAsyncDelegate readDelegate)
 		{
+			byte[] controlData = null;
+			lock(sourceDataLock)
+			{
+				controlData = new byte[sourceData.Length];
+				Buffer.BlockCopy(sourceData,0,controlData,0,sourceData.Length);
+			}
 			var testData = new byte[controlData.Length];
 			var random = new Random();
 			while(true)
@@ -191,8 +199,15 @@ namespace Tests
 			}
 		}
 
-		private static async Task<Exception> WriteWorker(WriteDataAsyncDelegate writeDelegate, byte[] sourceData)
+		private static async Task<Exception> WriteWorker(WriteDataAsyncDelegate writeDelegate)
 		{
+			byte[] data = null;
+			lock(sourceDataLock)
+			{
+				data = new byte[sourceData.Length];
+				Buffer.BlockCopy(sourceData, 0, data, 0, sourceData.Length);
+			}
+
 			while(true)
 			{
 				if(!start)
@@ -203,8 +218,8 @@ namespace Tests
 				try
 				{
 					int pos = 0;
-					while(pos < sourceData.Length)
-						pos += await writeDelegate(sourceData.Length - pos, sourceData, pos);
+					while(pos < data.Length)
+						pos += await writeDelegate(data.Length - pos, data, pos);
 				}
 				//expected failure
 				catch(MockLoopException ex)
@@ -223,8 +238,94 @@ namespace Tests
 		{
 			start = true;
 		}
+
 		public static void MultithreadedReadWrite(ITunnelConfig clTunConfig, CNode clientNode, MockClientLoopNode clientLoopMock, SNode serverNode, MockServerLoopNode serverLoopMock)
 		{
+			Reset();
+			clTunConfig.Set("mock_nofail_ops_count", 1000);
+			clTunConfig.Set("mock_fail_prob", 0.1f);
+			clientLoopMock.SetServerEntry(serverLoopMock);
+			var serverMockExit = new MockExitLoopNode(serverNode);
+			Assert.AreEqual(1, serverLoopMock.RegDsCount);
+			Assert.AreEqual(0, serverLoopMock.InitCount);
+			var runner = new AsyncRunner();
+			runner.ExecuteTask(serverMockExit.InitAsync);
+			Assert.AreEqual(1, serverLoopMock.InitCount);
+			Assert.IsNull(serverMockExit.IncomingConfig);
+			Assert.IsNull(serverMockExit.IncomingTunnel);
+			//generate source data
+			lock(sourceDataLock)
+			{
+				sourceData = new byte[262144];
+				GenerateHighComprData(sourceData);
+			}
+			//create new connection(s)
+			var cnt = 1;
+			var clTuns = new CTunnel[cnt];
+			var svTuns = new STunnel[cnt];
+			var clReaders = new Task<Exception>[cnt];
+			var svReaders = new Task<Exception>[cnt];
+			var clWriters = new Task<Exception>[cnt];
+			var svWriters = new Task<Exception>[cnt];
+
+			for(int i = 0; i < cnt; ++i)
+			{
+				clTuns[i] = runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig));
+				Assert.NotNull(clTuns[i]);
+				serverMockExit.WaitForNewConnection(5000);
+				svTuns[i] = serverMockExit.IncomingTunnel;
+				var svCfg = serverMockExit.IncomingConfig;
+				Assert.NotNull(svTuns[i]);
+				Assert.NotNull(svCfg);
+				Assert.Null(SynchronizationContext.Current);
+				ReadDataAsyncDelegate clReadDelegate = clTuns[i].ReadDataAsync;
+				WriteDataAsyncDelegate clWriteDelegate = clTuns[i].WriteDataAsync;
+				ReadDataAsyncDelegate svReadDelegate = svTuns[i].ReadDataAsync;
+				WriteDataAsyncDelegate svWriteDelegate = svTuns[i].WriteDataAsync;
+				clReaders[i] = Task.Run(() => ReadWorker(clReadDelegate));
+				svReaders[i] = Task.Run(() => ReadWorker(svReadDelegate));
+				clWriters[i] = Task.Run(() => WriteWorker(clWriteDelegate));
+				svWriters[i] = Task.Run(() => WriteWorker(svWriteDelegate));
+			}
+			for(int i = 0; i < cnt;++i)
+			{
+				if(clReaders[i].Status == TaskStatus.Faulted)
+					throw new Exception("clReader #" + i.ToString() + " is failed");
+				if(clWriters[i].Status == TaskStatus.Faulted)
+					throw new Exception("clWriter #" + i.ToString() + " is failed");
+				if(svReaders[i].Status == TaskStatus.Faulted)
+					throw new Exception("svReader #" + i.ToString() + " is failed");
+				if(svWriters[i].Status == TaskStatus.Faulted)
+					throw new Exception("svWriter #" + i.ToString() + " is failed");
+			}
+			Start();
+			Assert.AreEqual(cnt, serverLoopMock.NcCount);
+			Assert.AreEqual(0, serverLoopMock.ShutdownCount);
+			Assert.AreEqual(0, serverLoopMock.DisposeCount);
+
+			for(int i = 0; i < cnt; ++i)
+			{
+				Assert.True(clReaders[i].Result is MockLoopException);
+				Assert.True(svReaders[i].Result is MockLoopException);
+				Assert.True(clWriters[i].Result is MockLoopException);
+				Assert.True(svWriters[i].Result is MockLoopException);
+			}
+			for(int i = 0; i < cnt; ++i)
+			{
+				runner.ExecuteTask(clTuns[i].DisconnectAsync);
+				runner.ExecuteTask(svTuns[i].DisconnectAsync);
+				clTuns[i].Dispose();
+				svTuns[i].Dispose();
+			}
+			//simulate server shutdown
+			runner.ExecuteTask(serverMockExit.ShutdownAsync);
+			serverMockExit.Dispose();
+			Assert.AreEqual(1, serverLoopMock.ShutdownCount);
+			Assert.AreEqual(1, serverLoopMock.DisposeCount);
+			//try to open new connection again
+			Assert.Throws(typeof(MockLoopException), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
+			Assert.IsNull(serverMockExit.IncomingConfig);
+			Assert.IsNull(serverMockExit.IncomingTunnel);
 		}
 	}
 }

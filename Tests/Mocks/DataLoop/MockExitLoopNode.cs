@@ -24,6 +24,7 @@
 //
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Server;
 using DarkCaster.DataTransfer.Config;
@@ -65,6 +66,17 @@ namespace Tests.Mocks.DataLoop
 			}
 			if(timeout <= 0)
 				throw new Exception("WaitForNewConnectionAsync failed");
+		}
+
+		public void WaitForNewConnection(int timeout)
+		{
+			while((incomingTunnels.IsEmpty || incomingConfigs.IsEmpty) && timeout > 0)
+			{
+				Thread.Sleep(10);
+				timeout -= 10;
+			}
+			if(timeout <= 0)
+				throw new Exception("WaitForNewConnection failed");
 		}
 
 		private readonly INode upstreamNode;

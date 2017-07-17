@@ -78,5 +78,25 @@ namespace Tests
 			var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory());
 			CommonDataTransferTests.ReadWrite(clConfig, clientComprNode, clientLoopMock, serverComprNode, serverLoopMock);
 		}
+
+		[Test]
+		public void MultithreadedReadWrite()
+		{
+			var svConfig = new TunnelConfig();
+			//add mock parameters
+			svConfig.Set("mock_min_block_size", 4096);
+			svConfig.Set("mock_max_block_size", 8192);
+			svConfig.Set("mock_read_timeout", 5000);
+			svConfig.Set("mock_fail_prob", 0.1f);
+			svConfig.Set("mock_nofail_ops_count", 1000);
+			//add compression parameters
+			svConfig.Set("compr_max_block_size", 16384);
+			var serverLoopMock = new MockServerLoopNode(svConfig, new TunnelConfigFactory(new BinarySerializationHelperFactory()));
+			var serverComprNode = new CompressionServerNode(svConfig, serverLoopMock, new FastLZBlockCompressorFactory());
+			var clConfig = new TunnelConfig();
+			var clientLoopMock = new MockClientLoopNode();
+			var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory());
+			CommonDataTransferTests.MultithreadedReadWrite(clConfig, clientComprNode, clientLoopMock, serverComprNode, serverLoopMock);
+		}
 	}
 }
