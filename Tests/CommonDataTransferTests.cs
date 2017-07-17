@@ -160,11 +160,15 @@ namespace Tests
 
 		private delegate Task<int> ReadDataAsyncDelegate(int sz, byte[] buffer, int offset);
 		private delegate Task<int> WriteDataAsyncDelegate(int sz, byte[] buffer, int offset);
+		private delegate Task DisconnectAsyncDelegate();
+
 		private static volatile bool start = false;
 		private static readonly object sourceDataLock=new object();
 		private static byte[] sourceData = null;
+		private static int readWorkersActive = 0;
+		private static int writeWorkersActive = 0;
 
-		private static async Task<Exception> ReadWorker(ReadDataAsyncDelegate readDelegate)
+		private static async Task ReadWorker(ReadDataAsyncDelegate readDelegate)
 		{
 			byte[] controlData = null;
 			lock(sourceDataLock)
@@ -174,6 +178,7 @@ namespace Tests
 			}
 			var testData = new byte[controlData.Length];
 			var random = new Random();
+			Interlocked.Increment(ref readWorkersActive);
 			while(true)
 			{
 				if(!start)
@@ -189,9 +194,9 @@ namespace Tests
 						pos += await readDelegate(testData.Length - pos, testData, pos);
 				}
 				//expected failure
-				catch(MockLoopException ex)
+				catch(MockLoopException)
 				{
-					return ex;
+					return;
 				}
 				for(int i = 0; i < testData.Length; ++i)
 					if(testData[i] != controlData[i])
@@ -199,7 +204,7 @@ namespace Tests
 			}
 		}
 
-		private static async Task<Exception> WriteWorker(WriteDataAsyncDelegate writeDelegate)
+		private static async Task WriteWorker(WriteDataAsyncDelegate writeDelegate, DisconnectAsyncDelegate shutdownDelegate)
 		{
 			byte[] data = null;
 			lock(sourceDataLock)
@@ -207,7 +212,7 @@ namespace Tests
 				data = new byte[sourceData.Length];
 				Buffer.BlockCopy(sourceData, 0, data, 0, sourceData.Length);
 			}
-
+			Interlocked.Increment(ref writeWorkersActive);
 			while(true)
 			{
 				if(!start)
@@ -222,15 +227,18 @@ namespace Tests
 						pos += await writeDelegate(data.Length - pos, data, pos);
 				}
 				//expected failure
-				catch(MockLoopException ex)
+				catch(MockLoopException)
 				{
-					return ex;
+					await shutdownDelegate();
+					return;
 				}
 			}
 		}
 
 		private static void Reset()
 		{
+			Interlocked.Exchange(ref readWorkersActive, 0);
+			Interlocked.Exchange(ref writeWorkersActive, 0);
 			start = false;
 		}
 
@@ -260,13 +268,13 @@ namespace Tests
 				GenerateHighComprData(sourceData);
 			}
 			//create new connection(s)
-			var cnt = 1;
+			var cnt = 50;
 			var clTuns = new CTunnel[cnt];
 			var svTuns = new STunnel[cnt];
-			var clReaders = new Task<Exception>[cnt];
-			var svReaders = new Task<Exception>[cnt];
-			var clWriters = new Task<Exception>[cnt];
-			var svWriters = new Task<Exception>[cnt];
+			var clReaders = new Task[cnt];
+			var svReaders = new Task[cnt];
+			var clWriters = new Task[cnt];
+			var svWriters = new Task[cnt];
 
 			for(int i = 0; i < cnt; ++i)
 			{
@@ -282,41 +290,28 @@ namespace Tests
 				WriteDataAsyncDelegate clWriteDelegate = clTuns[i].WriteDataAsync;
 				ReadDataAsyncDelegate svReadDelegate = svTuns[i].ReadDataAsync;
 				WriteDataAsyncDelegate svWriteDelegate = svTuns[i].WriteDataAsync;
+				DisconnectAsyncDelegate clShutdown = clTuns[i].DisconnectAsync;
+				DisconnectAsyncDelegate svShutdown = svTuns[i].DisconnectAsync;
 				clReaders[i] = Task.Run(() => ReadWorker(clReadDelegate));
 				svReaders[i] = Task.Run(() => ReadWorker(svReadDelegate));
-				clWriters[i] = Task.Run(() => WriteWorker(clWriteDelegate));
-				svWriters[i] = Task.Run(() => WriteWorker(svWriteDelegate));
+				clWriters[i] = Task.Run(() => WriteWorker(clWriteDelegate,clShutdown));
+				svWriters[i] = Task.Run(() => WriteWorker(svWriteDelegate,svShutdown));
 			}
-			for(int i = 0; i < cnt;++i)
-			{
-				if(clReaders[i].Status == TaskStatus.Faulted)
-					throw new Exception("clReader #" + i.ToString() + " is failed");
-				if(clWriters[i].Status == TaskStatus.Faulted)
-					throw new Exception("clWriter #" + i.ToString() + " is failed");
-				if(svReaders[i].Status == TaskStatus.Faulted)
-					throw new Exception("svReader #" + i.ToString() + " is failed");
-				if(svWriters[i].Status == TaskStatus.Faulted)
-					throw new Exception("svWriter #" + i.ToString() + " is failed");
-			}
+			while(Interlocked.CompareExchange(ref readWorkersActive, 0, 0) < cnt * 2) { Thread.Sleep(10); }
+			while(Interlocked.CompareExchange(ref writeWorkersActive, 0, 0) < cnt * 2) { Thread.Sleep(10); }
 			Start();
-			Assert.AreEqual(cnt, serverLoopMock.NcCount);
-			Assert.AreEqual(0, serverLoopMock.ShutdownCount);
-			Assert.AreEqual(0, serverLoopMock.DisposeCount);
-
 			for(int i = 0; i < cnt; ++i)
 			{
-				Assert.True(clReaders[i].Result is MockLoopException);
-				Assert.True(svReaders[i].Result is MockLoopException);
-				Assert.True(clWriters[i].Result is MockLoopException);
-				Assert.True(svWriters[i].Result is MockLoopException);
-			}
-			for(int i = 0; i < cnt; ++i)
-			{
-				runner.ExecuteTask(clTuns[i].DisconnectAsync);
-				runner.ExecuteTask(svTuns[i].DisconnectAsync);
+				clReaders[i].Wait();
+				svReaders[i].Wait();
+				clWriters[i].Wait();
+				svWriters[i].Wait();
 				clTuns[i].Dispose();
 				svTuns[i].Dispose();
 			}
+			Assert.AreEqual(cnt, serverLoopMock.NcCount);
+			Assert.AreEqual(0, serverLoopMock.ShutdownCount);
+			Assert.AreEqual(0, serverLoopMock.DisposeCount);
 			//simulate server shutdown
 			runner.ExecuteTask(serverMockExit.ShutdownAsync);
 			serverMockExit.Dispose();

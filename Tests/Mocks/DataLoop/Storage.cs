@@ -43,14 +43,14 @@ namespace Tests.Mocks.DataLoop
 			if(chunks.TryDequeue(out byte[] chunk))
 				return chunk;
 			if(hangup)
-				throw new Exception("HANGUP");
+				throw new MockLoopException("HANGUP");
 			return null;
 		}
 
 		public void WriteChunk(byte[] chunk)
 		{
 			if(hangup)
-				throw new Exception("HANGUP");
+				throw new MockLoopException("HANGUP");
 			chunks.Enqueue(chunk);
 		}
 	}
