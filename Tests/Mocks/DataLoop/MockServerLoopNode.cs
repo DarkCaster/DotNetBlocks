@@ -126,7 +126,10 @@ namespace Tests.Mocks.DataLoop
 
 		public void Dispose()
 		{
-			Interlocked.Increment(ref disposeCount);
+			if(Interlocked.CompareExchange(ref disposeCount, 1, 0) == 0)
+				newConnRunner.Dispose();
+			else
+				Interlocked.Increment(ref disposeCount);
 		}
 
 		public int InitCount { get { return Interlocked.CompareExchange(ref initCount, 0, 0); } }
