@@ -32,6 +32,11 @@ namespace DarkCaster.DataTransfer.Client
 {
 	public sealed class EntryTunnel : IEntryTunnel
 	{
+		public class DownstreamNotSetException : Exception
+		{
+			public DownstreamNotSetException(string message) : base (message) { }
+		}
+
 		private readonly INode downstreamNode;
 		private readonly ITunnelConfig config;
 		private readonly AsyncRWLock stateChangeLock = new AsyncRWLock();
@@ -149,7 +154,7 @@ namespace DarkCaster.DataTransfer.Client
 				return;
 			state = TunnelState.Offline;
 			if(downstream == null)
-				throw new Exception("Downstream ITunnel was not initialized!");
+				throw new DownstreamNotSetException("Downstream ITunnel was not initialized!");
 			await downstream.DisconnectAsync();
 		}
 
@@ -184,7 +189,7 @@ namespace DarkCaster.DataTransfer.Client
 			if(Interlocked.CompareExchange(ref isDisposed, 1, 0) == 1)
 				return;
 			try { Disconnect(); }
-			catch{ }
+			catch (DownstreamNotSetException) { }
 			stateChangeLock.EnterWriteLock();
 			try
 			{
@@ -192,6 +197,9 @@ namespace DarkCaster.DataTransfer.Client
 					downstream.Dispose();
 				//precaution, so any operation on downstream will throw an exception now.
 				downstream = null;
+				stateChangeRunner.Dispose();
+				readRunner.Dispose();
+				writeRunner.Dispose();
 			}
 			finally
 			{
