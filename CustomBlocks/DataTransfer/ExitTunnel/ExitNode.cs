@@ -184,6 +184,7 @@ namespace DarkCaster.DataTransfer.Server
 					upstreamNode.Dispose();
 				errorEvCtl.Dispose();
 				incomingEvCtl.Dispose();
+				asyncRunner.Dispose();
 			}
 			finally
 			{

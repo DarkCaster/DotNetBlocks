@@ -133,7 +133,18 @@ namespace DarkCaster.DataTransfer.Server
 			if(Interlocked.CompareExchange(ref isDisposed, 1, 0) != 0)
 				return;
 			Disconnect();
-			upstream.Dispose();
+			stateChangeLock.EnterWriteLock();
+			try
+			{
+				upstream.Dispose();
+				readRunner.Dispose();
+				writeRunner.Dispose();
+				stateChangeRunner.Dispose();
+			}
+			finally
+			{
+				stateChangeLock.ExitWriteLock();
+			}
 		}
 	}
 }
