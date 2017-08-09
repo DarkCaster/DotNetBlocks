@@ -12,7 +12,7 @@
     <ReleaseVersion>1.0</ReleaseVersion>
     <CodePage>65001</CodePage>
     <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\signkey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)\signkey.snk</AssemblyOriginatorKeyFile>
     <NoWin32Manifest>False</NoWin32Manifest>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
