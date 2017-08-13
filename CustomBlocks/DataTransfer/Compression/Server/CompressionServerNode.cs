@@ -30,34 +30,21 @@ using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Server.Compression
 {
-	public sealed class CompressionServerNode : INode
+	public sealed class CompressionServerNode : ServerNodeBase
 	{
 		private readonly int maxBlockSZ;
 		private readonly IBlockCompressorFactory comprFactory;
-		private readonly INode upstreamNode;
-		private volatile INode downstreamNode;
 
 		public CompressionServerNode(ITunnelConfig serverConfig, INode upstream, IBlockCompressorFactory comprFactory, int defaultMaxBlockSZ = 65536)
+			: base(upstream)
 		{
 			this.comprFactory = comprFactory;
 			maxBlockSZ = serverConfig.Get<int>("compr_max_block_size");
-			if(maxBlockSZ == 0)
+			if (maxBlockSZ == 0)
 				maxBlockSZ = defaultMaxBlockSZ;
-			upstreamNode = upstream;
-			upstreamNode.RegisterDownstream(this);
 		}
 
-		public async Task InitAsync()
-		{
-			await upstreamNode.InitAsync();
-		}
-
-		public void RegisterDownstream(INode downstream)
-		{
-			downstreamNode = downstream;
-		}
-
-		public async Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
+		public override async Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
 		{
 			int blockSize = 0;
 			try
@@ -96,21 +83,6 @@ namespace DarkCaster.DataTransfer.Server.Compression
 			var tunnel = new CompressionServerTunnel(readCompr, writeCompr, upstream);
 			//call downstream's OpenTunnelAsync and pass created and prepared tunnel to it
 			await downstreamNode.OpenTunnelAsync(config, tunnel);
-		}
-
-		public async Task NodeFailAsync(Exception ex)
-		{
-			await downstreamNode.NodeFailAsync(ex);
-		}
-
-		public async Task ShutdownAsync()
-		{
-			await upstreamNode.ShutdownAsync();
-		}
-
-		public void Dispose()
-		{
-			upstreamNode.Dispose();
 		}
 	}
 }
