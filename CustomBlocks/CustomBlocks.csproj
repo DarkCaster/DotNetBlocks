@@ -143,6 +143,7 @@
     <Compile Include="DataTransfer\Compression\Server\CompressionServerNode.cs" />
     <Compile Include="DataTransfer\Compression\Server\CompressionServerTunnel.cs" />
     <Compile Include="DataTransfer\Compression\Private\CompressionMagicHelper.cs" />
+    <Compile Include="DataTransfer\Abstracts\Server\ServerNodeBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
