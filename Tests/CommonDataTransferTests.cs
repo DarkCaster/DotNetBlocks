@@ -39,7 +39,7 @@ namespace Tests
 {
 	public static class CommonDataTransferTests
 	{
-		public static void NewConnection(ITunnelConfig clTunConfig, CNode clientNode, MockClientLoopNode clientLoopMock,  SNode serverNode, MockServerLoopNode serverLoopMock)
+		public static void NewConnection(ITunnelConfig clTunConfig, CNode clientNode, MockClientLoopNode clientLoopMock, SNode serverNode, MockServerLoopNode serverLoopMock)
 		{
 			clTunConfig.Set("mock_nofail_ops_count", 1);
 			clTunConfig.Set("mock_fail_prob", 0.001f);
@@ -55,13 +55,14 @@ namespace Tests
 			//create new connection(s)
 			var cnt = 50;
 			var clTuns = new CTunnel[cnt];
-			for(int i = 0; i < cnt;++i)
+			var svTuns = new STunnel[cnt];
+			for (int i = 0; i < cnt; ++i)
 			{
 				clTuns[i] = runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig));
 				runner.ExecuteTask(() => serverMockExit.WaitForNewConnectionAsync(5000));
-				var svTun = serverMockExit.IncomingTunnel;
+				svTuns[i] = serverMockExit.IncomingTunnel;
 				var svCfg = serverMockExit.IncomingConfig;
-				Assert.NotNull(svTun);
+				Assert.NotNull(svTuns[i]);
 				Assert.NotNull(svCfg);
 			}
 			Assert.AreEqual(cnt, serverLoopMock.NcCount);
@@ -76,6 +77,14 @@ namespace Tests
 			Assert.Throws(typeof(MockLoopException), () => runner.ExecuteTask(() => clientNode.OpenTunnelAsync(clTunConfig)));
 			Assert.IsNull(serverMockExit.IncomingConfig);
 			Assert.IsNull(serverMockExit.IncomingTunnel);
+			//terminate opened client and server connections
+			for (int i = 0; i < cnt; ++i)
+			{
+				runner.ExecuteTask(clTuns[i].DisconnectAsync);
+				clTuns[i].Dispose();
+				runner.ExecuteTask(svTuns[i].DisconnectAsync);
+				svTuns[i].Dispose();
+			}
 		}
 
 		private static void GenerateHighComprData(byte[] buffer, int offset = 0, int length = -1)
