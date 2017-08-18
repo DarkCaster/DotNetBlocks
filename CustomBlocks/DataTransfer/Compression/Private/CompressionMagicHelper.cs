@@ -49,7 +49,7 @@ namespace DarkCaster.DataTransfer.Private
 
 		public static int DecodeBlockSZ(byte[] buffer, int offset)
 		{
-			return unchecked((short)(buffer[offset] | buffer[offset + 1] << 8 | buffer[offset + 2] << 16));
+			return unchecked((int)(buffer[offset] | buffer[offset + 1] << 8 | buffer[offset + 2] << 16));
 		}
 
 		public static void EncodeMagicAndBlockSZ(short magic, int bSize, byte[] buffer, int offset)
