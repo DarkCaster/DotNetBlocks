@@ -35,16 +35,16 @@ namespace DarkCaster.DataTransfer.Client.Compression
 		private readonly IBlockCompressorFactory comprFactory;
 		private readonly INode downstream;
 		private readonly int defaultBlockSz;
-		private readonly int maxBlockSZ;
+		private readonly int extraBlockSize;
 
-		public CompressionClientNode(INode downstream, IBlockCompressorFactory comprFactory, int defaultBlockSz=16384, int maxBlockSz=0xFFFFFF)
+		public CompressionClientNode(INode downstream, IBlockCompressorFactory comprFactory, int extraBlockSize = 0, int defaultBlockSz = 16384)
 		{
-			if(!comprFactory.MetadataPreviewSupported)
+			if (!comprFactory.MetadataPreviewSupported)
 				throw new Exception("Metadata preview feature is not supported by selected compressor, cannot proceed!");
 			this.downstream = downstream;
 			this.comprFactory = comprFactory;
 			this.defaultBlockSz = defaultBlockSz;
-			this.maxBlockSZ = maxBlockSz;
+			this.extraBlockSize = extraBlockSize;
 		}
 
 		public async Task<ITunnel> OpenTunnelAsync(ITunnelConfig config)
@@ -55,6 +55,7 @@ namespace DarkCaster.DataTransfer.Client.Compression
 			var blockSz = config.Get<int>("compr_block_size");
 			if(blockSz == 0)
 				blockSz = defaultBlockSz;
+			blockSz += extraBlockSize;
 			try
 			{
 				//send compressor magic and block size
@@ -70,8 +71,6 @@ namespace DarkCaster.DataTransfer.Client.Compression
 					ngPos += await dTun.ReadDataAsync(3 - ngPos, ng, ngPos);
 				//set block size, reported by server
 				blockSz = CompressionMagicHelper.DecodeBlockSZ(ng, 0);
-				if(blockSz > maxBlockSZ)
-					throw new Exception("Server's requested block size > local maxBlockSZ");
 				//create separate compressors for read and write routines
 				var readCompressor = comprFactory.GetCompressor(blockSz);
 				var writeCompressor = comprFactory.GetCompressor(blockSz);

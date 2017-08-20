@@ -58,10 +58,10 @@ namespace Tests
 					//add compression parameters
 					svConfig.Set("compr_max_block_size", maxSvBlockSize);
 					var serverLoopMock = new MockServerLoopNode(svConfig, new TunnelConfigFactory(new BinarySerializationHelperFactory()));
-					var serverComprNode = new CompressionServerNode(svConfig, serverLoopMock, new FastLZBlockCompressorFactory(),maxSvBlockSize);
+					var serverComprNode = new CompressionServerNode(svConfig, serverLoopMock, new FastLZBlockCompressorFactory(), maxSvBlockSize);
 					var clConfig = new TunnelConfig();
 					var clientLoopMock = new MockClientLoopNode();
-					var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory(), maxClBlockSize, maxClBlockSize);
+					var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory(), 0, maxClBlockSize);
 					CommonDataTransferTests.NewConnection(clConfig, clientComprNode, clientLoopMock, serverComprNode, serverLoopMock);
 				}
 		}
@@ -88,7 +88,7 @@ namespace Tests
 					var serverComprNode = new CompressionServerNode(svConfig, serverLoopMock, new FastLZBlockCompressorFactory(),maxSvBlockSize);
 					var clConfig = new TunnelConfig();
 					var clientLoopMock = new MockClientLoopNode();
-					var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory(), maxClBlockSize, maxClBlockSize);
+					var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory(), 0, maxClBlockSize);
 					CommonDataTransferTests.ReadWrite(clConfig, clientComprNode, clientLoopMock, serverComprNode, serverLoopMock);
 				}
 		}
@@ -115,7 +115,7 @@ namespace Tests
 					var serverComprNode = new CompressionServerNode(svConfig, serverLoopMock, new FastLZBlockCompressorFactory(), maxSvBlockSize);
 					var clConfig = new TunnelConfig();
 					var clientLoopMock = new MockClientLoopNode();
-					var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory(), maxClBlockSize, maxClBlockSize);
+					var clientComprNode = new CompressionClientNode(clientLoopMock, new FastLZBlockCompressorFactory(), 0, maxClBlockSize);
 					CommonDataTransferTests.MultithreadedReadWrite(clConfig, clientComprNode, clientLoopMock, serverComprNode, serverLoopMock);
 				}
 		}
