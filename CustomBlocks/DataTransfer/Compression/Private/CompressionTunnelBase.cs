@@ -134,8 +134,9 @@ namespace DarkCaster.DataTransfer.Private
 
 		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			if(sz == 0)
-				return 0;
+			//if requested size is zero - perform null-write to uplink, so it may trigger other data-processing logic
+			if (sz == 0)
+				return await uplink.WriteDataAsync(0, writeBuffCompr, 0);
 			if(sz > writeCompr.MaxBlockSZ)
 				sz = writeCompr.MaxBlockSZ;
 			//compress data
