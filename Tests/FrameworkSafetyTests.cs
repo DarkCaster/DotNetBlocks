@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -176,6 +178,116 @@ namespace Tests
 				//initial variable was captured, result will match initial value
 				if(tasks[i].Result != i)
 					throw new Exception(string.Format("tasks[{0}].Result == {1}", i, tasks[i].Result));
+		}
+
+		private static volatile bool start = false;
+		private static readonly object sourceDataLock = new object();
+		private static byte[] sourceData = null;
+
+		private static int readWorkersActive = 0;
+		private static int writeWorkersActive = 0;
+
+		private static void Reset()
+		{
+			Interlocked.Exchange(ref readWorkersActive, 0);
+			Interlocked.Exchange(ref writeWorkersActive, 0);
+			start = false;
+		}
+
+		private static void Start()
+		{
+			start = true;
+		}
+
+		private static async Task ReadWorker(int iterations)
+		{
+			byte[] controlData = null;
+			lock (sourceDataLock)
+			{
+				controlData = new byte[sourceData.Length];
+				Buffer.BlockCopy(sourceData, 0, controlData, 0, sourceData.Length);
+			}
+			Interlocked.Increment(ref readWorkersActive);
+			while (!start)
+				await Task.Delay(10);
+
+			var testData = new byte[controlData.Length];
+			var random = new Random();
+			var addr = Dns.GetHostEntry("127.0.0.1").AddressList[0];
+			var client = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+			await Task.Factory.FromAsync(
+				(callback, state) => client.BeginConnect(new IPEndPoint(addr, 49999), callback, state),
+				client.EndConnect, null).ConfigureAwait(false);
+			//apply some optional settings to socket
+			client.NoDelay = false;
+			client.ReceiveBufferSize = 262144;
+			client.SendBufferSize = 262144;
+
+			for (int iter = 0; iter < iterations; ++iter)
+			{
+				random.NextBytes(testData);
+				int pos = 0;
+				while (pos < testData.Length)
+					pos += await Task.Factory.FromAsync(
+						(callback, state) => client.BeginReceive(testData, pos, testData.Length - pos, SocketFlags.None, callback, state),
+						client.EndReceive, null).ConfigureAwait(false);
+				for (int i = 0; i < testData.Length; ++i)
+					if (testData[i] != controlData[i])
+						throw new Exception($"Data verification failed, iteration {iter}");
+			}
+		}
+
+		private static async Task WriteWorker(int iterations)
+		{
+			byte[] data = null;
+			lock (sourceDataLock)
+			{
+				data = new byte[sourceData.Length];
+				Buffer.BlockCopy(sourceData, 0, data, 0, sourceData.Length);
+			}
+			IPAddress addr = IPAddress.Any;
+			var ep = new IPEndPoint(addr, 49999);
+			var socket = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+			socket.Bind(ep);
+			socket.Listen(10);
+			Interlocked.Increment(ref writeWorkersActive);
+			while (!start)
+				await Task.Delay(10);
+			var tSocket = await Task.Factory.FromAsync(socket.BeginAccept, socket.EndAccept, null).ConfigureAwait(false);
+			tSocket.NoDelay = false;
+			tSocket.ReceiveBufferSize = 262144;
+			tSocket.SendBufferSize = 262144;
+			for (int iter = 0; iter < iterations; ++iter)
+			{
+				int pos = 0;
+				while (pos < data.Length)
+					pos += await Task.Factory.FromAsync(
+					(callback, state) => tSocket.BeginSend(data, pos, data.Length - pos, SocketFlags.None, callback, state),
+					tSocket.EndSend, null).ConfigureAwait(false);
+			}
+		}
+
+		//Failing, at least on Mono 5.2.0 Stable. I do not know why, yet.
+		[Test]
+		public void FromAsync_Socket_SendReceive()
+		{
+			//test params
+			const int iterations = 1000;
+			const int dataBlockSize = 1024 * 1024;
+			Reset();
+			//generate source data
+			lock (sourceDataLock)
+			{
+				sourceData = new byte[dataBlockSize];
+				new Random().NextBytes(sourceData);
+			}
+			Task clReaders = Task.Run(() => ReadWorker(iterations));
+			Task clWriters = Task.Run(() => WriteWorker(iterations));
+			while (Interlocked.CompareExchange(ref readWorkersActive, 0, 0) < 1) { Thread.Sleep(10); }
+			while (Interlocked.CompareExchange(ref writeWorkersActive, 0, 0) < 1) { Thread.Sleep(10); }
+			Start();
+			clReaders.Wait();
+			clWriters.Wait();
 		}
 	}
 }
