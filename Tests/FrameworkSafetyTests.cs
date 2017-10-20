@@ -267,7 +267,8 @@ namespace Tests
 			}
 		}
 
-		//Failing, at least on Mono 5.2.0 Stable. I do not know why, yet.
+		//Failing on Mono 5.2.0 Stable and 5.4.0 Stable
+		//https://bugzilla.xamarin.com/show_bug.cgi?id=57918
 		[Test]
 		public void FromAsync_Socket_SendReceive()
 		{
