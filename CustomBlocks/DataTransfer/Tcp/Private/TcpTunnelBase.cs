@@ -30,6 +30,8 @@ namespace DarkCaster.DataTransfer.Private
 {
 	public abstract class TcpTunnelBase
 	{
+		public class EOFException : Exception { public EOFException(Exception inner) : base(null, inner) { } }
+
 		private readonly Socket socket;
 
 		protected TcpTunnelBase(Socket socket)
@@ -37,29 +39,41 @@ namespace DarkCaster.DataTransfer.Private
 			this.socket = socket;
 		}
 
-		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
+		public virtual async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			if(sz == 0)
 				return 0;
-			return await Task.Factory.FromAsync(
+			var dataRead = await Task.Factory.FromAsync(
 				(callback, state) => socket.BeginReceive(buffer, offset, sz, SocketFlags.None, callback, state),
 				socket.EndReceive, null).ConfigureAwait(false);
+			if(dataRead <= 0)
+				throw new EOFException(null);
+			return dataRead;
 		}
 
-		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
+		public virtual async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			if(sz == 0)
 				return 0;
-			return await Task.Factory.FromAsync(
+			try
+			{
+				return await Task.Factory.FromAsync(
 				(callback, state) => socket.BeginSend(buffer, offset, sz, SocketFlags.None, callback, state),
 				socket.EndSend, null).ConfigureAwait(false);
+			}
+			catch(SocketException ex)
+			{
+				if(ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting)
+					throw new EOFException(ex);
+				throw;
+			}
 		}
 
 		public async Task DisconnectAsync()
 		{
 			try { socket.Shutdown(SocketShutdown.Both); }
 			//TODO: ignore only some types of SocketExceptions
-			catch(SocketException) {}
+			catch(SocketException) { }
 			try
 			{
 				await Task.Factory.FromAsync(

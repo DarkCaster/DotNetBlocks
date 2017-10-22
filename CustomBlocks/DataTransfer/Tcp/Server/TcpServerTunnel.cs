@@ -24,6 +24,7 @@
 //
 using System;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Private;
 
 namespace DarkCaster.DataTransfer.Server.Tcp
@@ -31,5 +32,29 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 	public sealed class TcpServerTunnel : TcpTunnelBase, ITunnel
 	{
 		public TcpServerTunnel(Socket socket) : base(socket) { }
+
+		public override Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
+		{
+			try
+			{
+				return base.ReadDataAsync(sz, buffer, offset);
+			}
+			catch(EOFException)
+			{
+				throw new TunnelEofException();
+			}
+		}
+
+		public override Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
+		{
+			try
+			{
+				return base.WriteDataAsync(sz, buffer, offset);
+			}
+			catch(EOFException ex)
+			{
+				throw new TunnelEofException(ex.InnerException);
+			}
+		}
 	}
 }
