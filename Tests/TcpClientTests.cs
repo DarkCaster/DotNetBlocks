@@ -27,6 +27,7 @@ using NUnit.Framework;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using DarkCaster.DataTransfer.Config;
+using DarkCaster.DataTransfer.Client;
 using DarkCaster.DataTransfer.Client.Tcp;
 using DarkCaster.Async;
 using Tests.Mocks;
@@ -160,7 +161,7 @@ namespace Tests
 			}
 			catch(AggregateException ex)
 			{
-				Assert.AreSame(typeof(SocketException), ex.InnerException.GetType());
+				Assert.AreSame(typeof(TunnelEofException), ex.InnerException.GetType());
 			}
 			Assert.AreEqual(-1, write);
 			tunnel.Dispose();
