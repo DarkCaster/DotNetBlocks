@@ -80,9 +80,6 @@ namespace DarkCaster.DataTransfer.Private
 
 		public async Task DisconnectAsync()
 		{
-			try { socket.Shutdown(SocketShutdown.Both); }
-			//TODO: ignore only some types of SocketExceptions
-			catch(SocketException) { }
 			try
 			{
 				await Task.Factory.FromAsync(
