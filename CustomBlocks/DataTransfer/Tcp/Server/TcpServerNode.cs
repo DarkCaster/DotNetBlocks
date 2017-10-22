@@ -116,6 +116,7 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 					//create new connection-socket
 					var tSocket = await Task.Factory.FromAsync(listener.BeginAccept, listener.EndAccept, null).ConfigureAwait(false);
 					tSocket.NoDelay = nodelay;
+					tSocket.LingerState = new LingerOption(true, 0);
 					if(bufferSize != 0)
 					{
 						tSocket.ReceiveBufferSize = bufferSize;

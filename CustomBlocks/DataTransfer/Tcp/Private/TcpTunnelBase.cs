@@ -43,12 +43,21 @@ namespace DarkCaster.DataTransfer.Private
 		{
 			if(sz == 0)
 				return 0;
-			var dataRead = await Task.Factory.FromAsync(
+			try
+			{
+				var dataRead = await Task.Factory.FromAsync(
 				(callback, state) => socket.BeginReceive(buffer, offset, sz, SocketFlags.None, callback, state),
 				socket.EndReceive, null).ConfigureAwait(false);
-			if(dataRead <= 0)
-				throw new EOFException(null);
-			return dataRead;
+				if(dataRead <= 0)
+					throw new EOFException(null);
+				return dataRead;
+			}
+			catch(SocketException ex)
+			{
+				if(ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting || ex.SocketErrorCode == SocketError.ConnectionReset)
+					throw new EOFException(ex);
+				throw;
+			}
 		}
 
 		public virtual async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
@@ -63,7 +72,7 @@ namespace DarkCaster.DataTransfer.Private
 			}
 			catch(SocketException ex)
 			{
-				if(ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting)
+				if(ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting || ex.SocketErrorCode == SocketError.ConnectionReset)
 					throw new EOFException(ex);
 				throw;
 			}
@@ -77,8 +86,8 @@ namespace DarkCaster.DataTransfer.Private
 			try
 			{
 				await Task.Factory.FromAsync(
-				(callback, state) => socket.BeginDisconnect(true, callback, state),
-				socket.EndDisconnect, null).ConfigureAwait(false);
+					(callback, state) => socket.BeginDisconnect(false, callback, state),
+					socket.EndDisconnect, null).ConfigureAwait(false);
 			}
 			//TODO: ignore only some types of SocketExceptions
 			catch(SocketException) { }
