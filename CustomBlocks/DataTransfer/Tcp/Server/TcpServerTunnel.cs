@@ -33,11 +33,11 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 	{
 		public TcpServerTunnel(Socket socket) : base(socket) { }
 
-		public override Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
+		public override async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			try
 			{
-				return base.ReadDataAsync(sz, buffer, offset);
+				return await base.ReadDataAsync(sz, buffer, offset);
 			}
 			catch(EOFException)
 			{
@@ -45,11 +45,11 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 			}
 		}
 
-		public override Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
+		public override async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
 			try
 			{
-				return base.WriteDataAsync(sz, buffer, offset);
+				return await base.WriteDataAsync(sz, buffer, offset);
 			}
 			catch(EOFException ex)
 			{

@@ -30,7 +30,7 @@ namespace DarkCaster.DataTransfer.Private
 {
 	public abstract class TcpTunnelBase
 	{
-		public class EOFException : Exception { public EOFException(Exception inner) : base(null, inner) { } }
+		protected class EOFException : Exception { public EOFException(Exception inner) : base(null, inner) { } }
 
 		private readonly Socket socket;
 
