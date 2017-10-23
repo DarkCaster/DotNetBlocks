@@ -24,6 +24,7 @@
 //
 using System;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DarkCaster.DataTransfer.Private
@@ -33,6 +34,7 @@ namespace DarkCaster.DataTransfer.Private
 		protected class EOFException : Exception { public EOFException(Exception inner) : base(null, inner) { } }
 
 		private readonly Socket socket;
+		private int isClosed = 0;
 
 		protected TcpTunnelBase(Socket socket)
 		{
@@ -41,6 +43,8 @@ namespace DarkCaster.DataTransfer.Private
 
 		public virtual async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
+			if(Interlocked.CompareExchange(ref isClosed, 0, 0) != 0)
+				throw new EOFException(new ObjectDisposedException(nameof(socket)));
 			if(sz == 0)
 				return 0;
 			try
@@ -62,6 +66,8 @@ namespace DarkCaster.DataTransfer.Private
 
 		public virtual async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
+			if(Interlocked.CompareExchange(ref isClosed, 0, 0) != 0)
+				throw new EOFException(new ObjectDisposedException(nameof(socket)));
 			if(sz == 0)
 				return 0;
 			try
@@ -78,21 +84,19 @@ namespace DarkCaster.DataTransfer.Private
 			}
 		}
 
-		public async Task DisconnectAsync()
+		public Task DisconnectAsync()
 		{
-			try
+			if(Interlocked.CompareExchange(ref isClosed, 1, 0) == 0)
 			{
-				await Task.Factory.FromAsync(
-					(callback, state) => socket.BeginDisconnect(false, callback, state),
-					socket.EndDisconnect, null).ConfigureAwait(false);
+				//According to mono sources (https://github.com/mono/mono/blob/master/mcs/class/System/System.Net.Sockets/Socket.cs)
+				//Looks like, this is the only reliable way to force-close connection and interrupt all other async calls currently executing on that Socket object.
+				//It may change in future.
+				//TODO: test on Windows/.NET/.NETCore
+				socket.Dispose();
 			}
-			//TODO: ignore only some types of SocketExceptions
-			catch(SocketException) { }
+			return Task.FromResult(true);
 		}
 
-		public void Dispose()
-		{
-			socket.Dispose();
-		}
+		public void Dispose() { /* noop */ }
 	}
 }
