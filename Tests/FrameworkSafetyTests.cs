@@ -311,7 +311,8 @@ namespace Tests
 			throw new Exception(string.Format("Payload length > MAX_BLOCK_SZ: {0} > {1}", payloadLen, TEST4));
 		}
 
-		//Failing on Mono 5.4.0 with Release build + optimizations enabled
+		//Failing on Mono 5.2.0 and 5.4.0 with Release build + optimizations enabled
+		//https://bugzilla.xamarin.com/show_bug.cgi?id=59608
 		[Test]
 		public void AggressiveInlining_Fail()
 		{
