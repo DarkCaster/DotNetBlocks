@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using NUnit.Framework;
 
 namespace Tests
@@ -289,6 +290,35 @@ namespace Tests
 			Start();
 			clReaders.Wait();
 			clWriters.Wait();
+		}
+
+		private const int TEST1 = 31;
+		private const int TEST2 = 8191;
+		private const int TEST3 = 2097151;
+		private const int TEST4 = 536870911;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int CalculateHeaderLength(int payloadLen)
+		{
+			if(payloadLen <= TEST1)
+				return 1;
+			if(payloadLen <= TEST2)
+				return 2;
+			if(payloadLen <= TEST3)
+				return 3;
+			if(payloadLen <= TEST4)
+				return 4;
+			throw new Exception(string.Format("Payload length > MAX_BLOCK_SZ: {0} > {1}", payloadLen, TEST4));
+		}
+
+		//Failing on Mono 5.4.0 with Release build + optimizations enabled
+		[Test]
+		public void AggressiveInlining_Fail()
+		{
+			var testLen = (new Random()).Next(8192, 2097150);
+			var result = CalculateHeaderLength(testLen);
+			if(result != 3)
+				throw new Exception("Triggered!");
 		}
 	}
 }
