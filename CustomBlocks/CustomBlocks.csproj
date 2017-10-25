@@ -144,6 +144,11 @@
     <Compile Include="DataTransfer\Compression\Server\CompressionServerTunnel.cs" />
     <Compile Include="DataTransfer\Compression\Private\CompressionMagicHelper.cs" />
     <Compile Include="DataTransfer\Abstracts\Server\ServerNodeBase.cs" />
+    <Compile Include="DataTransfer\Tracing\Private\TracingTunnelBase.cs" />
+    <Compile Include="DataTransfer\Tracing\Client\TracingClientTunnel.cs" />
+    <Compile Include="DataTransfer\Tracing\Server\TracingServerTunnel.cs" />
+    <Compile Include="DataTransfer\Tracing\Client\TracingClientNode.cs" />
+    <Compile Include="DataTransfer\Tracing\Server\TracingServerNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -177,6 +182,10 @@
     <Folder Include="DataTransfer\Compression\Private\" />
     <Folder Include="DataTransfer\Abstracts\Private\" />
     <Folder Include="DataTransfer\Compression\Server\" />
+    <Folder Include="DataTransfer\Tracing\" />
+    <Folder Include="DataTransfer\Tracing\Private\" />
+    <Folder Include="DataTransfer\Tracing\Client\" />
+    <Folder Include="DataTransfer\Tracing\Server\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
