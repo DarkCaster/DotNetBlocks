@@ -29,14 +29,14 @@ namespace DarkCaster.DataTransfer.Private
 	public abstract class TracingTunnelBase
 	{
 		private readonly ITunnelBase uplink;
-		private readonly Action<object, int> OnReadDelegate;
-		private readonly Action<object, int> OnWriteDelegate;
-		private readonly Action<object> OnDisconnectDelegate;
-		private readonly Action<object> OnDisposeDelegate;
+		private readonly Action<object, int, Exception> OnReadDelegate;
+		private readonly Action<object, int, Exception> OnWriteDelegate;
+		private readonly Action<object, Exception> OnDisconnectDelegate;
+		private readonly Action<object, Exception> OnDisposeDelegate;
 
 		protected TracingTunnelBase(ITunnelBase uplink,
-		                            Action<object,int> OnReadDelegate, Action<object, int> OnWriteDelegate,
-		                            Action<object> OnDisconnectDelegate, Action<object> OnDisposeDelegate)
+		                            Action<object, int, Exception> OnReadDelegate, Action<object, int, Exception> OnWriteDelegate,
+		                            Action<object, Exception> OnDisconnectDelegate, Action<object, Exception> OnDisposeDelegate)
 		{
 			this.uplink = uplink;
 			this.OnReadDelegate = OnReadDelegate;
@@ -47,28 +47,60 @@ namespace DarkCaster.DataTransfer.Private
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			var dataRead=await uplink.ReadDataAsync(sz, buffer, offset);
-			OnReadDelegate(this, dataRead);
-			return dataRead;
+			try
+			{
+				var dataRead = await uplink.ReadDataAsync(sz, buffer, offset);
+				OnReadDelegate(this, dataRead, null);
+				return dataRead;
+			}
+			catch(Exception ex)
+			{
+				OnReadDelegate(this, 0, ex);
+				throw;
+			}
 		}
 
 		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			var dataWrite=await uplink.WriteDataAsync(sz, buffer, offset);
-			OnWriteDelegate(this, dataWrite);
-			return dataWrite;
+			try
+			{
+				var dataWrite = await uplink.WriteDataAsync(sz, buffer, offset);
+				OnWriteDelegate(this, dataWrite, null);
+				return dataWrite;
+			}
+			catch (Exception ex)
+			{
+				OnWriteDelegate(this, 0, ex);
+				throw;
+			}
 		}
 
 		public async Task DisconnectAsync()
 		{
-			await uplink.DisconnectAsync();
-			OnDisconnectDelegate(this);
+			try
+			{
+				await uplink.DisconnectAsync();
+				OnDisconnectDelegate(this, null);
+			}
+			catch (Exception ex)
+			{
+				OnDisconnectDelegate(this, ex);
+				throw;
+			}
 		}
 
 		public void Dispose()
 		{
-			uplink.Dispose();
-			OnDisposeDelegate(this);
+			try
+			{
+				uplink.Dispose();
+				OnDisposeDelegate(this, null);
+			}
+			catch (Exception ex)
+			{
+				OnDisposeDelegate(this, ex);
+				throw;
+			}
 		}
 	}
 }

@@ -29,8 +29,8 @@ namespace DarkCaster.DataTransfer.Server.Tracing
 {
 	public sealed class TracingServerTunnel : TracingTunnelBase, ITunnel
 	{
-		public TracingServerTunnel(ITunnelBase upstream, Action<object, int> OnReadDelegate, Action<object, int> OnWriteDelegate,
-			Action<object> OnDisconnectDelegate, Action<object> OnDisposeDelegate)
+		public TracingServerTunnel(ITunnelBase upstream, Action<object, int, Exception> OnReadDelegate, Action<object, int, Exception> OnWriteDelegate,
+			Action<object, Exception> OnDisconnectDelegate, Action<object, Exception> OnDisposeDelegate)
 			: base(upstream, OnReadDelegate, OnWriteDelegate, OnDisconnectDelegate, OnDisposeDelegate) { }
 	}
 }

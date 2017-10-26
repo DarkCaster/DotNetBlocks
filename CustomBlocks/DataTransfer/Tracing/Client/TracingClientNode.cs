@@ -31,15 +31,15 @@ namespace DarkCaster.DataTransfer.Client.Tracing
 	public sealed class TracingClientNode : INode
 	{
 		private readonly INode downstream;
-		private readonly Action<object, object> OnNewTunnel;
-		private readonly Action<object, int> OnReadDelegate;
-		private readonly Action<object, int> OnWriteDelegate;
-		private readonly Action<object> OnDisconnectDelegate;
-		private readonly Action<object> OnDisposeDelegate;
+		private readonly Action<object, object, Exception> OnNewTunnel;
+		private readonly Action<object, int, Exception> OnReadDelegate;
+		private readonly Action<object, int, Exception> OnWriteDelegate;
+		private readonly Action<object, Exception> OnDisconnectDelegate;
+		private readonly Action<object, Exception> OnDisposeDelegate;
 
 		public TracingClientNode(INode downstream,
-			Action<object, object> OnNewTunnel, Action<object, int> OnReadDelegate,Action<object, int> OnWriteDelegate,
-			Action<object> OnDisconnectDelegate, Action<object> OnDisposeDelegate)
+			Action<object, object, Exception> OnNewTunnel, Action<object, int, Exception> OnReadDelegate,Action<object, int, Exception> OnWriteDelegate,
+			Action<object, Exception> OnDisconnectDelegate, Action<object, Exception> OnDisposeDelegate)
 		{
 			this.downstream = downstream;
 			this.OnNewTunnel = OnNewTunnel;
@@ -58,15 +58,16 @@ namespace DarkCaster.DataTransfer.Client.Tracing
 			{
 				tun = new TracingClientTunnel(dTun, OnReadDelegate, OnWriteDelegate, OnDisconnectDelegate, OnDisposeDelegate);
 			}
-			catch
+			catch(Exception ex)
 			{
 				//in case of error - disconnect and dispose downstream tunnel
 				await dTun.DisconnectAsync();
 				dTun.Dispose();
+				OnNewTunnel(this, null, ex);
 				//forward exception from current tunnel
 				throw;
 			}
-			OnNewTunnel(this, tun);
+			OnNewTunnel(this, tun, null);
 			return tun;
 		}
 	}
