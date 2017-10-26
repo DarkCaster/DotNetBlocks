@@ -29,7 +29,7 @@ namespace DarkCaster.DataTransfer.Client.Tracing
 {
 	public sealed class TracingClientTunnel : TracingTunnelBase, ITunnel
 	{
-		public TracingClientTunnel(ITunnelBase downstream,Action<object, int, Exception> OnReadDelegate, Action<object, int, Exception> OnWriteDelegate,
+		public TracingClientTunnel(ITunnelBase downstream, Action<object, int, Exception> OnReadDelegate, Action<object, int, Exception> OnWriteDelegate,
 			Action<object, Exception> OnDisconnectDelegate, Action<object, Exception> OnDisposeDelegate)
 			: base(downstream, OnReadDelegate, OnWriteDelegate, OnDisconnectDelegate, OnDisposeDelegate) { }
 	}

@@ -59,10 +59,10 @@ namespace DarkCaster.DataTransfer.Server.Tracing
 				//close upstream tunnel on any error, and return
 				await upstream.DisconnectAsync();
 				upstream.Dispose();
-				OnNewTunnel(this, null, ex);
+				OnNewTunnel(null, config, ex);
 				return;
 			}
-			OnNewTunnel(this, tun, null);
+			OnNewTunnel(tun, config, null);
 			//call downstream's OpenTunnelAsync and pass created tunnel to it
 			await downstreamNode.OpenTunnelAsync(config, tun);
 		}

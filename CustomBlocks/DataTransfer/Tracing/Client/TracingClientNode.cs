@@ -63,11 +63,11 @@ namespace DarkCaster.DataTransfer.Client.Tracing
 				//in case of error - disconnect and dispose downstream tunnel
 				await dTun.DisconnectAsync();
 				dTun.Dispose();
-				OnNewTunnel(this, null, ex);
+				OnNewTunnel(null, config, ex);
 				//forward exception from current tunnel
 				throw;
 			}
-			OnNewTunnel(this, tun, null);
+			OnNewTunnel(tun, config, null);
 			return tun;
 		}
 	}
