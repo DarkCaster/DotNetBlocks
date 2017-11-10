@@ -52,15 +52,19 @@ namespace DarkCaster.DataTransfer.Private
 				var dataRead = await Task.Factory.FromAsync(
 				(callback, state) => socket.BeginReceive(buffer, offset, sz, SocketFlags.None, callback, state),
 				socket.EndReceive, null).ConfigureAwait(false);
-				if(dataRead <= 0)
+				if (dataRead <= 0)
 					throw new EOFException(null);
 				return dataRead;
 			}
-			catch(SocketException ex)
+			catch (SocketException ex)
 			{
-				if(ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting || ex.SocketErrorCode == SocketError.ConnectionReset)
+				if (ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting || ex.SocketErrorCode == SocketError.ConnectionReset)
 					throw new EOFException(ex);
 				throw;
+			}
+			catch (ObjectDisposedException ex)
+			{
+				throw new EOFException(ex);
 			}
 		}
 
@@ -76,11 +80,15 @@ namespace DarkCaster.DataTransfer.Private
 				(callback, state) => socket.BeginSend(buffer, offset, sz, SocketFlags.None, callback, state),
 				socket.EndSend, null).ConfigureAwait(false);
 			}
-			catch(SocketException ex)
+			catch (SocketException ex)
 			{
-				if(ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting || ex.SocketErrorCode == SocketError.ConnectionReset)
+				if (ex.SocketErrorCode == SocketError.Shutdown || ex.SocketErrorCode == SocketError.Disconnecting || ex.SocketErrorCode == SocketError.ConnectionReset)
 					throw new EOFException(ex);
 				throw;
+			}
+			catch (ObjectDisposedException ex)
+			{
+				throw new EOFException(ex);
 			}
 		}
 
@@ -89,7 +97,7 @@ namespace DarkCaster.DataTransfer.Private
 			if(Interlocked.CompareExchange(ref isClosed, 1, 0) == 0)
 			{
 				//According to mono sources (https://github.com/mono/mono/blob/master/mcs/class/System/System.Net.Sockets/Socket.cs)
-				//Looks like, this is the only reliable way to force-close connection and interrupt all other async calls currently executing on that Socket object.
+				//Looks like, for now (oct 2017) this is the only reliable way to force-close connection and interrupt all other async calls currently executing on that Socket object.
 				//It may change in future.
 				//TODO: test on Windows/.NET/.NETCore
 				socket.Dispose();

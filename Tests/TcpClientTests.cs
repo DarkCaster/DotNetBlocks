@@ -74,7 +74,7 @@ namespace Tests
 			}
 			catch(AggregateException ex)
 			{
-				Assert.AreSame(typeof(SocketException), ex.InnerException.GetType());
+				Assert.AreSame(typeof(TunnelEofException), ex.InnerException.GetType());
 			}
 			Assert.AreEqual(-1, read);
 			tunnel.Dispose();
