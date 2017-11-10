@@ -45,6 +45,9 @@ namespace DarkCaster.DataTransfer.Client
 		private readonly AsyncRunner readRunner = new AsyncRunner();
 		private readonly AsyncRunner writeRunner = new AsyncRunner();
 
+		private readonly SemaphoreSlim readLock = new SemaphoreSlim(1,1);
+		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
+
 		private volatile TunnelState state = TunnelState.Init;
 		private ITunnel downstream;
 		private int isDisposed = 0;
@@ -120,12 +123,28 @@ namespace DarkCaster.DataTransfer.Client
 
 		public int ReadData(int sz, byte[] buffer, int offset = 0)
 		{
-			return readRunner.ExecuteTask(() => ReadDataAsyncWorker(sz, buffer, offset));
+			readLock.Wait();
+			try
+			{
+				return readRunner.ExecuteTask(() => ReadDataAsyncWorker(sz, buffer, offset));
+			}
+			finally
+			{
+				readLock.Release();
+			}
 		}
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			return await ReadDataAsyncWorker(sz, buffer, offset);
+			await readLock.WaitAsync();
+			try
+			{
+				return await ReadDataAsyncWorker(sz, buffer, offset);
+			}
+			finally
+			{
+				readLock.Release();
+			}
 		}
 
 		private async Task<int> WriteDataAsyncWorker(int sz, byte[] buffer, int offset = 0)
@@ -140,12 +159,28 @@ namespace DarkCaster.DataTransfer.Client
 
 		public int WriteData(int sz, byte[] buffer, int offset = 0)
 		{
-			return writeRunner.ExecuteTask(() => WriteDataAsyncWorker(sz, buffer, offset));
+			writeLock.Wait();
+			try
+			{
+				return writeRunner.ExecuteTask(() => WriteDataAsyncWorker(sz, buffer, offset));
+			}
+			finally
+			{
+				writeLock.Release();
+			}
 		}
 
 		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			return await WriteDataAsyncWorker(sz, buffer, offset);
+			await writeLock.WaitAsync();
+			try
+			{
+				return await WriteDataAsyncWorker(sz, buffer, offset);
+			}
+			finally
+			{
+				writeLock.Release();
+			}
 		}
 
 		private async Task DisconnectAsyncWorker()
@@ -200,6 +235,8 @@ namespace DarkCaster.DataTransfer.Client
 				stateChangeRunner.Dispose();
 				readRunner.Dispose();
 				writeRunner.Dispose();
+				readLock.Dispose();
+				writeLock.Dispose();
 			}
 			finally
 			{
