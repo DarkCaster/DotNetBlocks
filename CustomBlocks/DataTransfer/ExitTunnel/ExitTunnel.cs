@@ -35,8 +35,6 @@ namespace DarkCaster.DataTransfer.Server
 		private readonly AsyncRunner writeRunner = new AsyncRunner();
 		private readonly AsyncRunner stateChangeRunner = new AsyncRunner();
 		private readonly AsyncRWLock stateChangeLock = new AsyncRWLock();
-		private readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
-		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
 		private readonly ITunnel upstream;
 		private volatile bool isDisconnected = false;
 		private int isDisposed = 0;
@@ -78,54 +76,22 @@ namespace DarkCaster.DataTransfer.Server
 
 		public int ReadData(int sz, byte[] buffer, int offset = 0)
 		{
-			readLock.Wait();
-			try
-			{
-				return readRunner.ExecuteTask(() => ReadDataWorkerAsync(sz, buffer, offset));
-			}
-			finally
-			{
-				readLock.Release();
-			}
+			return readRunner.ExecuteTask(() => ReadDataWorkerAsync(sz, buffer, offset));
 		}
 
 		public int WriteData(int sz, byte[] buffer, int offset = 0)
 		{
-			writeLock.Wait();
-			try
-			{
-				return writeRunner.ExecuteTask(() => WriteDataWorkerAsync(sz, buffer, offset));
-			}
-			finally
-			{
-				writeLock.Release();
-			}
+			return writeRunner.ExecuteTask(() => WriteDataWorkerAsync(sz, buffer, offset));
 		}
 
 		public async Task<int> ReadDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			await readLock.WaitAsync();
-			try
-			{
-				return await ReadDataWorkerAsync(sz, buffer, offset);
-			}
-			finally
-			{
-				readLock.Release();
-			}
+			return await ReadDataWorkerAsync(sz, buffer, offset);
 		}
 
 		public async Task<int> WriteDataAsync(int sz, byte[] buffer, int offset = 0)
 		{
-			await writeLock.WaitAsync();
-			try
-			{
-				return await WriteDataWorkerAsync(sz, buffer, offset);
-			}
-			finally
-			{
-				writeLock.Release();
-			}
+			return await WriteDataWorkerAsync(sz, buffer, offset);
 		}
 
 		private async Task DisconnectAsyncWorker()
@@ -174,8 +140,6 @@ namespace DarkCaster.DataTransfer.Server
 				readRunner.Dispose();
 				writeRunner.Dispose();
 				stateChangeRunner.Dispose();
-				readLock.Dispose();
-				writeLock.Dispose();
 			}
 			finally
 			{
