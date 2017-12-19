@@ -61,13 +61,23 @@ namespace DarkCaster.DataTransfer.Server.Compression
 				//check block size
 				if(blockSize > maxBlockSZ)
 					blockSize = maxBlockSZ;
+				//check block size from upstream (optional)
+				var lastBSZ=config.Get<int>("last_buff_size");
+				if(lastBSZ>0)
+				{
+					lastBSZ -= 4; //maximum compressor-metadata header size. TODO: dynamically detect from compressor
+					if (blockSize > lastBSZ)
+						blockSize = lastBSZ;
+					if (blockSize < 1)
+						throw new Exception("Calculated blockSize is too small!");
+				}
 				//send back valid block size
 				CompressionMagicHelper.EncodeBlockSZ(blockSize, ng, 0);
 				ngPos = 0;
 				while(ngPos < 3)
 					ngPos += await upstream.WriteDataAsync(3 - ngPos, ng, ngPos);
 			}
-			catch
+			catch //TODO: add exceptions forwarding
 			{
 				//close upstream tunnel on any error, and return
 				await upstream.DisconnectAsync();
@@ -76,6 +86,8 @@ namespace DarkCaster.DataTransfer.Server.Compression
 			}
 			//add block size to config
 			config.Set("compr_block_size", blockSize);
+			//save final block size to config, may be used by downstream node to perform correction to it's internal buffer's sizes
+			config.Set<int>("last_buff_size", blockSize);
 			//create read and write compressors
 			var readCompr = comprFactory.GetCompressor(blockSize);
 			var writeCompr = comprFactory.GetCompressor(blockSize);

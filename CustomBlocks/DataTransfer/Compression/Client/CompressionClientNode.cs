@@ -74,6 +74,8 @@ namespace DarkCaster.DataTransfer.Client.Compression
 				//create separate compressors for read and write routines
 				var readCompressor = comprFactory.GetCompressor(blockSz);
 				var writeCompressor = comprFactory.GetCompressor(blockSz);
+				//save final block size to config, may be used by upstream node to perform correction to it's internal buffer's sizes
+				config.Set<int>("last_buff_size", blockSz);
 				return new CompressionClientTunnel(readCompressor, writeCompressor, dTun);
 			}
 			catch
