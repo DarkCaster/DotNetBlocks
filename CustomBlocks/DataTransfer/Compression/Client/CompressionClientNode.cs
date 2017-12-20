@@ -53,27 +53,48 @@ namespace DarkCaster.DataTransfer.Client.Compression
 			var dTun = await downstream.OpenTunnelAsync(config);
 			//parse compressors-parameters
 			var blockSz = config.Get<int>("compr_block_size");
-			if(blockSz == 0)
+			if(blockSz <= 0)
 				blockSz = defaultBlockSz;
 			blockSz += extraBlockSize;
+			//try to read buffer size used by downstream tunnel
+			int lastBSZ = 0;
+			if (config.Get<bool>("use_auto_buff_size"))
+				lastBSZ = config.Get<int>("last_buff_size");
 			try
 			{
-				//send compressor magic and block size
-				var ng = new byte[5];
-				CompressionMagicHelper.EncodeMagicAndBlockSZ(comprFactory.Magic, blockSz, ng, 0);
-				//send compressor magic and block size
-				int ngPos = 0;
-				while(ngPos < ng.Length)
-					ngPos += await dTun.WriteDataAsync(ng.Length - ngPos, ng, ngPos);
-				//receive block size confirmation from server
-				ngPos = 0;
-				while(ngPos < 3)
-					ngPos += await dTun.ReadDataAsync(3 - ngPos, ng, ngPos);
-				//set block size, reported by server
-				blockSz = CompressionMagicHelper.DecodeBlockSZ(ng, 0);
-				//create separate compressors for read and write routines
-				var readCompressor = comprFactory.GetCompressor(blockSz);
-				var writeCompressor = comprFactory.GetCompressor(blockSz);
+				IBlockCompressor readCompressor = null;
+				IBlockCompressor writeCompressor = null;
+				if (lastBSZ > 0)
+				{
+					blockSz = lastBSZ - 4; //maximum compressor-metadata header size. TODO: dynamically detect from compressor
+					if (blockSz < 1)
+						throw new Exception("Automatically calculated blockSize is too small!");
+					//create read and write compressors (may throw an error, if block size is invalid)
+					readCompressor = comprFactory.GetCompressor(blockSz);
+					writeCompressor = comprFactory.GetCompressor(blockSz);
+				}
+				else
+				{
+					//send compressor magic and block size
+					var ng = new byte[4];
+					ng[0] = (byte)(blockSz & 0xFF);
+					ng[1] = (byte)((blockSz >> 8) & 0xFF);
+					ng[2] = (byte)((blockSz >> 16) & 0xFF);
+					ng[3] = (byte)((blockSz >> 24) & 0xFF);
+					//send compressor magic and block size
+					int ngPos = 0;
+					while (ngPos < ng.Length)
+						ngPos += await dTun.WriteDataAsync(ng.Length - ngPos, ng, ngPos);
+					//receive block size confirmation from server
+					ngPos = 0;
+					while (ngPos < ng.Length)
+						ngPos += await dTun.ReadDataAsync(ng.Length - ngPos, ng, ngPos);
+					//set block size, reported by server
+					blockSz = ng[0] | ng[1] << 8 | ng[2] << 16 | ng[3] << 24;
+					//create read and write compressors (may throw an error, if block size is invalid)
+					readCompressor = comprFactory.GetCompressor(blockSz);
+					writeCompressor = comprFactory.GetCompressor(blockSz);
+				}
 				//save final block size to config, may be used by upstream node to perform correction to it's internal buffer's sizes
 				config.Set<int>("last_buff_size", blockSz);
 				return new CompressionClientTunnel(readCompressor, writeCompressor, dTun);

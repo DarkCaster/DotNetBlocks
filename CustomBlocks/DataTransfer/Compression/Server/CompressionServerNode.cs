@@ -34,6 +34,7 @@ namespace DarkCaster.DataTransfer.Server.Compression
 	{
 		private readonly int maxBlockSZ;
 		private readonly IBlockCompressorFactory comprFactory;
+		private readonly bool useAutoBSZ;
 
 		public CompressionServerNode(ITunnelConfig serverConfig, INode upstream, IBlockCompressorFactory comprFactory, int defaultMaxBlockSZ = 65536)
 			: base(upstream)
@@ -42,40 +43,58 @@ namespace DarkCaster.DataTransfer.Server.Compression
 			maxBlockSZ = serverConfig.Get<int>("compr_max_block_size");
 			if (maxBlockSZ == 0)
 				maxBlockSZ = defaultMaxBlockSZ;
+			useAutoBSZ = serverConfig.Get<bool>("use_auto_buff_size");
 		}
 
 		public override async Task OpenTunnelAsync(ITunnelConfig config, ITunnel upstream)
 		{
+			ITunnel tunnel = null;
 			int blockSize = 0;
 			try
 			{
-				var ng = new byte[5];
-				//receive magic and block size
-				int ngPos = 0;
-				while(ngPos < ng.Length)
-					ngPos += await upstream.ReadDataAsync(ng.Length - ngPos, ng, ngPos);
-				CompressionMagicHelper.DecodeMagicAndBlockSZ(ng, 0, out short magic, out blockSize);
-				//compare magic
-				if(magic != comprFactory.Magic)
-					throw new Exception("Magic mismatch");
-				//check block size
-				if(blockSize > maxBlockSZ)
-					blockSize = maxBlockSZ;
-				//check block size from upstream (optional)
-				var lastBSZ=config.Get<int>("last_buff_size");
-				if(lastBSZ>0)
+				int lastBSZ = 0;
+				if (useAutoBSZ)
+					lastBSZ = config.Get<int>("last_buff_size");
+				IBlockCompressor readCompr = null;
+				IBlockCompressor writeCompr = null;
+				if (lastBSZ > 0)
 				{
-					lastBSZ -= 4; //maximum compressor-metadata header size. TODO: dynamically detect from compressor
-					if (blockSize > lastBSZ)
-						blockSize = lastBSZ;
+					blockSize = lastBSZ - 4; //maximum compressor-metadata header size. TODO: dynamically detect from compressor
 					if (blockSize < 1)
-						throw new Exception("Calculated blockSize is too small!");
+						throw new Exception("Automatically calculated blockSize is too small!");
+					//create read and write compressors (may throw an error, if block size is invalid)
+					readCompr = comprFactory.GetCompressor(blockSize);
+					writeCompr = comprFactory.GetCompressor(blockSize);
 				}
-				//send back valid block size
-				CompressionMagicHelper.EncodeBlockSZ(blockSize, ng, 0);
-				ngPos = 0;
-				while(ngPos < 3)
-					ngPos += await upstream.WriteDataAsync(3 - ngPos, ng, ngPos);
+				else
+				{
+					var ng = new byte[4];
+					//receive requested block size
+					int ngPos = 0;
+					while (ngPos < ng.Length)
+						ngPos += await upstream.ReadDataAsync(ng.Length - ngPos, ng, ngPos);
+					blockSize = ng[0] | ng[1] << 8 | ng[2] << 16 | ng[3] << 24;
+					//check block size
+					if (blockSize > maxBlockSZ)
+						blockSize = maxBlockSZ;
+					ng[0] = (byte)(blockSize & 0xFF);
+					ng[1] = (byte)((blockSize >> 8) & 0xFF);
+					ng[2] = (byte)((blockSize >> 16) & 0xFF);
+					ng[3] = (byte)((blockSize >> 24) & 0xFF);
+					//create read and write compressors (may throw an error, if block size is invalid)
+					readCompr = comprFactory.GetCompressor(blockSize);
+					writeCompr = comprFactory.GetCompressor(blockSize);
+					//send valid block size back to client
+					ngPos = 0;
+					while (ngPos < ng.Length)
+						ngPos += await upstream.WriteDataAsync(ng.Length - ngPos, ng, ngPos);
+				}
+				//add block size to config
+				config.Set("compr_block_size", blockSize);
+				//save final block size to config, may be used by downstream node to perform correction to it's internal buffer's sizes
+				config.Set<int>("last_buff_size", blockSize);
+				//create new tunnel and connect it with given upstream tunnel
+				tunnel = new CompressionServerTunnel(readCompr, writeCompr, upstream);
 			}
 			catch //TODO: add exceptions forwarding
 			{
@@ -84,15 +103,6 @@ namespace DarkCaster.DataTransfer.Server.Compression
 				upstream.Dispose();
 				return;
 			}
-			//add block size to config
-			config.Set("compr_block_size", blockSize);
-			//save final block size to config, may be used by downstream node to perform correction to it's internal buffer's sizes
-			config.Set<int>("last_buff_size", blockSize);
-			//create read and write compressors
-			var readCompr = comprFactory.GetCompressor(blockSize);
-			var writeCompr = comprFactory.GetCompressor(blockSize);
-			//create new tunnel and connect it with given upstream tunnel
-			var tunnel = new CompressionServerTunnel(readCompr, writeCompr, upstream);
 			//call downstream's OpenTunnelAsync and pass created and prepared tunnel to it
 			await downstreamNode.OpenTunnelAsync(config, tunnel);
 		}
