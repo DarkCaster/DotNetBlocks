@@ -142,7 +142,6 @@
     <Compile Include="DataTransfer\Abstracts\Private\ITunnelBase.cs" />
     <Compile Include="DataTransfer\Compression\Server\CompressionServerNode.cs" />
     <Compile Include="DataTransfer\Compression\Server\CompressionServerTunnel.cs" />
-    <Compile Include="DataTransfer\Compression\Private\CompressionMagicHelper.cs" />
     <Compile Include="DataTransfer\Abstracts\Server\ServerNodeBase.cs" />
     <Compile Include="DataTransfer\Tracing\Private\TracingTunnelBase.cs" />
     <Compile Include="DataTransfer\Tracing\Client\TracingClientTunnel.cs" />
