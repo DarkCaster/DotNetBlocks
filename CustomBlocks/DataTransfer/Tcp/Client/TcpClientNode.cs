@@ -53,11 +53,14 @@ namespace DarkCaster.DataTransfer.Client.Tcp
 				//apply some optional settings to socket
 				client.NoDelay = nodelay;
 				client.LingerState = new LingerOption(true, 0);
-				if(bufferSize > 0)
+				if (bufferSize > 0)
 				{
 					client.ReceiveBufferSize = bufferSize;
 					client.SendBufferSize = bufferSize;
+					config.Set("buff_size", bufferSize);
 				}
+				else
+					config.Set("buff_size", client.ReceiveBufferSize);
 			}
 			catch
 			{

@@ -134,6 +134,7 @@ namespace DarkCaster.DataTransfer.Server.Tcp
 					config.Set("remote_port", remoteEp.Port);
 					config.Set("remote_host", remoteEp.Address.ToString());
 					config.Set("remote_addr", remoteEp.Address.GetAddressBytes());
+					config.Set("buff_size", bufferSize > 0 ? bufferSize : tSocket.ReceiveBufferSize);
 					//create new tunnel
 					var tunnel = new TcpServerTunnel(tSocket);
 					//call downstream's OpenTunnelAsync
