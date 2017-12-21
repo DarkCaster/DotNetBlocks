@@ -59,7 +59,8 @@ namespace DarkCaster.DataTransfer.Server.Compression
 				IBlockCompressor writeCompr = null;
 				if (lastBSZ > 0)
 				{
-					blockSize = lastBSZ - 4; //maximum compressor-metadata header size. TODO: dynamically detect from compressor
+					//dynamically detect max block size from compressor
+					comprFactory.CalculateBlockAndMetaSizes(lastBSZ, out int metaSz, out blockSize);
 					if (blockSize < 1)
 						throw new Exception("Automatically calculated blockSize is too small!");
 					//create read and write compressors (may throw an error, if block size is invalid)
