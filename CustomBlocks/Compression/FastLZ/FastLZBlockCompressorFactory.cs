@@ -47,6 +47,19 @@ namespace DarkCaster.Compression.FastLZ
 			return new FastLZBlockCompressor(maxBlockSize, true);
 		}
 
+		public void CalculateBlockAndMetaSizes(int limit, out int maxMetaSz, out int maxInputDataSz)
+		{
+			if (limit < 2)
+				throw new ArgumentException("Requested limit is too low!", nameof(limit));
+			maxInputDataSz = limit - 1;
+			maxMetaSz = FastLZBlockCompressor.CalculateHeaderLength(maxInputDataSz);
+			while (maxInputDataSz + maxMetaSz > limit)
+			{
+				--maxInputDataSz;
+				maxMetaSz = FastLZBlockCompressor.CalculateHeaderLength(maxInputDataSz);
+			}
+		}
+
 		public bool MetadataPreviewSupported { get { return true; } }
 
 		public short Magic { get { return 0x0001; } }

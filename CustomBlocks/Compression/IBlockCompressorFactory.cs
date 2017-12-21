@@ -69,5 +69,16 @@ namespace DarkCaster.Compression
 		/// </summary>
 		/// <value>The magic number, that represents selected compressor and it's main settings</value>
 		short Magic { get; }
+
+		/// <summary>
+		/// Calculate maximum uncompressed input data size + output metadata size for final compressed block,
+		/// so it will fit within selected limit after compression.
+		/// May be used to calculate block sizes when embedding compressed data produced by IBlockCompressor.
+		/// This method may be unsupprted on some compressors.
+		/// </summary>
+		/// <param name="limit">Maximum external limit in bytes, that must be respected</param>
+		/// <param name="maxMetaSz">Maximum metadata size that will be produced within compressed data block</param>
+		/// <param name="maxInputDataSz">Maximum allowed input data size that produce compressed data block that will fit within limit</param>
+		void CalculateBlockAndMetaSizes(int limit, out int maxMetaSz, out int maxInputDataSz);
 	}
 }

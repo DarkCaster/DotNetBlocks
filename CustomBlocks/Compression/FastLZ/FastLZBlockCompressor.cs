@@ -29,12 +29,12 @@ namespace DarkCaster.Compression.FastLZ
 {
 	public sealed class FastLZBlockCompressor : IBlockCompressor, IThreadSafeBlockCompressor
 	{
-		private const int PAYLOAD_LEN1 = 31; //2 ^ 5 - 1 = 5 bits / 8 bit-header;
-		private const int PAYLOAD_LEN2 = 8191; //2 ^ 13 - 1 = 13 bits / 16 bit-header;
-		private const int PAYLOAD_LEN3 = 2097151; //2 ^ 21 - 1 = 21 bits / 24 bit-header;
-		private const int MAX_BLOCK_SZ = 536870911; //2 ^ 29 - 1 = 29 bits / 32-bit header;
-		private readonly int maxBlockSz;
+		internal const int PAYLOAD_LEN1 = 31; //2 ^ 5 - 1 = 5 bits / 8 bit-header;
+		internal const int PAYLOAD_LEN2 = 8191; //2 ^ 13 - 1 = 13 bits / 16 bit-header;
+		internal const int PAYLOAD_LEN3 = 2097151; //2 ^ 21 - 1 = 21 bits / 24 bit-header;
+		internal const int MAX_BLOCK_SZ = 536870911; //2 ^ 29 - 1 = 29 bits / 32-bit header;
 
+		private readonly int maxBlockSz;
 		private readonly Func<byte[], int, int, byte[], int, int> fastLZDecompress;
 		private readonly Func<byte[], int, int, byte[], int, int> fastLZCompress;
 
@@ -59,7 +59,7 @@ namespace DarkCaster.Compression.FastLZ
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int CalculateHeaderLength(int payloadLen)
+		internal static int CalculateHeaderLength(int payloadLen)
 		{
 			if (payloadLen <= PAYLOAD_LEN1)
 				return 1;
