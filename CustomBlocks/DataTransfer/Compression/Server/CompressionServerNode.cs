@@ -54,7 +54,7 @@ namespace DarkCaster.DataTransfer.Server.Compression
 			{
 				int lastBSZ = 0;
 				if (useAutoBSZ)
-					lastBSZ = config.Get<int>("last_buff_size");
+					lastBSZ = config.Get<int>("auto_buff_size");
 				IBlockCompressor readCompr = null;
 				IBlockCompressor writeCompr = null;
 				if (lastBSZ > 0)
@@ -89,10 +89,11 @@ namespace DarkCaster.DataTransfer.Server.Compression
 					while (ngPos < ng.Length)
 						ngPos += await upstream.WriteDataAsync(ng.Length - ngPos, ng, ngPos);
 				}
-				//add block size to config
-				config.Set("compr_block_size", blockSize);
+				//add block size to config, may be used later for informational purposes
+				config.Set<int>("compr_block_size", blockSize);
+				config.Set<int>("buff_size", blockSize);
 				//save final block size to config, may be used by downstream node to perform correction to it's internal buffer's sizes
-				config.Set<int>("last_buff_size", blockSize);
+				config.Set<int>("auto_buff_size", blockSize);
 				//create new tunnel and connect it with given upstream tunnel
 				tunnel = new CompressionServerTunnel(readCompr, writeCompr, upstream);
 			}

@@ -59,7 +59,7 @@ namespace DarkCaster.DataTransfer.Client.Compression
 			//try to read buffer size used by downstream tunnel
 			int lastBSZ = 0;
 			if (config.Get<bool>("use_auto_buff_size"))
-				lastBSZ = config.Get<int>("last_buff_size");
+				lastBSZ = config.Get<int>("auto_buff_size");
 			try
 			{
 				IBlockCompressor readCompressor = null;
@@ -95,8 +95,12 @@ namespace DarkCaster.DataTransfer.Client.Compression
 					readCompressor = comprFactory.GetCompressor(blockSz);
 					writeCompressor = comprFactory.GetCompressor(blockSz);
 				}
+				//add final block size to config, may be used later (after init) for informational purposes about last node's block size
+				//should be filled by any node at the end of it's init process
+				config.Set<int>("buff_size", blockSz);
 				//save final block size to config, may be used by upstream node to perform correction to it's internal buffer's sizes
-				config.Set<int>("last_buff_size", blockSz);
+				//not guaranteed to be filled-up (or used) by all nodes, may be also removed at some point
+				config.Set<int>("auto_buff_size", blockSz);
 				return new CompressionClientTunnel(readCompressor, writeCompressor, dTun);
 			}
 			catch
