@@ -30,10 +30,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Security.AccessControl;
-#if UNIX
-using Mono.Unix;
-#endif
-
+using System.Reflection;
 using DarkCaster.Config.Private;
 
 namespace DarkCaster.Config.Files.Private
@@ -54,6 +51,33 @@ namespace DarkCaster.Config.Files.Private
 		private static readonly Dictionary<string, bool> cachedPerms = new Dictionary<string, bool>();
 		private static readonly object cacheLocker = new object();
 
+		//stuff for working with *nix version of CheckDirAccessRights method
+		private static readonly bool isWindows = !(((int)Environment.OSVersion.Platform == 4) ||
+																					 ((int)Environment.OSVersion.Platform == 6) ||
+																					 ((int)Environment.OSVersion.Platform == 128));
+		private static readonly Type udiType;
+		private static readonly Type amType;
+		private static readonly object amF_OK;
+		private static readonly object amR_OK;
+		private static readonly object amW_OK;
+		private static readonly MethodInfo udiCanAccessMethod;
+		private static readonly PropertyInfo udiIsDirectory;
+
+		static FileConfigBackend()
+		{
+			if(!isWindows)
+			{
+				Assembly monoPosixAsm = Assembly.Load("Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756");
+				udiType = monoPosixAsm.GetType("Mono.Unix.UnixDirectoryInfo", true);
+				amType = monoPosixAsm.GetType("Mono.Unix.Native.AccessModes", true);
+				amF_OK = Enum.Parse(amType, "F_OK");
+				amR_OK = Enum.Parse(amType, "R_OK");
+				amW_OK = Enum.Parse(amType, "W_OK");
+				udiCanAccessMethod = udiType.GetMethod("CanAccess", new Type[] { amType });
+				udiIsDirectory = udiType.GetProperty("IsDirectory");
+			}
+		}
+
 		private static byte[] ReadCfgFile(string target, ref bool writeAllowed)
 		{
 			byte[] result = null;
@@ -64,33 +88,33 @@ namespace DarkCaster.Config.Files.Private
 			return result;
 		}
 
-		//TODO: check and create separate method for mono\linux
 		//Based on http://stackoverflow.com/a/16032192
-#if UNIX
-		private static bool CheckDirAccessRights(string dir)
+		private static bool CheckDirAccessRights_Unix(string dir)
 		{
 			try
 			{
-				var info = new UnixDirectoryInfo(dir);
-				if (!info.CanAccess(Mono.Unix.Native.AccessModes.F_OK) ||
-					  !info.CanAccess(Mono.Unix.Native.AccessModes.R_OK) ||
-					  !info.CanAccess(Mono.Unix.Native.AccessModes.W_OK) ||
-					  !info.IsDirectory)
+				var info = Activator.CreateInstance(udiType, dir);
+				if (!(bool)udiCanAccessMethod.Invoke(info, new object[] { amF_OK }) ||
+				    !(bool)udiCanAccessMethod.Invoke(info, new object[] { amR_OK }) ||
+				    !(bool)udiCanAccessMethod.Invoke(info, new object[] { amW_OK }) ||
+				    !(bool)udiIsDirectory.GetValue(info))
 					return false;
 			}
 			catch (Exception) { return false; }
 			return true;
 		}
-#else
+
 		private static bool CheckDirAccessRights(string dir)
 		{
-			return CheckDirAccessRights(dir,FileSystemRights.CreateFiles) &&
-		CheckDirAccessRights(dir,FileSystemRights.Delete) &&
-		CheckDirAccessRights(dir,FileSystemRights.Read) &&
-		CheckDirAccessRights(dir,FileSystemRights.Write);
+			if(isWindows)
+				return CheckDirAccessRights_Win(dir,FileSystemRights.CreateFiles) &&
+					CheckDirAccessRights_Win(dir,FileSystemRights.Delete) &&
+					CheckDirAccessRights_Win(dir,FileSystemRights.Read) &&
+					CheckDirAccessRights_Win(dir,FileSystemRights.Write);
+			return CheckDirAccessRights_Unix(dir);
 		}
 
-		private static bool CheckDirAccessRights(string dir, FileSystemRights accessRights)
+		private static bool CheckDirAccessRights_Win(string dir, FileSystemRights accessRights)
 		{
 			bool isInRoleWithAccess = false;
 			try
@@ -119,9 +143,8 @@ namespace DarkCaster.Config.Files.Private
 			catch(Exception) { return false; }
 			return isInRoleWithAccess;
 		}
-#endif
 
-		private FileConfigBackend() {}
+		private FileConfigBackend() { }
 		
 		[Obsolete("This constructor is not for direct use. Use only for test purposes.")]
 		public FileConfigBackend(string testFileName) : this (new ConfigFileId(testFileName)) {}
@@ -233,7 +256,7 @@ namespace DarkCaster.Config.Files.Private
 		public void Commit(byte[] data)
 		{
 			if(data == null)
-				throw new ArgumentNullException("data","Cannot write null data!");
+				throw new ArgumentNullException(nameof(data), "Cannot write null data!");
 			writeLock.Wait();
 			try
 			{
@@ -264,7 +287,7 @@ namespace DarkCaster.Config.Files.Private
 		public async Task CommitAsync(byte[] data)
 		{
 			if(data == null)
-				throw new ArgumentNullException("data","Cannot write null data!");
+				throw new ArgumentNullException(nameof(data), "Cannot write null data!");
 			await writeLock.WaitAsync();
 			try
 			{
