@@ -36,25 +36,6 @@
     <ConsolePause>false</ConsolePause>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_Unix|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug_Unix</OutputPath>
-    <DefineConstants>DEBUG;TRACE;UNIX;</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug_Unix\CustomBlocks.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_Unix|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release_Unix</OutputPath>
-    <DefineConstants>UNIX;</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release_Unix\CustomBlocks.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Mono.Posix" />
