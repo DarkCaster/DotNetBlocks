@@ -41,7 +41,8 @@ namespace DarkCaster.DataTransfer.Client.Tcp
 			if(port==0)
 				throw new Exception("failed to get remote connection port from \"remote_port\" config parameter");
 			//open tcp connection
-			var addr = Dns.GetHostEntry(host).AddressList[0];
+			if(!IPAddress.TryParse(host, out IPAddress addr))
+				addr = (await Dns.GetHostEntryAsync(host)).AddressList[0];
 			var nodelay = config.Get<bool>("tcp_nodelay");
 			var bufferSize = config.Get<int>("tcp_buffer_size");
 			var client = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
