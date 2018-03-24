@@ -1,0 +1,14 @@
+diff -uprN json.net/Src/Newtonsoft.Json.sln json.net.new/Src/Newtonsoft.Json.sln
+--- json.net/Src/Newtonsoft.Json.sln	2018-03-24 03:22:12.827203718 +0300
++++ json.net.new/Src/Newtonsoft.Json.sln	2018-03-24 03:25:17.951203718 +0300
+@@ -11,10 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956
+ EndProject
+ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Newtonsoft.Json", "Newtonsoft.Json\Newtonsoft.Json.csproj", "{A97A4CB3-51AD-4605-BA9F-D6861E582C85}"
+ EndProject
+-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Newtonsoft.Json.Tests", "Newtonsoft.Json.Tests\Newtonsoft.Json.Tests.csproj", "{462EA9B9-8532-4330-9160-DF3450C70880}"
+-EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Newtonsoft.Json.TestConsole", "Newtonsoft.Json.TestConsole\Newtonsoft.Json.TestConsole.csproj", "{3CC9C2DF-CD0A-4096-BF46-B4AFDF0147D2}"
+-EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+ 		Debug|Any CPU = Debug|Any CPU

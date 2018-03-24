@@ -38,13 +38,14 @@ private void SNSign(string assembly, string key)
 Task("Patch").Does(() =>
 {
   Patch("json.net","../json.net.build_and_sign.patch",1);
+  Patch("json.net","../json.net.disable_extra_projects.patch",1);
 });
 
 Task("Build").IsDependentOn("Patch").Does(() =>
 {
 	MSBuild("json.net/Src/Newtonsoft.Json.sln", settings =>
 	{
-		settings.SetConfiguration(configuration).WithTarget("Newtonsoft_Json:Rebuild");
+		settings.SetConfiguration(configuration).WithTarget("Restore").WithTarget("Newtonsoft_Json:Rebuild");
 		if(IsRunningOnUnix())
 			settings.ToolPath = "/usr/bin/msbuild";
 	});
