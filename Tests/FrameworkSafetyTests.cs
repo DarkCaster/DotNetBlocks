@@ -214,7 +214,7 @@ namespace Tests
 
 			var testData = new byte[controlData.Length];
 			var random = new Random();
-			var addr = Dns.GetHostEntry("127.0.0.1").AddressList[0];
+			var addr = IPAddress.Parse("127.0.0.1");//Dns.GetHostEntry("127.0.0.1").AddressList[0];
 			var client = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 			await Task.Factory.FromAsync(
 				(callback, state) => client.BeginConnect(new IPEndPoint(addr, 49999), callback, state),
