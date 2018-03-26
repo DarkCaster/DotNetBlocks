@@ -157,29 +157,32 @@ namespace Tests
 		[Test]
 		public void TaskRun_ParameterNotCaptured()
 		{
-			var cnt = 10;
+			var cnt = 100;
 			var tasks = new Task<int>[cnt];
-			for(int i = 0; i < cnt; ++i)
+			for (int i = 0; i < cnt; ++i)
 				tasks[i] = Task.Run(() => TestWorker(i));
-			for(int i = 0; i < cnt; ++i)
-				//seems that initial variable was not captured, result will not match initial value
-				if(tasks[i].Result == i)
-					throw new Exception(string.Format("tasks[{0}].Result == {1}",i,tasks[i].Result));
+			var testPassed = false;
+			for (int i = 0; i < cnt; ++i)
+				//initial variable was not captured, result may not match initial value
+				if (tasks[i].Result != i)
+					testPassed = true;
+			if (!testPassed)
+				Assert.Fail("Coult not confirm that parameter sometimes is not captured");
 		}
 
 		[Test]
 		public void TaskRun_ParameterCaptured()
 		{
-			var cnt = 10;
+			var cnt = 100;
 			var tasks = new Task<int>[cnt];
-			for(int i = 0; i < cnt; ++i)
+			for (int i = 0; i < cnt; ++i)
 			{
 				var j = i;
 				tasks[i] = Task.Run(() => TestWorker(j));
 			}
-			for(int i = 0; i < cnt; ++i)
+			for (int i = 0; i < cnt; ++i)
 				//initial variable was captured, result will match initial value
-				if(tasks[i].Result != i)
+				if (tasks[i].Result != i)
 					throw new Exception(string.Format("tasks[{0}].Result == {1}", i, tasks[i].Result));
 		}
 
