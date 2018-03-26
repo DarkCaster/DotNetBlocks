@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using NUnit.Framework;
 
 namespace Tests
@@ -320,6 +322,22 @@ namespace Tests
 			var result = CalculateHeaderLength(testLen);
 			if(result != 3)
 				throw new Exception("Triggered!");
+		}
+
+		//Failing on Mono 5.10+ because of using new corefx sources that is less compatible with .NET 4.5
+		//More info:
+		//https://github.com/mono/mono/issues/7822
+		//https://github.com/dotnet/corefx/issues/28137
+		//https://github.com/dotnet/corefx/pull/19742
+		[Test]
+		public void ConcurrentDictionary_BinarySerialization_Fail()
+		{
+			var target = new ConcurrentDictionary<int, int>();
+			using (var stream = new MemoryStream())
+			{
+				var formatter = new BinaryFormatter();
+				formatter.Serialize(stream, target);  //exception will be thrown here
+			}
 		}
 	}
 }
