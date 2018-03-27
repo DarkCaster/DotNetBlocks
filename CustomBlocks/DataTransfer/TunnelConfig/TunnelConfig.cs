@@ -39,15 +39,31 @@ namespace DarkCaster.DataTransfer.Config
 			public byte[] Payload { get; set; }
 		}
 
-		private ConcurrentDictionary<string, StorageRecord> storage=new ConcurrentDictionary<string, StorageRecord>();
+		private Dictionary<string, StorageRecord> storage=new Dictionary<string, StorageRecord>();
 
 		public KeyValuePair<string, StorageRecord>[] Storage
 		{
-			get { return storage.ToArray(); }
-			set { storage=new ConcurrentDictionary<string, StorageRecord>(value); }
+			get
+			{
+				lock (storage)
+				{
+					var tmp = new KeyValuePair<string, StorageRecord>[storage.Count];
+					var pos = 0;
+					foreach (var pair in storage)
+						tmp[pos++] = pair;
+					return tmp;
+				}
+			}
+			set
+			{
+				storage = new Dictionary<string, StorageRecord>();
+				lock(storage)
+					for (int i = 0; i < value.Length; ++i)
+						storage.Add(value[i].Key, value[i].Value);
+			}
 		}
 
-		private byte[] ConvertForBigEndian(byte[] input)
+		private static byte[] ConvertForBigEndian(byte[] input)
 		{
 			if (BitConverter.IsLittleEndian)
 				return input;
@@ -57,7 +73,7 @@ namespace DarkCaster.DataTransfer.Config
 			return reverse;
 		}
 
-		private StorageRecord WriteRecord(byte[] val)
+		private static StorageRecord WriteRecord(byte[] val)
 		{
 			var result = new StorageRecord()
 			{
@@ -67,7 +83,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(bool val)
+		private static StorageRecord WriteRecord(bool val)
 		{
 			var result = new StorageRecord()
 			{
@@ -77,7 +93,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(int val)
+		private static StorageRecord WriteRecord(int val)
 		{
 			var result = new StorageRecord()
 			{
@@ -87,7 +103,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(uint val)
+		private static StorageRecord WriteRecord(uint val)
 		{
 			var result = new StorageRecord()
 			{
@@ -97,7 +113,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(long val)
+		private static StorageRecord WriteRecord(long val)
 		{
 			var result = new StorageRecord()
 			{
@@ -107,7 +123,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(ulong val)
+		private static StorageRecord WriteRecord(ulong val)
 		{
 			var result = new StorageRecord()
 			{
@@ -117,7 +133,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(float val)
+		private static StorageRecord WriteRecord(float val)
 		{
 			var result = new StorageRecord()
 			{
@@ -127,7 +143,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(double val)
+		private static StorageRecord WriteRecord(double val)
 		{
 			var result = new StorageRecord()
 			{
@@ -137,7 +153,7 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private StorageRecord WriteRecord(string val)
+		private static StorageRecord WriteRecord(string val)
 		{
 			var result = new StorageRecord()
 			{
@@ -147,47 +163,47 @@ namespace DarkCaster.DataTransfer.Config
 			return result;
 		}
 
-		private byte[] ReadByteRecord(StorageRecord input)
+		private static byte[] ReadByteRecord(StorageRecord input)
 		{
 			return input.Payload;
 		}
 
-		private bool ReadBoolRecord(StorageRecord input)
+		private static bool ReadBoolRecord(StorageRecord input)
 		{
 			return input.Payload[0] != 0 ? true : false;
 		}
 
-		private int ReadIntRecord(StorageRecord input)
+		private static int ReadIntRecord(StorageRecord input)
 		{
 			return BitConverter.ToInt32(ConvertForBigEndian(input.Payload),0);
 		}
 
-		private uint ReadUIntRecord(StorageRecord input)
+		private static uint ReadUIntRecord(StorageRecord input)
 		{
 			return BitConverter.ToUInt32(ConvertForBigEndian(input.Payload), 0);
 		}
 
-		private long ReadLongRecord(StorageRecord input)
+		private static long ReadLongRecord(StorageRecord input)
 		{
 			return BitConverter.ToInt64(ConvertForBigEndian(input.Payload), 0);
 		}
 
-		private ulong ReadULongRecord(StorageRecord input)
+		private static ulong ReadULongRecord(StorageRecord input)
 		{
 			return BitConverter.ToUInt64(ConvertForBigEndian(input.Payload), 0);
 		}
 
-		private float ReadFloatRecord(StorageRecord input)
+		private static float ReadFloatRecord(StorageRecord input)
 		{
 			return BitConverter.ToSingle(ConvertForBigEndian(input.Payload), 0);
 		}
 
-		private double ReadDoubleRecord(StorageRecord input)
+		private static double ReadDoubleRecord(StorageRecord input)
 		{
 			return BitConverter.ToDouble(ConvertForBigEndian(input.Payload), 0);
 		}
 
-		private string ReadStringRecord(StorageRecord input)
+		private static string ReadStringRecord(StorageRecord input)
 		{
 			return Encoding.UTF8.GetString(input.Payload);
 		}
@@ -216,33 +232,35 @@ namespace DarkCaster.DataTransfer.Config
 				result = WriteRecord((string)(object)val);
 			else
 				throw new NotSupportedException("Unsupported type!");
-			storage.AddOrUpdate(key.ToLower(), result, (k, old_v) => result);
+			lock (storage)
+				storage[key.ToLower()] = result;
 		}
 
 		public T Get<T>(string key)
 		{
 			//TODO: add nullables support for primitives that do not support null value
-			if(storage.TryGetValue(key.ToLower(), out StorageRecord record))
-			{
-				if(record.PType == 0 && typeof(T) == typeof(byte[]))
-					return (T)(object)ReadByteRecord(record);
-				if(record.PType == 1 && typeof(T) == typeof(bool))
-					return (T)(object)ReadBoolRecord(record);
-				if(record.PType == 2 && typeof(T) == typeof(int))
-					return (T)(object)ReadIntRecord(record);
-				if(record.PType == 3 && typeof(T) == typeof(uint))
-					return (T)(object)ReadUIntRecord(record);
-				if(record.PType == 4 && typeof(T) == typeof(long))
-					return (T)(object)ReadLongRecord(record);
-				if(record.PType == 5 && typeof(T) == typeof(ulong))
-					return (T)(object)ReadULongRecord(record);
-				if(record.PType == 6 && typeof(T) == typeof(float))
-					return (T)(object)ReadFloatRecord(record);
-				if(record.PType == 7 && typeof(T) == typeof(double))
-					return (T)(object)ReadDoubleRecord(record);
-				if(record.PType == 8 && typeof(T) == typeof(string))
-					return (T)(object)ReadStringRecord(record);
-			}
+			StorageRecord record;
+			lock (storage)
+				if (!storage.TryGetValue(key.ToLower(), out record))
+					return default(T);
+			if (record.PType == 0 && typeof(T) == typeof(byte[]))
+				return (T)(object)ReadByteRecord(record);
+			if (record.PType == 1 && typeof(T) == typeof(bool))
+				return (T)(object)ReadBoolRecord(record);
+			if (record.PType == 2 && typeof(T) == typeof(int))
+				return (T)(object)ReadIntRecord(record);
+			if (record.PType == 3 && typeof(T) == typeof(uint))
+				return (T)(object)ReadUIntRecord(record);
+			if (record.PType == 4 && typeof(T) == typeof(long))
+				return (T)(object)ReadLongRecord(record);
+			if (record.PType == 5 && typeof(T) == typeof(ulong))
+				return (T)(object)ReadULongRecord(record);
+			if (record.PType == 6 && typeof(T) == typeof(float))
+				return (T)(object)ReadFloatRecord(record);
+			if (record.PType == 7 && typeof(T) == typeof(double))
+				return (T)(object)ReadDoubleRecord(record);
+			if (record.PType == 8 && typeof(T) == typeof(string))
+				return (T)(object)ReadStringRecord(record);
 			return default(T);
 		}
 	}
