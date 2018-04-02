@@ -327,7 +327,7 @@ namespace Tests
 				throw new Exception("Triggered!");
 		}
 
-		//Failing on Mono 5.10+ because of using new corefx sources that is less compatible with .NET 4.5
+		//Failing on Mono 5.10.0.140-5.10.1.25 because of using new corefx sources that is less compatible with .NET 4.5
 		//More info:
 		//https://github.com/mono/mono/issues/7822
 		//https://github.com/dotnet/corefx/issues/28137
