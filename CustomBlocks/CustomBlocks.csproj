@@ -128,6 +128,7 @@
     <Compile Include="DataTransfer\Tracing\Server\TracingServerTunnel.cs" />
     <Compile Include="DataTransfer\Tracing\Client\TracingClientNode.cs" />
     <Compile Include="DataTransfer\Tracing\Server\TracingServerNode.cs" />
+    <Compile Include="UUID\TimestampHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -165,6 +166,7 @@
     <Folder Include="DataTransfer\Tracing\Private\" />
     <Folder Include="DataTransfer\Tracing\Client\" />
     <Folder Include="DataTransfer\Tracing\Server\" />
+    <Folder Include="UUID\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
