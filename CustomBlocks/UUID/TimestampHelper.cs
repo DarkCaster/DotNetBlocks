@@ -35,11 +35,14 @@ namespace DarkCaster.UUID
 		private static readonly Stopwatch counter = new Stopwatch();
 		private static readonly long startTimestamp;
 		private static readonly double swTicksToDateTicksMult = (double)10000000 / (double)Stopwatch.Frequency;
+		private static long lastTimestamp;
+
+		private const int minTimerResolutionMS = 1000;
 		//stuff for powering LCG algorithm that is used to fill lower 32 bits of timestamp
 		//with unique 32-bit values (until LGC overflows, of course)
-		private static ulong lastLCGValue;
+		private static ulong curLCGValue;
 		//used for overflow check when timestamp is not increased over previous invoke to GenerateGUID method
-		private static ulong startLCGValue;
+		private static ulong lastLCGValue;
 		//following constants ensures that LGC overflow will occur in 4294967290 rounds (this gives us almost 2^32 uinique values)
 		private const ulong m = 4294967291UL;
 		private const ulong a = 279470273UL;
@@ -48,6 +51,7 @@ namespace DarkCaster.UUID
 		{
 			//Bind start timestamp to some common base (this date taken from RFC 4122)
 			startTimestamp = DateTime.UtcNow.Ticks - new DateTime(1582, 10, 15, 00, 00, 00, DateTimeKind.Utc).Ticks;
+			lastTimestamp = startTimestamp;
 			//start time counter
 			counter.Start();
 			using (var random = new RNGCryptoServiceProvider())
@@ -60,20 +64,42 @@ namespace DarkCaster.UUID
 					init = 1;
 				if (init > (m - 1))
 					init = m - 1;
-				lastLCGValue = init;
-				startLCGValue = 0;
+				curLCGValue = init;
+				lastLCGValue = 0;
 			}
 		}
 
-		public static void WriteScrambledTimestamp(byte[] buffer, int offset)
+		public static long GetScrambledTimestamp()
 		{
 			lock (locker)
 			{
-				throw new NotImplementedException("TODO:");
+				while (true)
+				{
+					long curTimestamp = (long)((double)(counter.ElapsedTicks) * swTicksToDateTicksMult) + startTimestamp;
+					curTimestamp = unchecked((long)((ulong)curTimestamp & 0xFFFFFFFF00000000UL));
+					if (curTimestamp != lastTimestamp)
+					{
+						lastTimestamp = curTimestamp; //update last timestamp
+						lastLCGValue = curLCGValue; //update startLCGValue
+						curLCGValue = (curLCGValue * a) % m; //generate next 32-bit pseudo-random value for timestamp scrambling
+					}
+					else
+					{
+						//LGC overflow detection
+						if(curLCGValue==lastLCGValue)
+						{
+							//wait for a while, so next timestamp will change
+							Thread.Sleep(minTimerResolutionMS);
+							continue;
+						}
+						curLCGValue = (curLCGValue * a) % m; //generate next 32-bit pseudo-random value for timestamp scrambling
+					}
+					return unchecked((long)((ulong)curTimestamp & (0xFFFFFFFF00000000UL | curLCGValue)));
+				}
 			}
 		}
 
-		public static DateTime ReadScrambledTimestamp(byte[] buffer, int offset)
+		public static DateTime DecodeScrambledTimestamp(long timestamp)
 		{
 			throw new NotImplementedException("TODO:");
 		}
