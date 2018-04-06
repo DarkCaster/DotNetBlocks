@@ -37,7 +37,7 @@ namespace DarkCaster.UUID
 		private static readonly double swTicksToDateTicksMult = (double)10000000 / (double)Stopwatch.Frequency;
 		private static long lastTimestamp;
 
-		private const int minTimerResolutionMS = 1000;
+		private const int timerResolution = (int)(0xFFFFF / TimeSpan.TicksPerMillisecond) + 1;
 		//stuff for powering LCG algorithm that is used to fill lower 32 bits of timestamp
 		//with unique 32-bit values (until LGC overflows, of course)
 		private static ulong curLCGValue;
@@ -89,7 +89,7 @@ namespace DarkCaster.UUID
 						if(curLCGValue==lastLCGValue)
 						{
 							//wait for a while, so next timestamp will change
-							Thread.Sleep(minTimerResolutionMS);
+							Thread.Sleep(timerResolution);
 							continue;
 						}
 						curLCGValue = (curLCGValue * a) % m; //generate next 32-bit pseudo-random value for timestamp scrambling
