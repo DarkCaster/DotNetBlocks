@@ -77,7 +77,7 @@ namespace DarkCaster.UUID
 				while (true)
 				{
 					long curTimestamp = (long)((double)(counter.ElapsedTicks) * swTicksToDateTicksMult) + startTimestamp;
-					curTimestamp = unchecked((long)((ulong)curTimestamp & 0xFFFFFFFF00000000UL));
+					curTimestamp = unchecked((long)((ulong)curTimestamp & 0xFFFFFFFFFFF00000UL));
 					if (curTimestamp != lastTimestamp)
 					{
 						lastTimestamp = curTimestamp; //update last timestamp
@@ -95,14 +95,35 @@ namespace DarkCaster.UUID
 						}
 						curLCGValue = (curLCGValue * a) % m; //generate next 32-bit pseudo-random value for timestamp scrambling
 					}
-					return unchecked((long)((ulong)curTimestamp & (0xFFFFFFFF00000000UL | curLCGValue)));
+					return unchecked((long)((ulong)curTimestamp & (0xFFFFFFFFFFF00000UL | curLCGValue)));
 				}
 			}
 		}
 
+		public static void GetScrambledTimestamp(byte[] target, int offset)
+		{
+			var timestamp = GetScrambledTimestamp();
+			target[offset] = (byte)((timestamp >> 56) & 0xFF);
+			target[offset + 1] = (byte)((timestamp >> 48) & 0xFF);
+			target[offset + 2] = (byte)((timestamp >> 40) & 0xFF);
+			target[offset + 3] = (byte)((timestamp >> 32) & 0xFF);
+			target[offset + 4] = (byte)((timestamp >> 24) & 0xFF);
+			target[offset + 5] = (byte)((timestamp >> 16) & 0xFF);
+			target[offset + 6] = (byte)((timestamp >> 8) & 0xFF);
+			target[offset + 7] = (byte)(timestamp & 0xFF);
+		}
+
 		public static DateTime DecodeScrambledTimestamp(long timestamp)
 		{
-			throw new NotImplementedException("TODO:");
+			return new DateTime(unchecked((long)((ulong)timestamp & 0xFFFFFFFFFFF00000UL)));
+		}
+
+		public static DateTime DecodeScrambledTimestamp(byte[] target, int offset)
+		{
+			var timestamp = unchecked((long)(target[offset] << 56 | target[offset + 1] << 48 | target[offset + 2] << 40
+				| target[offset + 3] << 32 | target[offset + 4] << 24 | target[offset + 5] << 16
+				| target[offset + 6] << 8 | target[offset + 7]));
+			return DecodeScrambledTimestamp(timestamp);
 		}
 	}
 }
