@@ -26,6 +26,7 @@ using System;
 using System.Threading;
 using System.Diagnostics;
 using NUnit.Framework;
+using DarkCaster.UUID;
 
 namespace Tests
 {
@@ -106,6 +107,15 @@ namespace Tests
 					break;
 			}
 			Assert.AreEqual(m - 1, counter);
+		}
+
+		[Test]
+		public void TimestampHelper_Get()
+		{
+			var startTimestamp = new DateTime(1582, 10, 15, 00, 00, 00, DateTimeKind.Utc).Ticks;
+			var test1 = TimestampHelper.GetScrambledTimestamp();
+			var test2 = unchecked((long)((ulong)(DateTime.UtcNow.Ticks-startTimestamp) & 0xFFFFFFFFFFF00000UL));
+			Assert.AreEqual(test1, test2);
 		}
 	}
 }
