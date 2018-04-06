@@ -120,9 +120,14 @@ namespace DarkCaster.UUID
 
 		public static DateTime DecodeScrambledTimestamp(byte[] target, int offset)
 		{
-			var timestamp = unchecked((long)(target[offset] << 56 | target[offset + 1] << 48 | target[offset + 2] << 40
-				| target[offset + 3] << 32 | target[offset + 4] << 24 | target[offset + 5] << 16
-				| target[offset + 6] << 8 | target[offset + 7]));
+			var timestamp = unchecked(((long)target[offset] << 56 |
+				(long)target[offset + 1] << 48 |
+				(long)target[offset + 2] << 40 |
+				(long)target[offset + 3] << 32 |
+				(long)target[offset + 4] << 24 |
+				(long)target[offset + 5] << 16 |
+				(long)target[offset + 6] << 8 |
+				(long)target[offset + 7]));
 			return DecodeScrambledTimestamp(timestamp);
 		}
 	}
