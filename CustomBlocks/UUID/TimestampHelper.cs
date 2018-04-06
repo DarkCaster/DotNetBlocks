@@ -43,9 +43,10 @@ namespace DarkCaster.UUID
 		private static ulong curLCGValue;
 		//used for overflow check when timestamp is not increased over previous invoke to GenerateGUID method
 		private static ulong lastLCGValue;
-		//following constants ensures that LGC overflow will occur in 4294967290 rounds (this gives us almost 2^32 uinique values)
-		private const ulong m = 4294967291UL;
-		private const ulong a = 279470273UL;
+		//following constants ensures that LGC overflow will occur in 1048572 rounds (this gives us 2^20-3 uinique values)
+		//see http://statmath.wu-wien.ac.at/software/prng/doc/prng.html for constant selection details
+		private const ulong m = 1048573UL;
+		private const ulong a = 22202UL;
 
 		static TimestampHelper()
 		{
