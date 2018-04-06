@@ -46,18 +46,18 @@ namespace Tests
 		}
 
 		[Test]
-		public void SufficientDateTimeResolution()
+		public void Sufficient_DateTime_Resolution()
 		{
 			long start = TrimTimestamp(DateTime.UtcNow.Ticks);
 			long cur = TrimTimestamp(DateTime.UtcNow.Ticks);
 			while (cur <= start)
 				cur = TrimTimestamp(DateTime.UtcNow.Ticks);
 			Assert.AreEqual(1048576, (cur - start));
-			Assert.AreEqual(104, (cur - start)/TimeSpan.TicksPerMillisecond);
+			Assert.AreEqual(104, (cur - start) / TimeSpan.TicksPerMillisecond);
 		}
 
 		[Test]
-		public void SufficientStopWatchResolution()
+		public void Sufficient_StopWatch_Resolution()
 		{
 			//multiplier that used to convert stopwatch-ticks to datetime-ticks
 			var swTicksToDateTicksMult = (double)10000000 / (double)Stopwatch.Frequency;
@@ -72,6 +72,40 @@ namespace Tests
 			sw.Stop();
 			Assert.AreEqual(1048576, (cur - start));
 			Assert.AreEqual(104, (cur - start) / TimeSpan.TicksPerMillisecond);
+		}
+
+		[Test]
+		public void DateTime_StopWatch_Interoperability()
+		{
+			//multiplier that used to convert stopwatch-ticks to datetime-ticks
+			var swTicksToDateTicksMult = (double)10000000 / (double)Stopwatch.Frequency;
+			var sw = new Stopwatch();
+			long start = DateTime.UtcNow.Ticks;
+			sw.Start();
+			Thread.Sleep(1000);
+			long curDt = DateTime.UtcNow.Ticks;
+			long diffSw = (long)((double)sw.ElapsedTicks * swTicksToDateTicksMult);
+			sw.Stop();
+			Assert.AreEqual(TrimTimestamp(curDt), TrimTimestamp(start + diffSw));
+		}
+
+		[Test]
+		public void LGC_Constants()
+		{
+			const ulong m = 1048573UL;
+			const ulong a = 22202UL;
+
+			ulong last = (ulong)(new Random().Next(1, (int)m));
+			ulong ovf = last;
+			ulong counter = 0;
+			while(true)
+			{
+				last = (last * a) % m;
+				++counter;
+				if (last == ovf)
+					break;
+			}
+			Assert.AreEqual(m - 1, counter);
 		}
 	}
 }
