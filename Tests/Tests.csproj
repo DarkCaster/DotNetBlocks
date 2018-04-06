@@ -85,6 +85,7 @@
     <Compile Include="CommonDataTransferTests.cs" />
     <Compile Include="DT_CompressionNodeTests.cs" />
     <Compile Include="Mocks\DataLoop\MockLoopException.cs" />
+    <Compile Include="UUIDTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CustomBlocksExtra\CustomBlocksExtra.csproj">
