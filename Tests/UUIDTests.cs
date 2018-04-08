@@ -113,9 +113,22 @@ namespace Tests
 		public void TimestampHelper_Get()
 		{
 			var startTimestamp = new DateTime(1582, 10, 15, 00, 00, 00, DateTimeKind.Utc).Ticks;
-			var test1 = TimestampHelper.GetScrambledTimestamp();
+			var test1 = unchecked((long)((ulong)TimestampHelper.GetScrambledTimestamp() & 0xFFFFFFFFFFF00000UL));
 			var test2 = unchecked((long)((ulong)(DateTime.UtcNow.Ticks-startTimestamp) & 0xFFFFFFFFFFF00000UL));
 			Assert.AreEqual(test1, test2);
 		}
+
+		/*[Test]
+		public void TimestampHelper_Decode()
+		{
+			var epochStart = new DateTime(1582, 10, 15, 00, 00, 00, DateTimeKind.Utc).Ticks;
+			var curDate = DateTime.UtcNow.Ticks;
+
+			var testTimestamp = TimestampHelper.GetScrambledTimestamp();
+
+			var testDate = TimestampHelper.DecodeScrambledTimestamp(curDate - epochStart).Ticks;
+			var finalDate=unchecked((long)((ulong)(curDate) & 0xFFFFFFFFFFF00000UL));
+			Assert.AreEqual(finalDate, testDate);
+		}*/
 	}
 }
