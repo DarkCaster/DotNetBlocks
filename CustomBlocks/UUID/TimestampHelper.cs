@@ -37,6 +37,9 @@ namespace DarkCaster.UUID
 		private static readonly double swTicksToDateTicksMult = (double)10000000 / (double)Stopwatch.Frequency;
 		private static long lastTimestamp;
 
+		//Date used to bind timestamps to some common base (this date taken from RFC 4122)
+		private static readonly long epochStart = new DateTime(1582, 10, 15, 00, 00, 00, DateTimeKind.Utc).Ticks;
+
 		private const int timerResolution = (int)(0xFFFFF / TimeSpan.TicksPerMillisecond) + 1;
 		//stuff for powering LCG algorithm that is used to fill lower 32 bits of timestamp
 		//with unique 32-bit values (until LGC overflows, of course)
@@ -50,8 +53,8 @@ namespace DarkCaster.UUID
 
 		static TimestampHelper()
 		{
-			//Bind start timestamp to some common base (this date taken from RFC 4122)
-			startTimestamp = DateTime.UtcNow.Ticks - new DateTime(1582, 10, 15, 00, 00, 00, DateTimeKind.Utc).Ticks;
+			
+			startTimestamp = DateTime.UtcNow.Ticks - epochStart;
 			lastTimestamp = startTimestamp;
 			//start time counter
 			counter.Start();
@@ -95,7 +98,7 @@ namespace DarkCaster.UUID
 						}
 						curLCGValue = (curLCGValue * a) % m; //generate next 32-bit pseudo-random value for timestamp scrambling
 					}
-					return unchecked((long)((ulong)curTimestamp & (0xFFFFFFFFFFF00000UL | curLCGValue)));
+					return unchecked((long)((ulong)curTimestamp & 0xFFFFFFFFFFF00000UL | curLCGValue));
 				}
 			}
 		}
@@ -115,7 +118,7 @@ namespace DarkCaster.UUID
 
 		public static DateTime DecodeScrambledTimestamp(long timestamp)
 		{
-			return new DateTime(unchecked((long)((ulong)timestamp & 0xFFFFFFFFFFF00000UL)));
+			return new DateTime(unchecked((long)((ulong)timestamp & 0xFFFFFFFFFFF00000UL) + epochStart));
 		}
 
 		public static DateTime DecodeScrambledTimestamp(byte[] target, int offset)
