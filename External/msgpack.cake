@@ -58,10 +58,10 @@ Task("Build").IsDependentOn("Patch").Does(() =>
   {
     MSBuild_Linux("msgpack/MsgPack.sln");
     //perform full-sign
-    if(SNTest("msgpack/bin/net45/bin/MsgPack.dll"))
-      SNSign("msgpack/bin/net45/bin/MsgPack.dll","msgpack/MsgPack.snk");
-    if(SNTest("msgpack/bin/net46/bin/MsgPack.dll"))
-      SNSign("msgpack/bin/net46/bin/MsgPack.dll","msgpack/MsgPack.snk");
+    if(SNTest("msgpack/bin/net45/MsgPack.dll"))
+      SNSign("msgpack/bin/net45/MsgPack.dll","msgpack/MsgPack.snk");
+    if(SNTest("msgpack/bin/net46/MsgPack.dll"))
+      SNSign("msgpack/bin/net46/MsgPack.dll","msgpack/MsgPack.snk");
   }
 });
 
