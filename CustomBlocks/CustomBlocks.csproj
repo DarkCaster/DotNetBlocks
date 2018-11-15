@@ -132,6 +132,8 @@
     <Compile Include="Events\SafeEvents.cs">
       <DependentUpon>SafeEvents.tt</DependentUpon>
     </Compile>
+    <Compile Include="Events\SafeEventCommon.cs" />
+    <Compile Include="Events\SafeEventDbgCommon.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
