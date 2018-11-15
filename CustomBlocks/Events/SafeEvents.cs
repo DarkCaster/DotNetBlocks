@@ -5,6 +5,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DarkCaster.Events
 {
@@ -108,6 +109,35 @@ namespace DarkCaster.Events
 			}
 		}
 
+		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public bool Raise(object sender, Func<T> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public bool Raise(Func<KeyValuePair<object, T>> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public async Task<bool> Raise(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public async Task<bool> Raise(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public async Task<bool> Raise(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
 
 	}
 	public sealed partial class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
@@ -212,6 +242,35 @@ namespace DarkCaster.Events
 			}
 		}
 
+		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public bool Raise(object sender, Func<T> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public bool Raise(Func<KeyValuePair<object, T>> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public async Task<bool> Raise(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public async Task<bool> Raise(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
+
+		public async Task<bool> Raise(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		{
+			
+		}
 
 	}
 }
