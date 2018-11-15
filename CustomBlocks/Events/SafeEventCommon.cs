@@ -32,43 +32,6 @@ namespace DarkCaster.Events
 {
 	public sealed partial class SafeEvent<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
 	{
-		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
-		private int invListUsedLen = 0;
-		private bool invListRebuildNeeded = false;
-		private EventHandler<T>[] invList = { null };
-		private readonly HashSet<EventHandler<T>> dynamicSubscribers = new HashSet<EventHandler<T>>();
-
-		private readonly object manageLock = new object();
-		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private int UpdateInvListOnRise_Safe()
-		{
-			lock (manageLock)
-			{
-				if (!invListRebuildNeeded)
-					return invListUsedLen;
-				invListRebuildNeeded = false;
-				//optionally recreate invocationList array if there is not enough space
-				if (dynamicSubscribers.Count < (invListUsedLen / 3) && invList.Length >= INVLIST_MIN_RESIZE_LIMIT)
-					invList = new EventHandler<T>[invList.Length / 2];
-				else
-				{
-					var len = invList.Length;
-					while (dynamicSubscribers.Count > len)
-						len *= 2;
-					if (len != invList.Length)
-						invList = new EventHandler<T>[len];
-				}
-				//copy values and set invListUsedLen;
-				dynamicSubscribers.CopyTo(invList, 0);
-				invListUsedLen = dynamicSubscribers.Count;
-				for (int i = invListUsedLen; i < invList.Length; ++i)
-					invList[i] = null;
-				return invListUsedLen;
-			}
-		}
-
 		public void Subscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
 		{
 			if (subscriber == null)
