@@ -129,6 +129,9 @@
     <Compile Include="DataTransfer\Tracing\Client\TracingClientNode.cs" />
     <Compile Include="DataTransfer\Tracing\Server\TracingServerNode.cs" />
     <Compile Include="UUID\TimestampHelper.cs" />
+    <Compile Include="Events\SafeEvents.cs">
+      <DependentUpon>SafeEvents.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -170,6 +173,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Events\README.md" />
+    <None Include="Events\SafeEvents.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SafeEvents.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
