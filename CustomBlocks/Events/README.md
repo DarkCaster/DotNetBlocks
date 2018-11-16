@@ -9,13 +9,13 @@ simplify use of events in multithreaded applications and restrict some common un
 
 ## Features that helps to implement a more robust (and yet relatively simple) publisher's side logic:
  * Event raising process is thread safe and will block when it is run from different threads simultaneously.
- * TODO: you can manually request lock-object and `lock` on it before raising an event, if you want to do some stuff atomically with event processing.
- * `Raise` method will block by default (while calling to subscriber's callbacks), but you can wrap it inside `Task` (for example)
+ * `Raise` methods will block by default (while calling to subscriber's callbacks), but you can wrap it inside `Task` (for example)
    if you want to run event processing in parallel without waiting for subscriber's callback completion.
+   There are also `RaiseAsync` methods for using inside asynchronous methods using Task and async\await semantics.
  * Exceptions thrown by subscribers will not cause failure at publisher side and will not interrupt callbacks execution for remaining subscribers.
    `Raise` method returns `true` if no exceptions was thrown by subscribers while processing the event, `false` in case when some subscribers was failed.
-   All exceptions thrown by subscribers can be collected to ICollection<EventRaiseException> container (will be appended in order of appearance) to be processed later,
-   but it is optional and not required for normal operation.
+   All exceptions thrown by subscribers can be collected to ICollection<EventRaiseException> container (will be appended in order of appearance)
+   to be processed later, but it is optional and not required for normal operation.
  * Additional features of SafeEventDbg class to detect some specific flaws in publisher's and subscriber's logic (performance is bad, not for production use):
   * Checks for recursive event raise. Will throw exception on `Raise` method execution in case when recursion detected.
   * Checks for missing "unsubscribe" call from the subscriber's side.
@@ -59,7 +59,13 @@ There is a special "drop-in" replacement for regular events `event EventHandler<
 It may be used when switching from default events to SafeEvents. Event `add` is just a wrapper for `Subscribe(value, true)` method call,
 `remove` is a wrapper for `Unsubscribe(value, true)`. See detailed method usage description at build-in XML docs.
 
+### ISafeEventCtrlLite<T>
+`interface ISafeEventCtrlLite<T> where T : EventArgs`. This interface should be used by publisher to initiate event raise,
+gather statistics, and perform other publisher-side-stuff. See detailed method usage description at build-in XML docs.
+
 ### ISafeEventCtrl<T>
+*This interface is obsolete.* Use `ISafeEventCtrlLite` interface instead.
+
 `interface ISafeEventCtrl<T> where T : EventArgs`. This interface should be used by publisher to initiate event raise,
 gather statistics, and perform other publisher-side-stuff. See detailed method usage description at build-in XML docs.
 
@@ -85,21 +91,20 @@ Normal operation usually is not possible in such situations, you should interfer
 See `message` field from exception class for information about detected problem.
 
 ### SafeEvent<T>
-`sealed class SafeEvent<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs`.
+`sealed class SafeEvent<T> : ISafeEventCtrlLite<T>, ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs`.
 This is a main class of this custom event system.
 It may be used when building your local event processing logic at publisher's side,
-but it is recommended to use this class indirectly by it's ISafeEventCtrl and ISafeEvent interfaces for better portability and extensibility.
+but it is recommended to use this class indirectly by it's ISafeEventCtrlLite and ISafeEvent interfaces for better portability and extensibility.
+*Does not require disposing*, IDisposable implemented for compatibility reasons only.
 
 ### SafeEventDbg<T>
-`sealed class SafeEventDbg<T> : ISafeEventCtrl <T>, ISafeEvent<T> where T : EventArgs`.
+`sealed class SafeEventDbg<T> : ISafeEventCtrlLite<T>, ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs`.
 This class may be used as drop-in replacement for SafeEvent to detect some rare misuses and bugs in your event-related logic.
 See this doc for more info (earlier) about logical errors that may be detected by this class.
 Do not use SafeEventDbg in production builds because of it's bad performance.
+*Does not require disposing*, IDisposable implemented for compatibility reasons only.
 
 ## TODO:
  * More checks and debug features when using SafeEventDbg class
  * Factory class for creating SafeEvent or SafeEventDbg for better use with IOC and such
- * Maybe, distributed variants of SafeEvent (as drop-in replacement for regular SafeEvent by using factory-classes and IOC) -
- to easily create events distributed over processes, networks... Maybe by using stuff like DBus and such.
- * Abstract class for all SafeEvent-based classes, for better scalability and extensibility
  * Remove sealed modifier and allow to extend SafeEvent functionality
