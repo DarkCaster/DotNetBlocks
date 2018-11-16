@@ -299,7 +299,7 @@ namespace DarkCaster.Events
 			finally { raiseRwLock.ExitReadLock(); }
 		}
 
-		public async Task SafeExec(Func<Task> method)
+		public async Task SafeExecAsync(Func<Task> method)
 		{
 			await raiseRwLock.EnterReadLockAsync();
 			try { await method(); }
@@ -730,7 +730,7 @@ namespace DarkCaster.Events
 			finally { raiseRwLock.ExitReadLock(); }
 		}
 
-		public async Task SafeExec(Func<Task> method)
+		public async Task SafeExecAsync(Func<Task> method)
 		{
 			await raiseRwLock.EnterReadLockAsync();
 			try { await method(); }

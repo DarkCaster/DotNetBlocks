@@ -282,7 +282,7 @@ namespace DarkCaster.Events
 			finally { raiseRwLock.ExitReadLock(); }
 		}
 
-		public <#=asyncChunk.ret_void#> SafeExec(<#=asyncChunk.action#> method)
+		public <#=asyncChunk.ret_void#> SafeExec<#=asyncChunk.async_sfx#>(<#=asyncChunk.action#> method)
 		{
 			<#=asyncChunk.await#>raiseRwLock.EnterReadLock<#=asyncChunk.async_sfx#>();
 			try { <#=asyncChunk.await#>method(); }
