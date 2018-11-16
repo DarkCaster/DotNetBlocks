@@ -285,13 +285,13 @@ namespace Tests
 		
 		private class TickingPublisher<T, C> : IPublisher
 		where T : ISafeEvent<TestEventArgs>
-		where C : ISafeEventCtrl<TestEventArgs>
+		where C : ISafeEventCtrlLite<TestEventArgs>
 		{
 			private int counter;
 			private readonly C theEventCtrl;
 			private readonly T theEvent;
 			public ISafeEvent<TestEventArgs> TheEvent { get { return theEvent; } }
-			public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEventCtrl; } }
+			public ISafeEventCtrlLite<TestEventArgs> TheEventCtrl { get { return theEventCtrl; } }
 			
 			public volatile bool done=false;
 			public readonly Thread worker;
@@ -342,13 +342,12 @@ namespace Tests
 			{
 				done=true;
 				worker.Join();
-				theEventCtrl.Dispose();
 			}
 		}
 		
 		public static void SafeExec<T, C>(T ev, C evc)
 			where T : ISafeEvent<TestEventArgs>
-			where C : ISafeEventCtrl<TestEventArgs>
+			where C : ISafeEventCtrlLite<TestEventArgs>
 		{
 			var pub=new TickingPublisher<T,C>(ev,evc);
 			Assert.AreEqual(0, pub.TheEventCtrl.SubCount);

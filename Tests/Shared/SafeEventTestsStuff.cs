@@ -37,7 +37,7 @@ namespace Tests.SafeEventStuff
 	public interface IPublisher
 	{
 		ISafeEvent<TestEventArgs> TheEvent { get; }
-		ISafeEventCtrl<TestEventArgs> TheEventCtrl { get; }
+		ISafeEventCtrlLite<TestEventArgs> TheEventCtrl { get; }
 		bool Raise(ICollection<EventRaiseException> exceptions = null);
 	}
 
@@ -64,13 +64,13 @@ namespace Tests.SafeEventStuff
 
 	public class SimplePublisher<T, C> : IPublisher
 		where T : ISafeEvent<TestEventArgs>
-		where C : ISafeEventCtrl<TestEventArgs>
+		where C : ISafeEventCtrlLite<TestEventArgs>
 	{
 		private int counter;
 		private readonly C theEventCtrl;
 		private readonly T theEvent;
 		public ISafeEvent<TestEventArgs> TheEvent { get { return theEvent; } }
-		public ISafeEventCtrl<TestEventArgs> TheEventCtrl { get { return theEventCtrl; } }
+		public ISafeEventCtrlLite<TestEventArgs> TheEventCtrl { get { return theEventCtrl; } }
 		private SimplePublisher() { throw new NotSupportedException(); }
 		public SimplePublisher(T iSafeEvent, C iSafeEventCtrl) { counter = 0; theEvent = iSafeEvent; theEventCtrl = iSafeEventCtrl; }
 		public bool Raise(ICollection<EventRaiseException> exceptions = null)

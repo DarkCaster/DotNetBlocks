@@ -40,9 +40,9 @@ namespace DarkCaster.DataTransfer.Server
 		private readonly INode upstreamNode = null;
 		private readonly AsyncRWLock upstreamLock = new AsyncRWLock();
 		private readonly AsyncRunner asyncRunner = new AsyncRunner();
-		private readonly ISafeEventCtrl<NewTunnelEventArgs> incomingEvCtl;
+		private readonly ISafeEventCtrlLite<NewTunnelEventArgs> incomingEvCtl;
 		private readonly ISafeEvent<NewTunnelEventArgs> incomingEv;
-		private readonly ISafeEventCtrl<NodeFailEventArgs> errorEvCtl;
+		private readonly ISafeEventCtrlLite<NodeFailEventArgs> errorEvCtl;
 		private readonly ISafeEvent<NodeFailEventArgs> errorEv;
 
 		public ExitNode(INode upstream)
@@ -182,8 +182,6 @@ namespace DarkCaster.DataTransfer.Server
 				catch { }
 				if (upstreamNode != null)
 					upstreamNode.Dispose();
-				errorEvCtl.Dispose();
-				incomingEvCtl.Dispose();
 				asyncRunner.Dispose();
 			}
 			finally

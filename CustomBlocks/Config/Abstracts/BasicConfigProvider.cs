@@ -45,7 +45,7 @@ namespace DarkCaster.Config
 		private readonly AsyncRWLock opLock;
 		private readonly ISerializationHelper<CFG> serializer;
 		private readonly IConfigBackendFactory backendFactory;
-		private readonly ISafeEventCtrl<ConfigProviderStateEventArgs> stateEventCtl;
+		private readonly ISafeEventCtrlLite<ConfigProviderStateEventArgs> stateEventCtl;
 		private readonly ISafeEvent<ConfigProviderStateEventArgs> stateEvent;
 		
 		private IConfigBackend backend;
@@ -163,7 +163,6 @@ namespace DarkCaster.Config
 					return;
 				isDisposed=true;
 				Shutdown();
-				stateEventCtl.Dispose();
 			}
 		}
 		
