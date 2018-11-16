@@ -4,8 +4,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
+using DarkCaster.Async;
 
 namespace DarkCaster.Events
 {
@@ -15,7 +15,7 @@ namespace DarkCaster.Events
 	public sealed partial class SafeEvent<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
 	{
 		private readonly object manageLock = new object();
-		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+		private readonly AsyncRWLock raiseRwLock = new AsyncRWLock();
 
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
@@ -108,7 +108,6 @@ namespace DarkCaster.Events
 				//such situation is already an error, so following 2 lines may be removed in future.
 				raiseRwLock.EnterWriteLock();
 				raiseRwLock.ExitWriteLock();
-				raiseRwLock.Dispose();
 			}
 		}
 
@@ -367,7 +366,7 @@ namespace DarkCaster.Events
 	public sealed partial class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
 	{
 		private readonly object manageLock = new object();
-		private readonly ReaderWriterLockSlim raiseRwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+		private readonly AsyncRWLock raiseRwLock = new AsyncRWLock();
 
 		private const int INVLIST_MIN_RESIZE_LIMIT = 64;
 		private int invListUsedLen = 0;
@@ -462,7 +461,6 @@ namespace DarkCaster.Events
 				//such situation is already an error, so following 2 lines may be removed in future.
 				raiseRwLock.EnterWriteLock();
 				raiseRwLock.ExitWriteLock();
-				raiseRwLock.Dispose();
 			}
 		}
 
