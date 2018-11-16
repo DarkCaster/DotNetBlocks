@@ -36,7 +36,9 @@ namespace DarkCaster.Events
 	/// <summary>
 	/// SafeEvent class, for release usage
 	/// </summary>
-	public sealed partial class SafeEvent<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
+#pragma warning disable CS0618
+	public sealed partial class SafeEvent<T> : ISafeEventCtrlLite<T>, ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
+#pragma warning restore CS0618
 	{
 		private readonly object manageLock = new object();
 		private readonly AsyncRWLock raiseRwLock = new AsyncRWLock();
@@ -400,7 +402,9 @@ namespace DarkCaster.Events
 	/// <summary>
 	/// SafeEventDbg class, SafeEvent with debug features
 	/// </summary>
-	public sealed partial class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
+#pragma warning disable CS0618
+	public sealed partial class SafeEventDbg<T> : ISafeEventCtrlLite<T>, ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
+#pragma warning restore CS0618
 	{
 		private readonly object manageLock = new object();
 		private readonly AsyncRWLock raiseRwLock = new AsyncRWLock();

@@ -60,7 +60,9 @@ namespace DarkCaster.Events
 	/// <summary>
 	/// <#=classDef.summary#>
 	/// </summary>
-	public sealed partial class <#=classDef.name#><T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
+#pragma warning disable CS0618
+	public sealed partial class <#=classDef.name#><T> : ISafeEventCtrlLite<T>, ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
+#pragma warning restore CS0618
 	{
 		private readonly object manageLock = new object();
 		private readonly AsyncRWLock raiseRwLock = new AsyncRWLock();
