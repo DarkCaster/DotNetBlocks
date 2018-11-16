@@ -4,8 +4,10 @@
 <#
 	var asyncChunks	=	new []
 	{
-		new { async=false, await="",       async_sfx="",      ret="bool",             action="Action",     func_t="Func<T>",       func_kvp="Func<KeyValuePair<object, T>>" },
-		new { async=true,  await="await ", async_sfx="Async", ret="async Task<bool>", action="Func<Task>", func_t="Func<Task<T>>", func_kvp="Func<Task<KeyValuePair<object, T>>>" },
+		new { async=false, await="",        async_sfx="",           ret="bool",             ret_void="void",       ret_tresult="TResult",             action="Action",
+		func_tresult="Func<TResult>",       func_t="Func<T>",       func_kvp="Func<KeyValuePair<object, T>>" },
+		new { async=true,  await="await ",  async_sfx="Async",      ret="async Task<bool>", ret_void="async Task", ret_tresult="async Task<TResult>", action="Func<Task>",
+		func_tresult="Func<Task<TResult>>", func_t="Func<Task<T>>", func_kvp="Func<Task<KeyValuePair<object, T>>>" },
 	};
 	
 	var classDefs = new []
@@ -122,20 +124,6 @@ namespace DarkCaster.Events
 				lock (manageLock)
 					return dynamicSubscribers.Count;
 			}
-		}
-
-		public TResult SafeExec<TResult>(Func<TResult> method)
-		{
-			raiseRwLock.EnterReadLock();
-			try { return method(); }
-			finally { raiseRwLock.ExitReadLock(); }
-		}
-
-		public void SafeExec(Action method)
-		{
-			raiseRwLock.EnterReadLock();
-			try { method(); }
-			finally { raiseRwLock.ExitReadLock(); }
 		}
 
 		private bool isDisposed = false;
@@ -262,6 +250,20 @@ namespace DarkCaster.Events
 			}
 		}
 <# foreach(var asyncChunk in asyncChunks) { #>
+
+		public <#=asyncChunk.ret_tresult#> SafeExec<#=asyncChunk.async_sfx#><TResult>(<#=asyncChunk.func_tresult#> method)
+		{
+			<#=asyncChunk.await#>raiseRwLock.EnterReadLock<#=asyncChunk.async_sfx#>();
+			try { return <#=asyncChunk.await#>method(); }
+			finally { raiseRwLock.ExitReadLock(); }
+		}
+
+		public <#=asyncChunk.ret_void#> SafeExec(<#=asyncChunk.action#> method)
+		{
+			<#=asyncChunk.await#>raiseRwLock.EnterReadLock<#=asyncChunk.async_sfx#>();
+			try { <#=asyncChunk.await#>method(); }
+			finally { raiseRwLock.ExitReadLock(); }
+		}
 <# foreach(var raiseMethod in raiseMethods) { #>
 
 <#if(raiseMethod==1){#>

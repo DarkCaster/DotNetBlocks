@@ -83,20 +83,6 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public TResult SafeExec<TResult>(Func<TResult> method)
-		{
-			raiseRwLock.EnterReadLock();
-			try { return method(); }
-			finally { raiseRwLock.ExitReadLock(); }
-		}
-
-		public void SafeExec(Action method)
-		{
-			raiseRwLock.EnterReadLock();
-			try { method(); }
-			finally { raiseRwLock.ExitReadLock(); }
-		}
-
 		private bool isDisposed = false;
 
 		public void Dispose()
@@ -175,6 +161,20 @@ namespace DarkCaster.Events
 					for (int i = 0; i < subLen; ++i)
 						invListRebuildNeeded |= dynamicSubscribers.Remove((EventHandler<T>)subList[i]);
 			}
+		}
+
+		public TResult SafeExec<TResult>(Func<TResult> method)
+		{
+			raiseRwLock.EnterReadLock();
+			try { return method(); }
+			finally { raiseRwLock.ExitReadLock(); }
+		}
+
+		public void SafeExec(Action method)
+		{
+			raiseRwLock.EnterReadLock();
+			try { method(); }
+			finally { raiseRwLock.ExitReadLock(); }
 		}
 
 		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
@@ -266,6 +266,20 @@ namespace DarkCaster.Events
 			{
 				raiseRwLock.ExitWriteLock();
 			}
+		}
+
+		public async Task<TResult> SafeExecAsync<TResult>(Func<Task<TResult>> method)
+		{
+			await raiseRwLock.EnterReadLockAsync();
+			try { return await method(); }
+			finally { raiseRwLock.ExitReadLock(); }
+		}
+
+		public async Task SafeExec(Func<Task> method)
+		{
+			await raiseRwLock.EnterReadLockAsync();
+			try { await method(); }
+			finally { raiseRwLock.ExitReadLock(); }
 		}
 
 		public async Task<bool> RaiseAsync(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
@@ -435,20 +449,6 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public TResult SafeExec<TResult>(Func<TResult> method)
-		{
-			raiseRwLock.EnterReadLock();
-			try { return method(); }
-			finally { raiseRwLock.ExitReadLock(); }
-		}
-
-		public void SafeExec(Action method)
-		{
-			raiseRwLock.EnterReadLock();
-			try { method(); }
-			finally { raiseRwLock.ExitReadLock(); }
-		}
-
 		private bool isDisposed = false;
 
 		public void Dispose()
@@ -541,6 +541,20 @@ namespace DarkCaster.Events
 					dynamicSubscribers.Remove(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target));
 				invListRebuildNeeded = true;
 			}
+		}
+
+		public TResult SafeExec<TResult>(Func<TResult> method)
+		{
+			raiseRwLock.EnterReadLock();
+			try { return method(); }
+			finally { raiseRwLock.ExitReadLock(); }
+		}
+
+		public void SafeExec(Action method)
+		{
+			raiseRwLock.EnterReadLock();
+			try { method(); }
+			finally { raiseRwLock.ExitReadLock(); }
 		}
 
 		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
@@ -683,6 +697,20 @@ namespace DarkCaster.Events
 				recursiveRaiseCheck = false;
 				raiseRwLock.ExitWriteLock();
 			}
+		}
+
+		public async Task<TResult> SafeExecAsync<TResult>(Func<Task<TResult>> method)
+		{
+			await raiseRwLock.EnterReadLockAsync();
+			try { return await method(); }
+			finally { raiseRwLock.ExitReadLock(); }
+		}
+
+		public async Task SafeExec(Func<Task> method)
+		{
+			await raiseRwLock.EnterReadLockAsync();
+			try { await method(); }
+			finally { raiseRwLock.ExitReadLock(); }
 		}
 
 		public async Task<bool> RaiseAsync(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
