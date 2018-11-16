@@ -268,9 +268,9 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public async Task<bool> Raise(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public async Task<bool> RaiseAsync(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			raiseRwLock.EnterWriteLock();
+			await raiseRwLock.EnterWriteLockAsync();
 			try
 			{
 				if (preExec != null)
@@ -299,9 +299,9 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public async Task<bool> Raise(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public async Task<bool> RaiseAsync(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			raiseRwLock.EnterWriteLock();
+			await raiseRwLock.EnterWriteLockAsync();
 			try
 			{
 				var args = await preExec();
@@ -329,9 +329,9 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public async Task<bool> Raise(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public async Task<bool> RaiseAsync(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			raiseRwLock.EnterWriteLock();
+			await raiseRwLock.EnterWriteLockAsync();
 			try
 			{
 				var pair = await preExec();
@@ -358,7 +358,6 @@ namespace DarkCaster.Events
 				raiseRwLock.ExitWriteLock();
 			}
 		}
-
 	}
 	/// <summary>
 	/// SafeEventDbg class, SafeEvent with debug features
@@ -686,9 +685,9 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public async Task<bool> Raise(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public async Task<bool> RaiseAsync(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			raiseRwLock.EnterWriteLock();
+			await raiseRwLock.EnterWriteLockAsync();
 			try
 			{
 				if (recursiveRaiseCheck)
@@ -734,9 +733,9 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public async Task<bool> Raise(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public async Task<bool> RaiseAsync(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			raiseRwLock.EnterWriteLock();
+			await raiseRwLock.EnterWriteLockAsync();
 			try
 			{
 				if (recursiveRaiseCheck)
@@ -781,9 +780,9 @@ namespace DarkCaster.Events
 			}
 		}
 
-		public async Task<bool> Raise(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public async Task<bool> RaiseAsync(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			raiseRwLock.EnterWriteLock();
+			await raiseRwLock.EnterWriteLockAsync();
 			try
 			{
 				if (recursiveRaiseCheck)
@@ -827,6 +826,5 @@ namespace DarkCaster.Events
 				raiseRwLock.ExitWriteLock();
 			}
 		}
-
 	}
 }

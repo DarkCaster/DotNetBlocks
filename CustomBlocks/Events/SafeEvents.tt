@@ -4,8 +4,8 @@
 <#
 	var asyncChunks	=	new []
 	{
-		new { async=false, await="",       ret="bool",             action="Action",     func_t="Func<T>",       func_kvp="Func<KeyValuePair<object, T>>" },
-		new { async=true,  await="await ", ret="async Task<bool>", action="Func<Task>", func_t="Func<Task<T>>", func_kvp="Func<Task<KeyValuePair<object, T>>>" },
+		new { async=false, await="",       async_sfx="",      ret="bool",             action="Action",     func_t="Func<T>",       func_kvp="Func<KeyValuePair<object, T>>" },
+		new { async=true,  await="await ", async_sfx="Async", ret="async Task<bool>", action="Func<Task>", func_t="Func<Task<T>>", func_kvp="Func<Task<KeyValuePair<object, T>>>" },
 	};
 	
 	var classDefs = new []
@@ -261,18 +261,18 @@ namespace DarkCaster.Events
 <#}#>
 			}
 		}
-
 <# foreach(var asyncChunk in asyncChunks) { #>
 <# foreach(var raiseMethod in raiseMethods) { #>
+
 <#if(raiseMethod==1){#>
-		public <#=asyncChunk.ret#> Raise(object sender, T args, <#=asyncChunk.action#> preExec = null, <#=asyncChunk.action#> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public <#=asyncChunk.ret#> Raise<#=asyncChunk.async_sfx#>(object sender, T args, <#=asyncChunk.action#> preExec = null, <#=asyncChunk.action#> postExec = null, ICollection<EventRaiseException> exceptions = null)
 <#} else if(raiseMethod==2) {#>
-		public <#=asyncChunk.ret#> Raise(object sender, <#=asyncChunk.func_t#> preExec, <#=asyncChunk.action#> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public <#=asyncChunk.ret#> Raise<#=asyncChunk.async_sfx#>(object sender, <#=asyncChunk.func_t#> preExec, <#=asyncChunk.action#> postExec = null, ICollection<EventRaiseException> exceptions = null)
 <#} else if(raiseMethod==3) {#>
-		public <#=asyncChunk.ret#> Raise(<#=asyncChunk.func_kvp#> preExec, <#=asyncChunk.action#> postExec = null, ICollection<EventRaiseException> exceptions = null)
+		public <#=asyncChunk.ret#> Raise<#=asyncChunk.async_sfx#>(<#=asyncChunk.func_kvp#> preExec, <#=asyncChunk.action#> postExec = null, ICollection<EventRaiseException> exceptions = null)
 <#}#>
 		{
-			raiseRwLock.EnterWriteLock();
+			<#=asyncChunk.await#>raiseRwLock.EnterWriteLock<#=asyncChunk.async_sfx#>();
 			try
 			{
 <#if(classDef.dbg) {#>
@@ -343,7 +343,6 @@ namespace DarkCaster.Events
 				raiseRwLock.ExitWriteLock();
 			}
 		}
-
 <# } #>
 <# } #>
 	}
