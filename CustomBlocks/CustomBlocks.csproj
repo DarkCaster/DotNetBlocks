@@ -77,7 +77,6 @@
     <Compile Include="Events\EventException.cs" />
     <Compile Include="Events\EventSubscriptionException.cs" />
     <Compile Include="Events\EventRaiseException.cs" />
-    <Compile Include="Events\ISafeEvent.cs" />
     <Compile Include="Events\ISafeEventCtrl.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\ITunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\INode.cs" />
@@ -131,6 +130,9 @@
     <Compile Include="Events\SafeEvents.cs">
       <DependentUpon>SafeEvents.tt</DependentUpon>
     </Compile>
+    <Compile Include="Events\SafeEventsInterfaces.cs">
+      <DependentUpon>SafeEventsInterfaces.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
@@ -175,6 +177,10 @@
     <None Include="Events\SafeEvents.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SafeEvents.cs</LastGenOutput>
+    </None>
+    <None Include="Events\SafeEventsInterfaces.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SafeEventsInterfaces.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
