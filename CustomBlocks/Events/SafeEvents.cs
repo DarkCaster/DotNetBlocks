@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace DarkCaster.Events
 {
+	/// <summary>
+	/// SafeEvent class, for release usage
+	/// </summary>
 	public sealed partial class SafeEvent<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
 	{
 		private readonly object manageLock = new object();
@@ -106,6 +109,72 @@ namespace DarkCaster.Events
 				raiseRwLock.EnterWriteLock();
 				raiseRwLock.ExitWriteLock();
 				raiseRwLock.Dispose();
+			}
+		}
+
+		public void Subscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
+		{
+			if (subscriber == null)
+			{
+				if (ignoreErrors)
+					return;
+				throw new EventSubscriptionException("Subscriber is null", null, null);
+			}
+
+			var subList = subscriber.GetInvocationList();
+			var subLen = RemoveDublicates(subList);
+			if (!ignoreErrors && subLen != subList.Length)
+				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
+
+			lock (manageLock)
+			{
+				if (!ignoreErrors)
+				{
+					for (int i = 0; i < subLen; ++i)
+						if (dynamicSubscribers.Contains((EventHandler<T>)subList[i]))
+							throw new EventSubscriptionException("Subscriber's delegate list contains dublicates from active subscribers", subscriber, null);
+					for (int i = 0; i < subLen; ++i)
+						dynamicSubscribers.Add((EventHandler<T>)subList[i]);
+					invListRebuildNeeded = true;
+				}
+				else
+					for (int i = 0; i < subLen; ++i)
+						invListRebuildNeeded |= dynamicSubscribers.Add((EventHandler<T>)subList[i]);
+			}
+		}
+
+		public void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
+		{
+			if (subscriber == null)
+			{
+				if (ignoreErrors)
+					return;
+				throw new EventSubscriptionException("Subscriber is null", null, null);
+			}
+			var subList = subscriber.GetInvocationList();
+			var subLen = RemoveDublicates(subList);
+			if (!ignoreErrors && subLen != subList.Length)
+				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
+			lock (manageLock)
+			{
+				if (dynamicSubscribers.Count == 0)
+				{
+					if (ignoreErrors)
+						return;
+					throw new EventSubscriptionException("Current subscribers list is already empty", null, null);
+				}
+				if (!ignoreErrors)
+				{
+					for (int i = 0; i < subLen; ++i)
+						if (!dynamicSubscribers.Contains((EventHandler<T>)subList[i]))
+							throw new EventSubscriptionException("Current subscribers list do not contain some subscribers requested for remove", null, null);
+					for (int i = 0; i < subLen; ++i)
+						dynamicSubscribers.Remove((EventHandler<T>)subList[i]);
+					invListRebuildNeeded = true;
+				}
+				else
+					for (int i = 0; i < subLen; ++i)
+						invListRebuildNeeded |= dynamicSubscribers.Remove((EventHandler<T>)subList[i]);
 			}
 		}
 
@@ -292,6 +361,9 @@ namespace DarkCaster.Events
 		}
 
 	}
+	/// <summary>
+	/// SafeEventDbg class, SafeEvent with debug features
+	/// </summary>
 	public sealed partial class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
 	{
 		private readonly object manageLock = new object();
@@ -391,6 +463,86 @@ namespace DarkCaster.Events
 				raiseRwLock.EnterWriteLock();
 				raiseRwLock.ExitWriteLock();
 				raiseRwLock.Dispose();
+			}
+		}
+
+		public void Subscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
+		{
+			if (subscriber == null)
+			{
+				if (ignoreErrors)
+					return;
+				throw new EventSubscriptionException("Subscriber is null", null, null);
+			}
+
+			var subList = subscriber.GetInvocationList();
+			var subLen = RemoveDublicates(subList);
+			if (!ignoreErrors && subLen != subList.Length)
+				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
+
+			lock (manageLock)
+			{
+				if (ignoreErrors)
+				{
+					for (int i = 0; i < subLen; ++i)
+					{
+						var handle = new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target);
+						if (dynamicSubscribers.ContainsKey(handle))
+							continue;
+						dynamicSubscribers.Add(handle, new Forwarder(subList[i]));
+						invListRebuildNeeded = true;
+					}
+					return;
+				}
+				for (int i = 0; i < subLen; ++i)
+				{
+					var handle = new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target);
+					if (dynamicSubscribers.ContainsKey(handle))
+						throw new EventSubscriptionException("Subscriber's delegate list contains dublicates from active subscribers", subscriber, null);
+				}
+				for (int i = 0; i < subLen; ++i)
+				{
+					dynamicSubscribers.Add(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target), new Forwarder(subList[i]));
+					invListRebuildNeeded = true;
+				}
+			}
+		}
+
+		public void Unsubscribe(EventHandler<T> subscriber, bool ignoreErrors = false)
+		{
+			if (subscriber == null)
+			{
+				if (ignoreErrors)
+					return;
+				throw new EventSubscriptionException("Subscriber is null", null, null);
+			}
+			var subList = subscriber.GetInvocationList();
+			var subLen = RemoveDublicates(subList);
+			if (!ignoreErrors && subLen != subList.Length)
+				throw new EventSubscriptionException("Subscriber's delegate list contains dublicates", subscriber, null);
+			lock (manageLock)
+			{
+				if (dynamicSubscribers.Count == 0)
+				{
+					if (ignoreErrors)
+						return;
+					throw new EventSubscriptionException("Current subscribers list is already empty", null, null);
+				}
+				if (ignoreErrors)
+				{
+					for (int i = 0; i < subLen; ++i)
+						invListRebuildNeeded |= dynamicSubscribers.Remove(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target));
+					return;
+				}
+				for (int i = 0; i < subLen; ++i)
+				{
+					var handle = new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target);
+					if (!dynamicSubscribers.ContainsKey(handle))
+						throw new EventSubscriptionException("Current subscribers list do not contain some subscribers requested for remove", null, null);
+				}
+				for (int i = 0; i < subLen; ++i)
+					dynamicSubscribers.Remove(new SafeEventDbg.DelegateHandle(subList[i].Method, subList[i].Target));
+				invListRebuildNeeded = true;
 			}
 		}
 

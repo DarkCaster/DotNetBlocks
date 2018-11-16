@@ -60,7 +60,6 @@
     <Compile Include="Config\Abstracts\Private\IConfigBackendFactory.cs" />
     <Compile Include="Converters\Base85.cs" />
     <Compile Include="Events\EventDbgException.cs" />
-    <Compile Include="Events\SafeEvent.cs" />
     <Compile Include="Events\SafeEventDbg.cs" />
     <Compile Include="Hash\MMHash32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -132,8 +131,6 @@
     <Compile Include="Events\SafeEvents.cs">
       <DependentUpon>SafeEvents.tt</DependentUpon>
     </Compile>
-    <Compile Include="Events\SafeEventCommon.cs" />
-    <Compile Include="Events\SafeEventDbgCommon.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\FileConfigProvider" />
