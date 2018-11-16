@@ -60,10 +60,7 @@ namespace DarkCaster.Events
 		internal static readonly Dictionary<MethodInfo, DynamicMethod> forwardersCache = new Dictionary<MethodInfo, DynamicMethod>();
 	}
 
-	/// <summary>
-	/// Variant of SafeEvent class, used for debug purposes
-	/// </summary>
-	public sealed partial class SafeEventDbg<T> : ISafeEventCtrl<T>, ISafeEvent<T>, IDisposable where T : EventArgs
+	public partial class SafeEventDbg<T> where T : EventArgs
 	{
 		private static readonly MethodInfo GetStrongTargetMethod = typeof(Forwarder).GetMethod("GetStrongTarget", BindingFlags.NonPublic | BindingFlags.Instance);
 		private static readonly Type[] forwarderParams = new Type[] { typeof(Forwarder), typeof(object), typeof(EventArgs) };
