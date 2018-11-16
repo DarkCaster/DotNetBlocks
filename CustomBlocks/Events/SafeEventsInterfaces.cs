@@ -112,6 +112,7 @@ namespace DarkCaster.Events
 	/// <summary>
 	/// Control interface for custom event classes. For use by publisher to raise events and gather usage statistics.
 	/// </summary>
+	[ObsoleteAttribute("This interface is obsolete and keep for compatibility. Consider to use ISafeEventCtrlLite instead.", false)]
 	public interface ISafeEventCtrl<T> : IDisposable where T : EventArgs
 	{
 		/// <summary>

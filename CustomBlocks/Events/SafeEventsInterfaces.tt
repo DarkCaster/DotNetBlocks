@@ -37,8 +37,8 @@
 
 	var ifaceDefs = new []
 	{
-		new { name="ISafeEventCtrl", idisposable=" : IDisposable", summary="Control interface for custom event classes. For use by publisher to raise events and gather usage statistics."},
-		new { name="ISafeEventCtrlLite", idisposable="", summary="Control interface for custom event classes (new version, dispose not needed anymore). For use by publisher to raise events and gather usage statistics."},
+		new { obsolete=true,  name="ISafeEventCtrl", idisposable=" : IDisposable", summary="Control interface for custom event classes. For use by publisher to raise events and gather usage statistics."},
+		new { obsolete=false, name="ISafeEventCtrlLite", idisposable="", summary="Control interface for custom event classes (new version, dispose not needed anymore). For use by publisher to raise events and gather usage statistics."},
 	};
 
 	var raiseMethods = new int[] { 1, 2, 3 };
@@ -114,6 +114,9 @@ namespace DarkCaster.Events
 	/// <summary>
 	/// <#=ifaceDef.summary#>
 	/// </summary>
+<#if(ifaceDef.obsolete){#>
+	[ObsoleteAttribute("This interface is obsolete and keep for compatibility. Consider to use ISafeEventCtrlLite instead.", false)]
+<#}#>
 	public interface <#=ifaceDef.name#><T><#=ifaceDef.idisposable#> where T : EventArgs
 	{
 		/// <summary>
