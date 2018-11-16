@@ -4,8 +4,8 @@
 <#
 	var asyncChunks	=	new []
 	{
-		new { ret="bool",             action="Action",     func_t="Func<T>",       func_kvp="Func<KeyValuePair<object, T>>" },
-		new { ret="async Task<bool>", action="Func<Task>", func_t="Func<Task<T>>", func_kvp="Func<Task<KeyValuePair<object, T>>>" },
+		new { async=false, await="",       ret="bool",             action="Action",     func_t="Func<T>",       func_kvp="Func<KeyValuePair<object, T>>" },
+		new { async=true,  await="await ", ret="async Task<bool>", action="Func<Task>", func_t="Func<Task<T>>", func_kvp="Func<Task<KeyValuePair<object, T>>>" },
 	};
 	
 	var classDefs = new []
@@ -160,7 +160,76 @@ namespace DarkCaster.Events
 		public <#=asyncChunk.ret#> Raise(<#=asyncChunk.func_kvp#> preExec, <#=asyncChunk.action#> postExec = null, ICollection<EventRaiseException> exceptions = null)
 <#}#>
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+<#if(classDef.dbg) {#>
+				if (recursiveRaiseCheck)
+				{
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
+				}
+				recursiveRaiseCheck = true;
+<#}#>
+<#if(raiseMethod==1){#>
+				if (preExec != null)
+					<#=asyncChunk.await#>preExec();
+<#} else if(raiseMethod==2) {#>
+				var args = <#=asyncChunk.await#>preExec();
+<#} else if(raiseMethod==3) {#>
+				var pair = <#=asyncChunk.await#>preExec();
+<#}#>
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+<#if(classDef.dbg) {#>
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
+<#if(raiseMethod==1||raiseMethod==2){#>
+					try { invList[i].fwdDelegate(sender, args); }
+<#} else if(raiseMethod==3) {#>
+					try { invList[i].fwdDelegate(pair.Key, pair.Value); }
+<#}#>
+					catch (EventDbgException ex)
+					{
+						throw ex;
+					}
+<#} else {#>
+<#if(raiseMethod==1||raiseMethod==2){#>
+					try { invList[i](sender, args); }
+<#} else if(raiseMethod==3) {#>
+					try { invList[i](pair.Key, pair.Value); }
+<#}#>
+<#}#>
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+<#if(classDef.dbg) {#>
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
+<#} else {#>
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+<#}#>
+						result = false;
+					}
+				}
+				if (postExec != null)
+					<#=asyncChunk.await#>postExec();
+				return result;
+			}
+			finally
+			{
+<#if(classDef.dbg) {#>
+				curDelegate = null;
+				recursiveRaiseCheck = false;
+<#}#>
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 <# } #>

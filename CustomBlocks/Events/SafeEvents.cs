@@ -111,32 +111,184 @@ namespace DarkCaster.Events
 
 		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (preExec != null)
+					preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					try { invList[i](sender, args); }
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					postExec();
+				return result;
+			}
+			finally
+			{
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public bool Raise(object sender, Func<T> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				var args = preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					try { invList[i](sender, args); }
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					postExec();
+				return result;
+			}
+			finally
+			{
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public bool Raise(Func<KeyValuePair<object, T>> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				var pair = preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					try { invList[i](pair.Key, pair.Value); }
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					postExec();
+				return result;
+			}
+			finally
+			{
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public async Task<bool> Raise(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (preExec != null)
+					await preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					try { invList[i](sender, args); }
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					await postExec();
+				return result;
+			}
+			finally
+			{
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public async Task<bool> Raise(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				var args = await preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					try { invList[i](sender, args); }
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					await postExec();
+				return result;
+			}
+			finally
+			{
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public async Task<bool> Raise(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				var pair = await preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					try { invList[i](pair.Key, pair.Value); }
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), invList[i], ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					await postExec();
+				return result;
+			}
+			finally
+			{
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 	}
@@ -244,32 +396,286 @@ namespace DarkCaster.Events
 
 		public bool Raise(object sender, T args, Action preExec = null, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (recursiveRaiseCheck)
+				{
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
+				}
+				recursiveRaiseCheck = true;
+				if (preExec != null)
+					preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
+					try { invList[i].fwdDelegate(sender, args); }
+					catch (EventDbgException ex)
+					{
+						throw ex;
+					}
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					postExec();
+				return result;
+			}
+			finally
+			{
+				curDelegate = null;
+				recursiveRaiseCheck = false;
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public bool Raise(object sender, Func<T> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (recursiveRaiseCheck)
+				{
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
+				}
+				recursiveRaiseCheck = true;
+				var args = preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
+					try { invList[i].fwdDelegate(sender, args); }
+					catch (EventDbgException ex)
+					{
+						throw ex;
+					}
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					postExec();
+				return result;
+			}
+			finally
+			{
+				curDelegate = null;
+				recursiveRaiseCheck = false;
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public bool Raise(Func<KeyValuePair<object, T>> preExec, Action postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (recursiveRaiseCheck)
+				{
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
+				}
+				recursiveRaiseCheck = true;
+				var pair = preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
+					try { invList[i].fwdDelegate(pair.Key, pair.Value); }
+					catch (EventDbgException ex)
+					{
+						throw ex;
+					}
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					postExec();
+				return result;
+			}
+			finally
+			{
+				curDelegate = null;
+				recursiveRaiseCheck = false;
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public async Task<bool> Raise(object sender, T args, Func<Task> preExec = null, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (recursiveRaiseCheck)
+				{
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
+				}
+				recursiveRaiseCheck = true;
+				if (preExec != null)
+					await preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
+					try { invList[i].fwdDelegate(sender, args); }
+					catch (EventDbgException ex)
+					{
+						throw ex;
+					}
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					await postExec();
+				return result;
+			}
+			finally
+			{
+				curDelegate = null;
+				recursiveRaiseCheck = false;
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public async Task<bool> Raise(object sender, Func<Task<T>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (recursiveRaiseCheck)
+				{
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
+				}
+				recursiveRaiseCheck = true;
+				var args = await preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
+					try { invList[i].fwdDelegate(sender, args); }
+					catch (EventDbgException ex)
+					{
+						throw ex;
+					}
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					await postExec();
+				return result;
+			}
+			finally
+			{
+				curDelegate = null;
+				recursiveRaiseCheck = false;
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 		public async Task<bool> Raise(Func<Task<KeyValuePair<object, T>>> preExec, Func<Task> postExec = null, ICollection<EventRaiseException> exceptions = null)
 		{
-			
+			raiseRwLock.EnterWriteLock();
+			try
+			{
+				if (recursiveRaiseCheck)
+				{
+					recursiveRaiseCheck = false;
+					throw new EventDbgException(
+						string.Format("Recursion detected while processing event callback on object of type {0}", curDelegate.Method.DeclaringType.FullName),
+						curDelegate.Method.DeclaringType,
+						curDelegate
+					);
+				}
+				recursiveRaiseCheck = true;
+				var pair = await preExec();
+				if (exceptions != null && exceptions.IsReadOnly)
+					exceptions = null;
+				var len = UpdateInvListOnRise_Safe();
+				var result = true;
+				for (int i = 0; i < len; ++i)
+				{
+					curDelegate = Delegate.CreateDelegate(typeof(EventHandler<T>), invList[i].weakTarget.Target, invList[i].method, false);
+					try { invList[i].fwdDelegate(pair.Key, pair.Value); }
+					catch (EventDbgException ex)
+					{
+						throw ex;
+					}
+					catch (Exception ex)
+					{
+						if (exceptions != null)
+							exceptions.Add(new EventRaiseException(string.Format("Subscriber's exception: {0}", ex.Message), curDelegate, ex));
+						result = false;
+					}
+				}
+				if (postExec != null)
+					await postExec();
+				return result;
+			}
+			finally
+			{
+				curDelegate = null;
+				recursiveRaiseCheck = false;
+				raiseRwLock.ExitWriteLock();
+			}
 		}
 
 	}
