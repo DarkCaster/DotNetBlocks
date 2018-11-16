@@ -77,7 +77,6 @@
     <Compile Include="Events\EventException.cs" />
     <Compile Include="Events\EventSubscriptionException.cs" />
     <Compile Include="Events\EventRaiseException.cs" />
-    <Compile Include="Events\ISafeEventCtrl.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\ITunnel.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\INode.cs" />
     <Compile Include="DataTransfer\Abstracts\Client\TunnelState.cs" />
