@@ -33,4 +33,4 @@ using System.Reflection;
 [assembly: AssemblyCopyright("Copyright (c) 2016 DarkCaster <dark.caster@outlook.com>")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.0.0.0")]
