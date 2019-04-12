@@ -26,6 +26,7 @@
     <ConsolePause>false</ConsolePause>
     <NoWarn>1591</NoWarn>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <LangVersion>Latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -35,6 +36,7 @@
     <DocumentationFile>bin\Release\CustomBlocks.xml</DocumentationFile>
     <ConsolePause>false</ConsolePause>
     <NoWarn>1591</NoWarn>
+    <LangVersion>Latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
